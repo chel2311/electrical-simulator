@@ -1,0 +1,3205 @@
+/* Circuit Simulator CSS */
+:root {
+  --corporate-color: #005BAB;
+  --accent-color: #FF961C;
+  --secondary-color: #4D8BC9;
+  --light-blue: #E0EEF9;
+  --background-color: #f5f5f5;
+  --text-color: #333;
+  --light-gray: #E0E0E0;
+  --mid-gray: #9E9E9E;
+  --dark-gray: #616161;
+  --header-height: 60px;
+  --footer-height: 40px;
+  --success-color: #28a745;
+  --warning-color: #ffc107;
+  --danger-color: #dc3545;
+  --info-color: #17a2b8;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "メイリオ", Meiryo, sans-serif;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+.header {
+  background-color: var(--corporate-color);
+  color: white;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  justify-content: space-between;
+}
+
+.header h1 {
+  font-size: 20px;
+  text-align: left;
+}
+
+.main-nav {
+  background-color: var(--light-blue);
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  z-index: 99;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+}
+
+.nav-item {
+  padding: 10px 15px;
+  white-space: nowrap;
+  font-size: 14px;
+  color: var(--corporate-color);
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border-bottom: 3px solid transparent;
+}
+
+.nav-item:hover {
+  background-color: rgba(0, 91, 171, 0.1);
+}
+
+.nav-item.active {
+  border-bottom: 3px solid var(--corporate-color);
+  font-weight: bold;
+}
+
+.footer {
+  background-color: var(--corporate-color);
+  color: white;
+  height: var(--footer-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.page-number {
+  margin-left: auto;
+}
+
+.container {
+  padding-top: calc(var(--header-height) + 45px);
+  padding-bottom: calc(var(--footer-height) + 20px);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.circuit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.circuit {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.circuit-title {
+  color: var(--corporate-color);
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--corporate-color);
+  padding-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.circuit-title h2 {
+  font-size: 18px;
+}
+
+.circuit-status {
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: var(--light-gray);
+}
+
+.circuit-status.on {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.circuit-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  height: 220px;
+}
+
+.circuit-content.larger {
+  height: 350px;
+}
+
+.circuit-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.circuit-description {
+  margin-top: 10px;
+  font-size: 14px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.switch {
+  cursor: pointer;
+}
+
+.legend {
+  margin-top: 30px;
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.legend h2 {
+  color: var(--corporate-color);
+  font-size: 18px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--corporate-color);
+  padding-bottom: 5px;
+}
+
+.legend-items {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legend-color {
+  width: 24px;
+  height: 3px;
+  border-radius: 3px;
+}
+
+.legend-text {
+  font-size: 14px;
+}
+
+.label {
+  font-size: 12px;
+}
+
+.w-color {
+  background-color: #AAAAAA;
+}
+
+.b-color {
+  background-color: #333;
+}
+
+.r-color {
+  background-color: #FF0000;
+}
+
+.current-path {
+  stroke-dasharray: 5;
+  animation: flow 0.5s linear infinite;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+.interactive-element {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.button {
+  background-color: var(--corporate-color);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.button:hover {
+  background-color: #0078e7;
+  transform: translateY(-2px);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--corporate-color);
+}
+
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+  margin-right: 5px;
+  transition: all 0.3s ease;
+}
+
+.tab:hover {
+  background-color: var(--light-blue);
+}
+
+.tab.active {
+  background-color: var(--corporate-color);
+  color: white;
+  border-color: var(--corporate-color);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.help-tip {
+  background-color: var(--accent-color);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 5px;
+  font-size: 12px;
+}
+
+.tooltip {
+  position: absolute;
+  background-color: white;
+  border: 1px solid var(--light-gray);
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  max-width: 300px;
+  display: none;
+}
+
+.panel {
+  background-color: white;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.panel-title {
+  font-size: 16px;
+  color: var(--corporate-color);
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.measurement-display {
+  background-color: #f9f9f9;
+  border: 1px solid var(--light-gray);
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.meter {
+  padding: 5px 10px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.meter-label {
+  font-size: 12px;
+  color: var(--dark-gray);
+}
+
+.meter-value {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.troubleshooting-panel {
+  background-color: #f9f9f9;
+  border: 1px solid var(--light-gray);
+  border-radius: 5px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+.problem-desc {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.hint-btn {
+  background-color: var(--secondary-color);
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 10px;
+}
+
+.solution-btn {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.checklist {
+  list-style-type: none;
+  margin: 15px 0;
+}
+
+.checklist li {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checklist input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.safety-notice {
+  background-color: #ffe9e9;
+  border-left: 4px solid var(--danger-color);
+  padding: 10px 15px;
+  margin: 15px 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.safety-title {
+  color: var(--danger-color);
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.safety-icon {
+  font-size: 16px;
+}
+
+.quiz-container {
+  margin-top: 20px;
+}
+
+.quiz-question {
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.quiz-options {
+  list-style-type: none;
+  margin-bottom: 20px;
+}
+
+.quiz-options li {
+  margin-bottom: 8px;
+}
+
+.quiz-option label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.quiz-option label:hover {
+  background-color: var(--light-blue);
+}
+
+.check-answer-btn {
+  background-color: var(--corporate-color);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.section-container {
+  display: none;
+}
+
+.section-container.active {
+  display: block;
+}
+
+.symbol-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0 30px 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.symbol-table th {
+  background-color: var(--light-blue);
+  color: var(--corporate-color);
+  font-weight: bold;
+  text-align: left;
+  padding: 12px 15px;
+  border-bottom: 2px solid var(--corporate-color);
+}
+
+.symbol-table td {
+  padding: 12px 15px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--light-gray);
+}
+
+.symbol-table tr:hover {
+  background-color: rgba(0, 91, 171, 0.05);
+}
+
+.symbol-table td:first-child {
+  width: 120px;
+  text-align: center;
+}
+
+.symbol-table td:nth-child(2) {
+  width: 30%;
+  font-weight: bold;
+  color: var(--corporate-color);
+}
+
+.symbol-table td:last-child {
+  color: var(--text-color);
+}
+
+.symbol-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .legend-items {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .measurement-display {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .legend-items {
+    grid-template-columns: 1fr;
+  }
+  
+  .circuit-content {
+    height: 180px;
+  }
+  
+  .circuit-content.larger {
+    height: 300px;
+  }
+}        :root {
+            --primary-color: #005BAB;
+            --primary-dark: #004590;
+            --accent-color: #FF961C;
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --gray-light: #e0e0e0;
+            --gray-medium: #9e9e9e;
+            --red-color: #d32f2f;
+            --green-color: #388e3c;
+            --blue-light: #e3f2fd;
+            --wire-red: #ff0000;
+            --wire-white: #ffffff;
+            --wire-black: #000000;
+            --breaker-green: #5cb85c;
+            --mlb-color: #ffa366;
+            --seismic-color: #e91e63;
+            --elcb-color: #9c27b0;
+            --grid-tie-color: #2196f3;
+            --solar-color: #4caf50;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Meiryo', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: minmax(550px, 1fr) minmax(600px, 680px);
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* UI制御 */
+        .ui-controls {
+            background-color: #fff;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .layout-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* シミュレーションエリア */
+        .simulation-area {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .simulation-area h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* SVGコンテナ */
+        .svg-container {
+            width: 100%;
+            overflow: auto;
+            position: relative;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: #f8f8f8;
+            transition: height 0.3s ease;
+        }
+
+        /* 分電盤のSVG */
+        .panel-svg {
+            min-width: 800px;
+            min-height: 500px;
+            display: block;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+
+        /* ブレーカースタイル */
+        .breaker {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .breaker:hover {
+            opacity: 0.8;
+            filter: brightness(1.1);
+        }
+
+        .breaker rect {
+            stroke: #333;
+            stroke-width: 2;
+        }
+
+        .breaker.off rect {
+            fill: var(--red-color) !important;
+        }
+
+        .breaker.on rect {
+            fill: var(--breaker-green);
+        }
+
+        .breaker.mlb.on rect {
+            fill: var(--mlb-color);
+        }
+
+        .breaker.mlb.off rect {
+            fill: var(--red-color) !important;
+        }
+
+        .breaker.seismic.on rect {
+            fill: var(--seismic-color);
+        }
+
+        .breaker.elcb.on rect {
+            fill: var(--elcb-color);
+        }
+
+        .breaker.grid-tie.on rect {
+            fill: var(--grid-tie-color);
+        }
+
+        .breaker.space rect {
+            fill: #f0f0f0;
+            stroke-dasharray: 3 3;
+        }
+
+        .breaker.double-space rect {
+            width: 100px;
+        }
+
+        /* 配線スタイル */
+        .wire {
+            fill: none;
+            stroke-width: 6;
+        }
+
+        .wire-l1 {
+            stroke: var(--wire-red);
+        }
+
+        .wire-n {
+            stroke: #888888;
+        }
+
+        .wire-l2 {
+            stroke: var(--wire-black);
+        }
+
+        /* 太陽光アイコン */
+        .solar-icon {
+            fill: var(--solar-color);
+        }
+
+        /* ステータス表示 */
+        .status-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .status-card {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .status-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-color);
+            text-align: center;
+        }
+
+        .dual-status {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .phase-status {
+            text-align: center;
+            padding: 8px;
+            border-radius: 4px;
+            flex: 1;
+        }
+
+        .phase-status.phase-r {
+            background-color: rgba(255, 0, 0, 0.1);
+        }
+
+        .phase-status.phase-t {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .phase-status h5 {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: var(--primary-color);
+        }
+
+        .phase-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* 計算ロジック表示 */
+        .calculation-logic {
+            background-color: #fffbf0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #ffe0b2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .calculation-logic h4 {
+            color: var(--accent-color);
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calculation-detail {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .calculation-detail.formula {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .calculation-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        .calculation-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .math {
+            font-family: monospace;
+            background-color: rgba(0,0,0,0.03);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        /* 進捗バー */
+        .capacity-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .capacity-bar-fill {
+            height: 100%;
+            background-color: #4caf50;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .capacity-bar-fill::after {
+            content: attr(data-value);
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+
+        .capacity-bar-fill.warning {
+            background-color: #ff9800;
+        }
+
+        .capacity-bar-fill.danger {
+            background-color: var(--red-color);
+        }
+
+        .dual-bars {
+            display: flex;
+            gap: 10px;
+        }
+
+        .phase-bar {
+            flex: 1;
+        }
+
+        .phase-bar .capacity-bar {
+            height: 12px;
+        }
+
+        .phase-r .capacity-bar-fill {
+            background-color: var(--wire-red);
+        }
+
+        .phase-t .capacity-bar-fill {
+            background-color: var(--text-color);
+        }
+
+        /* 回路設定エリア */
+        .circuit-config-area {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-height: calc(100vh - 90px);
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 600px;
+        }
+
+        /* タブ */
+        .tab-nav {
+            display: flex;
+            border-bottom: 2px solid var(--gray-light);
+            margin-bottom: 20px;
+            gap: 5px;
+        }
+
+        .tab-nav button {
+            background: none;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 15px;
+            color: var(--gray-medium);
+            transition: all 0.3s ease;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+        }
+
+        .tab-nav button.active {
+            color: var(--primary-color);
+            background-color: rgba(0, 91, 171, 0.05);
+        }
+
+        .tab-nav button.active::after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 回路設定テーブル */
+        .circuit-table-container {
+            max-height: 800px;
+            overflow-y: auto;
+            border: 1px solid var(--gray-light);
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .circuit-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .circuit-table th,
+        .circuit-table td {
+            border: 1px solid var(--gray-light);
+            padding: 8px 6px;
+            text-align: center;
+        }
+
+        .circuit-table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .circuit-table tr:nth-child(even) {
+            background-color: rgba(0,0,0,0.02);
+        }
+
+        .circuit-table tr:hover {
+            background-color: rgba(0,91,171,0.05);
+        }
+
+        .circuit-table input[type="text"],
+        .circuit-table input[type="number"],
+        .circuit-table select {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid var(--gray-light);
+            border-radius: 3px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .circuit-table input:focus,
+        .circuit-table select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,91,171,0.2);
+        }
+
+        /* カラムの幅調整（統一） */
+        .circuit-table th:nth-child(1),
+        .circuit-table td:nth-child(1) {
+            width: 40px;
+        }
+
+        .circuit-table th:nth-child(2),
+        .circuit-table td:nth-child(2) {
+            width: 40px;
+        }
+
+        .circuit-table th:nth-child(3),
+        .circuit-table td:nth-child(3) {
+            width: 110px;
+        }
+        
+        .circuit-table th:nth-child(4),
+        .circuit-table td:nth-child(4) {
+            width: 120px;
+        }
+
+        .circuit-table th:nth-child(5),
+        .circuit-table td:nth-child(5),
+        .circuit-table th:nth-child(6),
+        .circuit-table td:nth-child(6),
+        .circuit-table th:nth-child(7),
+        .circuit-table td:nth-child(7) {
+            width: 70px;
+        }
+        
+        .circuit-table th:nth-child(8),
+        .circuit-table td:nth-child(8),
+        .circuit-table th:nth-child(9),
+        .circuit-table td:nth-child(9),
+        .circuit-table th:nth-child(10),
+        .circuit-table td:nth-child(10) {
+            width: 70px;
+        }
+
+        .circuit-table .phase-r {
+            background-color: rgba(255, 107, 107, 0.1);
+        }
+
+        .circuit-table .phase-t {
+            background-color: rgba(77, 171, 247, 0.1);
+        }
+
+        .circuit-table .double-space {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+
+        /* R相T相負荷表示スタイル */
+        .circuit-table td.r-phase-load {
+            background-color: rgba(255, 107, 107, 0.1);
+        }
+
+        .circuit-table td.t-phase-load {
+            background-color: rgba(77, 171, 247, 0.1);
+        }
+
+        /* ブレーカー種類バッジ */
+        .breaker-type {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            color: white;
+            margin-left: 4px;
+            font-weight: bold;
+        }
+
+        .breaker-type.elcb {
+            background-color: var(--elcb-color);
+        }
+
+        .breaker-type.double {
+            background-color: var(--accent-color);
+        }
+
+        .breaker-type.grid-tie {
+            background-color: var(--grid-tie-color);
+        }
+
+        /* ボタン */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            margin: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary {
+            background-color: var(--gray-medium);
+        }
+
+        .btn-secondary:hover {
+            background-color: #757575;
+        }
+
+        .btn-danger {
+            background-color: var(--red-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #b71c1c;
+        }
+
+        .btn-success {
+            background-color: var(--green-color);
+        }
+
+        .btn-success:hover {
+            background-color: #2e7d32;
+        }
+
+        .btn-icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .button-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* 設定入力 */
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--gray-light);
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,91,171,0.2);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .input-row .input-group {
+            flex: 1;
+        }
+
+        /* 発電容量入力スタイル */
+        .generation-input {
+            position: relative;
+        }
+
+        .generation-input-highlight {
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 8px var(--solar-color) !important;
+            border-color: var(--solar-color) !important;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+
+        .grid-tie-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--grid-tie-color);
+            font-size: 20px;
+            pointer-events: none;
+        }
+
+        /* 警告スタイル */
+        .warning-text {
+            color: var(--red-color);
+            font-weight: bold;
+            margin-left: 10px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .warning-icon {
+            width: 16px;
+            height: 16px;
+            fill: var(--red-color);
+        }
+
+        .status-card.warning {
+            background-color: #fff3e0;
+            border: 2px solid #ff9800;
+        }
+
+        .status-card.danger {
+            background-color: #ffebee;
+            border: 2px solid var(--red-color);
+        }
+
+        .status-card.generation {
+            background-color: #e8f5e9;
+            border: 2px solid var(--solar-color);
+        }
+
+        /* ツールチップ */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* コントロールエリア */
+        .control-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .control-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        /* 解説タブ用スタイル */
+        .explanation-section {
+            margin-bottom: 30px;
+        }
+        
+        .explanation-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .explanation-section h3:hover {
+            color: var(--primary-dark);
+        }
+        
+        .explanation-section h3::before {
+            content: "▼";
+            margin-right: 10px;
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+        
+        .explanation-section.collapsed h3::before {
+            transform: rotate(-90deg);
+        }
+        
+        .explanation-content {
+            padding-left: 20px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            max-height: 2000px;
+        }
+        
+        .explanation-section.collapsed .explanation-content {
+            max-height: 0;
+            padding: 0 20px;
+        }
+        
+        .explanation-diagram {
+            background-color: #f8f8f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .explanation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .explanation-table th,
+        .explanation-table td {
+            border: 1px solid var(--gray-light);
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .explanation-table th {
+            background-color: var(--blue-light);
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .explanation-table tr:nth-child(even) {
+            background-color: rgba(0,0,0,0.02);
+        }
+        
+        .highlight-box {
+            background-color: #fff8e1;
+            border-left: 4px solid var(--accent-color);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .highlight-box h4 {
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+        
+        .formula-box {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .term-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .term-item {
+            background-color: #f0f8ff;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .term-item strong {
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .interactive-demo {
+            background-color: #e8f5e9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .interactive-demo h4 {
+            color: var(--green-color);
+            margin-bottom: 15px;
+        }
+        
+        .demo-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .demo-control {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .demo-result {
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        /* FAQ用スタイル */
+        .faq-item {
+            margin-bottom: 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .faq-question {
+            background-color: var(--blue-light);
+            padding: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .faq-question:hover {
+            background-color: #d1e7ff;
+        }
+        
+        .faq-question::after {
+            content: "+";
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-item.open .faq-question::after {
+            transform: rotate(45deg);
+        }
+        
+        .faq-answer {
+            padding: 0 15px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background-color: white;
+        }
+        
+        .faq-item.open .faq-answer {
+            padding: 15px;
+            max-height: 500px;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 1400px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .circuit-config-area {
+                max-height: none;
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .simulation-area,
+            .circuit-config-area {
+                padding: 15px;
+            }
+            
+            .status-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .control-container {
+                flex-direction: column;
+            }
+            
+            .input-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+        :root {
+            --primary-color: #005BAB;
+            --primary-dark: #004590;
+            --primary-light: #e3f2fd;
+            --accent-color: #FF961C;
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --gray-light: #e0e0e0;
+            --gray-medium: #9e9e9e;
+            --gray-dark: #616161;
+            --red-color: #d32f2f;
+            --green-color: #388e3c;
+            --yellow-color: #FF961C;
+            --blue-light: #e3f2fd;
+            --blue-dark: #004590;
+            --wire-red: #ff0000;
+            --wire-white: #ffffff;
+            --wire-black: #000000;
+            --breaker-green: #5cb85c;
+            --mlb-color: #ffa366;
+            --seismic-color: #e91e63;
+            --elcb-color: #9c27b0;
+            --grid-tie-color: #2196f3;
+            --solar-color: #4caf50;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            
+            --border-radius: 8px;
+            --padding-standard: 16px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+
+            --transition-standard: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Meiryo', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding-bottom: 40px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            transition: var(--transition-standard);
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: minmax(500px, 1fr) minmax(800px, 2fr);
+            gap: 20px;
+            transition: var(--transition-standard);
+        }
+
+        /* シミュレーションエリア */
+        .simulation-area {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .simulation-area h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* SVGコンテナ */
+        .svg-container {
+            width: 100%;
+            overflow: auto;
+            position: relative;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: #f8f8f8;
+            height: 500px;
+            transition: height 0.3s ease;
+        }
+
+        /* 分電盤のSVG */
+        .panel-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* ブレーカースタイル */
+        .breaker {
+            cursor: pointer;
+        }
+
+        .breaker:hover {
+            opacity: 0.9;
+        }
+
+        .breaker rect {
+            stroke: #333;
+            stroke-width: 2;
+        }
+
+        .breaker.off rect {
+            fill: var(--red-color) !important;
+        }
+
+        .breaker.on rect {
+            fill: var(--breaker-green);
+        }
+
+        .breaker.mlb.on rect {
+            fill: var(--mlb-color);
+        }
+
+        .breaker.mlb.off rect {
+            fill: var(--red-color) !important;
+        }
+
+        .breaker.elcb.on rect {
+            fill: var(--elcb-color);
+        }
+
+        /* 配線スタイル */
+        .wire {
+            fill: none;
+            stroke-width: 6;
+        }
+
+        .wire-l1 {
+            stroke: var(--wire-red);
+        }
+
+        .wire-n {
+            stroke: var(--gray-medium);
+        }
+
+        .wire-l2 {
+            stroke: var(--wire-black);
+        }
+
+        /* ステータス表示 */
+        .status-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .status-card {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: var(--transition-standard);
+        }
+
+        .status-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .status-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-color);
+            text-align: center;
+            margin: var(--spacing-sm) 0;
+        }
+
+        .dual-status {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .phase-status {
+            text-align: center;
+            padding: 8px;
+            border-radius: 4px;
+            flex: 1;
+        }
+
+        .phase-status.phase-r {
+            background-color: rgba(248, 113, 113, 0.1);
+        }
+
+        .phase-status.phase-t {
+            background-color: rgba(2, 6, 23, 0.05);
+        }
+
+        .phase-status h5 {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: var(--primary-color);
+        }
+
+        .phase-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* 進捗バー */
+        .capacity-bar {
+            width: 100%;
+            height: 20px;
+            background-color: var(--gray-light);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .capacity-bar-fill {
+            height: 100%;
+            background-color: var(--green-color);
+            transition: var(--transition-standard);
+            position: relative;
+        }
+
+        .capacity-bar-fill::after {
+            content: attr(data-value);
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+
+        .capacity-bar-fill.warning {
+            background-color: var(--yellow-color);
+        }
+
+        .capacity-bar-fill.danger {
+            background-color: var(--red-color);
+        }
+
+        .dual-bars {
+            display: flex;
+            gap: 10px;
+        }
+
+        .phase-bar {
+            flex: 1;
+        }
+
+        .phase-bar .capacity-bar {
+            height: 12px;
+        }
+
+        .phase-r .capacity-bar-fill {
+            background-color: var(--wire-red);
+        }
+
+        .phase-t .capacity-bar-fill {
+            background-color: var(--text-color);
+        }
+
+        /* 家電と部屋エリア */
+        .room-config-area {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-height: calc(100vh - 90px);
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            min-width: 600px;
+        }
+
+        .room-config-area h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .room-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .room {
+            background-color: var(--primary-light);
+            padding: 16px;
+            border-radius: 8px;
+            border: 2px solid rgba(0, 91, 171, 0.2);
+            min-height: 200px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .room:hover {
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-2px);
+        }
+
+        .room h3 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            border-bottom: 1px solid rgba(0, 91, 171, 0.2);
+            padding-bottom: 5px;
+        }
+
+        .room-info {
+            position: absolute;
+            bottom: 5px;
+            right: 10px;
+            font-size: 12px;
+            color: var(--gray-dark);
+        }
+
+        .circuit-status {
+            position: absolute;
+            bottom: 5px;
+            left: 10px;
+            font-size: 12px;
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        .appliance-container {
+            padding: var(--padding-standard);
+            border-radius: var(--border-radius);
+            background-color: #e8eaf6;
+            margin-top: var(--spacing-md);
+            border: 1px solid #c5cae9;
+        }
+
+        .appliance-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-md);
+            margin-top: 10px;
+        }
+
+        .appliance {
+            background-color: white;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            border: 1px solid var(--gray-light);
+            cursor: grab;
+            user-select: none;
+            position: relative;
+            transition: var(--transition-standard);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .appliance:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .appliance svg {
+            width: 100%;
+            height: 100px;
+            object-fit: contain;
+        }
+
+        .appliance-info {
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--gray-dark);
+            font-weight: 500;
+        }
+
+        .appliance.dragging {
+            opacity: 0.6;
+            cursor: grabbing;
+        }
+
+        .room-appliance {
+            display: inline-block;
+            margin: 5px;
+            padding: 5px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--gray-light);
+            position: relative;
+            font-size: 12px;
+            width: 80px;
+            height: 95px;
+            cursor: pointer;
+            vertical-align: top;
+            transition: var(--transition-standard);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .room-appliance:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-md);
+        }
+
+        .room-appliance svg {
+            width: 70px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        .remove-appliance {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            background-color: rgba(239, 68, 68, 0.8);
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            line-height: 16px;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 5;
+            transition: var(--transition-standard);
+        }
+
+        .remove-appliance:hover {
+            transform: scale(1.2);
+            background-color: var(--red-color);
+        }
+
+        .appliance-name {
+            font-size: 10px;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ボタン */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 14px;
+            transition: var(--transition-standard);
+            margin: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-danger {
+            background-color: var(--red-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-accent {
+            background-color: var(--accent-color);
+        }
+
+        .btn-accent:hover {
+            background-color: #d97706;
+        }
+
+        .btn-ghost {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: var(--primary-dark); border: 2px solid white; font-weight: 600; 
+            border: 2px solid white; font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); 
+        }
+
+        .btn-ghost:hover {
+            background-color: white; color: var(--primary-color);
+            transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); 
+        }
+
+        .button-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        /* アラートモーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            width: 80%;
+            max-width: 600px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+            position: relative;
+            animation: modalFadeIn 0.3s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .modal-header {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .modal-header.alert {
+            color: var(--red-color);
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .modal-footer {
+            margin-top: 20px;
+        }
+        
+        .close-modal {
+            padding: 10px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            transition: var(--transition-standard);
+        }
+        
+        .close-modal:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* 漏電モーダル用アイコン */
+        .leakage-icon {
+            font-size: 48px;
+            color: var(--yellow-color);
+            margin-bottom: 15px;
+        }
+
+        /* 専用回路セクション */
+        .dedicated-appliances-section {
+            background-color: #fffbeb;
+            padding: var(--padding-standard);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-md);
+            border: 2px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .dedicated-appliances-section h3 {
+            color: #d97706;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .dedicated-appliances-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-md);
+        }
+
+        .dedicated-appliance {
+            background-color: white;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            border: 1px solid #fcd34d;
+            position: relative;
+            transition: var(--transition-standard);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .dedicated-appliance:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .dedicated-appliance svg {
+            width: 100%;
+            height: 100px;
+            object-fit: contain;
+        }
+
+        .dedicated-appliance-info {
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--gray-dark);
+            font-weight: 500;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+            margin-top: 10px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--gray-medium);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--green-color);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        .toggle-status {
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .toggle-status.on {
+            color: var(--green-color);
+        }
+
+        .toggle-status.off {
+            color: var(--gray-dark);
+        }
+        
+        /* 新規追加: 設定パネル */
+        .settings-panel {
+            background-color: var(--blue-light);
+            padding: var(--padding-standard);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-md);
+            border: 2px solid rgba(37, 99, 235, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .settings-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 5px 0;
+        }
+        
+        .settings-control label {
+            font-weight: 500;
+            color: var(--blue-dark);
+        }
+        
+        .settings-control select, 
+        .settings-control input {
+            padding: 6px 12px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--gray-medium);
+            background-color: white;
+            font-size: 14px;
+        }
+        
+        /* 新規追加: 計算ロジックカード */
+        .calculation-section {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--gray-light);
+        }
+        
+        .calculation-section:last-child {
+            border-bottom: none;
+        }
+        
+        .calculation-section h5 {
+            color: var(--primary-dark);
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .calculation-value {
+            font-size: 13px;
+            line-height: 1.4;
+            color: var(--text-color);
+        }
+        
+        .highlight-value {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .formula-box {
+            background-color: #f1f5f9;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--gray-dark);
+        }
+        
+        /* チュートリアル関連 */
+        #tutorial-modal .modal-content {
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .tutorial-body {
+            text-align: left;
+        }
+        
+        .tutorial-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+        
+        .tutorial-section:last-child {
+            border-bottom: none;
+        }
+        
+        .tutorial-section h4 {
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+        
+        .tutorial-image {
+            margin: 10px 0;
+            background-color: #f8fafc;
+            border-radius: var(--border-radius);
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .tutorial-image img {
+            max-width: 100%;
+            border-radius: 4px;
+        }
+        
+        .tutorial-tip {
+            background-color: #fffbeb;
+            padding: 10px;
+            border-left: 4px solid var(--accent-color);
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        /* レスポンシブ */
+        @media (max-width: 1400px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .room-config-area {
+                min-width: 100%;
+            }
+            
+            .status-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .room-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .appliance-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dedicated-appliances-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .settings-panel {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+        :root {
+            --corporate-color: #005BAB;
+            --accent-color: #FF961C;
+            --light-blue: #E0EEF9;
+            --medium-blue: #4D8BC9;
+            --light-gray: #F5F5F5;
+            --medium-gray: #E0E0E0;
+            --dark-gray: #9E9E9E;
+            --darker-gray: #616161;
+        }
+        
+        body {
+            font-family: 'Meiryo', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-gray);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--corporate-color);
+            color: white;
+            padding: 15px 0;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            margin: 0;
+            padding: 0 20px;
+            font-size: 24px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel h2 {
+            color: var(--corporate-color);
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-blue);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="number"],
+        input[type="range"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        input[type="range"] {
+            padding: 0;
+        }
+        
+        .range-value {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+            margin-left: 10px;
+        }
+        
+        button {
+            background-color: var(--corporate-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: var(--medium-blue);
+            transform: scale(1.03);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .results-panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .results-panel h2 {
+            color: var(--corporate-color);
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-blue);
+        }
+        
+        .result-item {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .result-item strong {
+            font-weight: bold;
+        }
+        
+        .result-value {
+            font-weight: bold;
+            color: var(--corporate-color);
+        }
+        
+        .system-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+            position: relative;
+        }
+        
+        .diagram-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .component {
+            margin: 15px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .component-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--corporate-color);
+        }
+        
+        .component-svg {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .connection-line {
+            width: 3px;
+            background-color: var(--corporate-color);
+            position: absolute;
+            z-index: -1;
+        }
+        
+        .power-flow {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            animation: flow 3s linear infinite;
+        }
+
+        .efficiency-label {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--corporate-color);
+            border: 1px solid var(--light-blue);
+        }
+        
+        @keyframes flow {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100px); opacity: 0; }
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .chart-panel h3 {
+            color: var(--corporate-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        canvas {
+            width: 100% !important;
+            max-height: 300px;
+        }
+
+        /* ストリング設定パネル */
+        .string-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .string-config {
+            background-color: var(--light-blue);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .string-config h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: var(--corporate-color);
+        }
+        
+        /* ソーラーパネル表示用のスタイル */
+        .solar-panel-grid {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .solar-panel-string {
+            position: relative;
+            display: grid;
+            gap: 0.5rem;
+        }
+        
+        .string-connection {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #FFD700;
+            z-index: 1;
+        }
+        
+        .solar-panel-container {
+            position: relative;
+            z-index: 2;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 0.25rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* パワコン表示用のスタイル */
+        .pcs-container {
+            margin-top: 30px;
+            border: 1px dashed var(--medium-blue);
+            border-radius: 8px;
+            padding: 15px;
+            background-color: rgba(224, 238, 249, 0.3);
+        }
+
+        .pcs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .pcs-title {
+            color: var(--corporate-color);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .pcs-info {
+            font-size: 0.9rem;
+            color: var(--darker-gray);
+        }
+
+        .pcs-details {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .pcs-detail-item {
+            background-color: white;
+            padding: 8px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .pcs-detail-label {
+            font-size: 0.8rem;
+            color: var(--dark-gray);
+            margin-bottom: 2px;
+        }
+
+        .pcs-detail-value {
+            font-weight: bold;
+            color: var(--corporate-color);
+        }
+
+        /* マルチパワコン用のタブ */
+        .pcs-tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--medium-gray);
+            flex-wrap: wrap;
+        }
+
+        .pcs-tab {
+            padding: 8px 16px;
+            background-color: var(--light-gray);
+            border: 1px solid var(--medium-gray);
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            margin-right: 5px;
+            margin-bottom: -1px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .pcs-tab:hover {
+            background-color: var(--light-blue);
+        }
+
+        .pcs-tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+            font-weight: bold;
+            color: var(--corporate-color);
+        }
+
+        .pcs-tab-content {
+            display: none;
+        }
+
+        .pcs-tab-content.active {
+            display: block;
+        }
+
+        .string-assignment-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--light-blue);
+            border-radius: 8px;
+        }
+
+        .string-assignment-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--corporate-color);
+        }
+
+        .string-assignment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .string-assignment-item {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        /* 追加: 共通設定ボタン */
+        .common-settings-btn {
+            background-color: var(--light-blue);
+            color: var(--corporate-color);
+            border: 1px solid var(--medium-blue);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 15px;
+            transition: background-color 0.2s;
+        }
+        
+        .common-settings-btn:hover {
+            background-color: var(--medium-blue);
+            color: white;
+        }
+        
+        /* 追加: パワコン比較表 */
+        .pcs-comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .pcs-comparison-table th,
+        .pcs-comparison-table td {
+            border: 1px solid var(--medium-gray);
+            padding: 8px;
+            text-align: center;
+        }
+        
+        .pcs-comparison-table th {
+            background-color: var(--light-blue);
+            color: var(--corporate-color);
+            font-weight: bold;
+        }
+        
+        .pcs-comparison-table tr:nth-child(even) {
+            background-color: var(--light-gray);
+        }
+        
+        /* 最適化提案バッジ */
+        .optimization-badge {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+            vertical-align: middle;
+            font-weight: bold;
+        }
+        
+        /* PCS情報ラベルのスタイル修正 */
+        .pcs-connection-info {
+            position: absolute;
+            right: -120px; /* -150pxから-120pxに変更 */
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(63, 81, 181, 0.13);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            color: #3f51b5;
+            border: 1px solid #3f51b5;
+            width: 120px; /* 幅を固定して確実に表示されるようにする */
+            z-index: 10; /* 重なり順序を上位に */
+        }
+        
+        /* 昇圧回路の視覚化用スタイル */
+        .boost-circuit {
+            fill: none;
+            stroke-width: 1.5;
+        }
+        
+        .circuit-path {
+            stroke: #FF961C;
+        }
+        
+        .circuit-component {
+            stroke: #3f51b5;
+            fill: #E0EEF9;
+        }
+        
+        .circuit-label {
+            font-family: Arial, sans-serif;
+            font-size: 6px;
+            fill: #333;
+            text-anchor: middle;
+        }
+        
+        .current-flow {
+            fill: #FF961C;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+        
+        /* タブ切り替え用のスタイル */
+        .tab-navigation {
+            display: flex;
+            background-color: #e0eef9;
+            padding: 0 20px;
+            border-bottom: 2px solid var(--corporate-color);
+        }
+        
+        .tab-button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+        }
+        
+        .tab-button:hover {
+            background-color: rgba(0, 91, 171, 0.1);
+        }
+        
+        .tab-button.active {
+            background-color: var(--corporate-color);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 用語集のスタイル */
+        .glossary-container {
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .glossary-search {
+            margin-bottom: 20px;
+        }
+        
+        .glossary-search input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .glossary-category {
+            margin-bottom: 20px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: var(--light-blue);
+            cursor: pointer;
+        }
+        
+        .category-header h2 {
+            margin: 0;
+            color: var(--corporate-color);
+            font-size: 18px;
+        }
+        
+        .toggle-icon {
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+        
+        .category-content {
+            padding: 15px;
+            display: none;
+        }
+        
+        .glossary-category.active .category-content {
+            display: block;
+        }
+        
+        .glossary-category.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+        
+        .term-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--light-blue);
+        }
+        
+        .term-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .term-item h3 {
+            color: var(--corporate-color);
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .term-item p {
+            margin: 5px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .term-item ul {
+            padding-left: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+                                        .cable-sheath {
+                                          fill: #4a4a4a; /* ケーブル外装色 (濃いグレー) */
+                                          stroke: #303030;
+                                          stroke-width: 0.4;
+                                        }
+                                        .cable-core-red { fill: #d32f2f; /* 芯線 赤 (プラス線) */ }
+                                        .cable-core-blue { fill: #1976d2; /* 芯線 青 (マイナス線) */ }
+
+                                        /* コネクタ共通スタイル */
+                                        .connector-housing { stroke: #111111; stroke-width: 0.2; }
+                                        .connector-grip { }
+                                        .connector-lock-clip { fill: #555555; } /* ロッククリップ部分 */
+                                        .connector-insulator { }
+
+                                        /* オスコネクタ */
+                                        .connector-housing-male { fill: #222222; /* 黒 */ }
+                                        .connector-grip-male { fill: #333333; }
+                                        .connector-pin { fill: #b0bec5; /* 金属ピン: 明るい青灰色 */ }
+                                        .connector-insulator-male { fill: #1e1e1e; }
+
+                                        /* メスコネクタ */
+                                        .connector-housing-female { fill: #2a2a2a; /* やや明るい黒 */ }
+                                        .connector-grip-female { fill: #3a3a3a; }
+                                        .connector-socket-ring { fill: #b0bec5; stroke: #78909c; stroke-width: 0.2; } /* ソケットリング */
+                                        .connector-socket-hole { fill: #2a2a2a; } /* ソケットの穴 */
+                                        .connector-insulator-female { fill: #242424; }
+                                    .pcs-body { fill: #e0e0e0; stroke: #b0b0b0; stroke-width: 0.8; }
+                                    .pcs-front-panel { fill: #f0f0f0; stroke: #c0c0c0; stroke-width: 0.4; }
+                                    .pcs-display-screen { fill: ${pcsColor}; rx:1; ry:1; }
+                                    .pcs-display-text-main { font-family: 'Segoe UI', Arial, sans-serif; font-size: 5px; fill: #e8eaf6; text-anchor: middle; }
+                                    .pcs-display-text-sub { font-family: 'Segoe UI', Arial, sans-serif; font-size: 3.5px; fill: #c5cae9; text-anchor: middle; }
+                                    .pcs-indicator-label { font-family: 'Segoe UI', Arial, sans-serif; font-size: 2.5px; fill: #424242; text-anchor: middle; }
+                                    .indicator-on { fill: #66bb6a; }
+                                    .indicator-warn { fill: #ffa726; }
+                                    .indicator-error { fill: #ef5350; }
+                                    .pcs-button { fill: #cfd8dc; stroke: #90a4ae; stroke-width: 0.3; rx:1; ry:1; cursor: pointer; }
+                                    .pcs-button:hover { fill: #b0bec5; }
+                                    .pcs-button-text { font-family: 'Segoe UI', Arial, sans-serif; font-size: 3px; fill: #263238; text-anchor: middle; dominant-baseline: central; pointer-events: none;}
+                                    .pcs-vent-slot { fill: #bdbdbd; }
+                                    .pcs-logo { font-family: 'Arial Black', Gadget, sans-serif; font-size: 6px; fill: #757575; text-anchor: start;}

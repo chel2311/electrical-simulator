@@ -1,0 +1,713 @@
+        :root {
+            --corporate-color: #005BAB;
+            --accent-color: #FF961C;
+            --light-blue: #E0EEF9;
+            --medium-blue: #4D8BC9;
+            --light-gray: #F5F5F5;
+            --medium-gray: #E0E0E0;
+            --dark-gray: #9E9E9E;
+            --darker-gray: #616161;
+        }
+        
+        body {
+            font-family: 'Meiryo', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-gray);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--corporate-color);
+            color: white;
+            padding: 15px 0;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            margin: 0;
+            padding: 0 20px;
+            font-size: 24px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel h2 {
+            color: var(--corporate-color);
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-blue);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="number"],
+        input[type="range"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        input[type="range"] {
+            padding: 0;
+        }
+        
+        .range-value {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+            margin-left: 10px;
+        }
+        
+        button {
+            background-color: var(--corporate-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: var(--medium-blue);
+            transform: scale(1.03);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .results-panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .results-panel h2 {
+            color: var(--corporate-color);
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-blue);
+        }
+        
+        .result-item {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .result-item strong {
+            font-weight: bold;
+        }
+        
+        .result-value {
+            font-weight: bold;
+            color: var(--corporate-color);
+        }
+        
+        .system-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+            position: relative;
+        }
+        
+        .diagram-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .component {
+            margin: 15px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .component-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--corporate-color);
+        }
+        
+        .component-svg {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .connection-line {
+            width: 3px;
+            background-color: var(--corporate-color);
+            position: absolute;
+            z-index: -1;
+        }
+        
+        .power-flow {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            animation: flow 3s linear infinite;
+        }
+
+        .efficiency-label {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--corporate-color);
+            border: 1px solid var(--light-blue);
+        }
+        
+        @keyframes flow {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100px); opacity: 0; }
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .chart-panel h3 {
+            color: var(--corporate-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        canvas {
+            width: 100% !important;
+            max-height: 300px;
+        }
+
+        /* ストリング設定パネル */
+        .string-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .string-config {
+            background-color: var(--light-blue);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .string-config h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: var(--corporate-color);
+        }
+        
+        /* ソーラーパネル表示用のスタイル */
+        .solar-panel-grid {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .solar-panel-string {
+            position: relative;
+            display: grid;
+            gap: 0.5rem;
+        }
+        
+        .string-connection {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #FFD700;
+            z-index: 1;
+        }
+        
+        .solar-panel-container {
+            position: relative;
+            z-index: 2;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 0.25rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* パワコン表示用のスタイル */
+        .pcs-container {
+            margin-top: 30px;
+            border: 1px dashed var(--medium-blue);
+            border-radius: 8px;
+            padding: 15px;
+            background-color: rgba(224, 238, 249, 0.3);
+        }
+
+        .pcs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .pcs-title {
+            color: var(--corporate-color);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .pcs-info {
+            font-size: 0.9rem;
+            color: var(--darker-gray);
+        }
+
+        .pcs-details {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .pcs-detail-item {
+            background-color: white;
+            padding: 8px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .pcs-detail-label {
+            font-size: 0.8rem;
+            color: var(--dark-gray);
+            margin-bottom: 2px;
+        }
+
+        .pcs-detail-value {
+            font-weight: bold;
+            color: var(--corporate-color);
+        }
+
+        /* マルチパワコン用のタブ */
+        .pcs-tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--medium-gray);
+            flex-wrap: wrap;
+        }
+
+        .pcs-tab {
+            padding: 8px 16px;
+            background-color: var(--light-gray);
+            border: 1px solid var(--medium-gray);
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            margin-right: 5px;
+            margin-bottom: -1px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .pcs-tab:hover {
+            background-color: var(--light-blue);
+        }
+
+        .pcs-tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+            font-weight: bold;
+            color: var(--corporate-color);
+        }
+
+        .pcs-tab-content {
+            display: none;
+        }
+
+        .pcs-tab-content.active {
+            display: block;
+        }
+
+        .string-assignment-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--light-blue);
+            border-radius: 8px;
+        }
+
+        .string-assignment-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--corporate-color);
+        }
+
+        .string-assignment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .string-assignment-item {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        /* 追加: 共通設定ボタン */
+        .common-settings-btn {
+            background-color: var(--light-blue);
+            color: var(--corporate-color);
+            border: 1px solid var(--medium-blue);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 15px;
+            transition: background-color 0.2s;
+        }
+        
+        .common-settings-btn:hover {
+            background-color: var(--medium-blue);
+            color: white;
+        }
+        
+        /* 追加: パワコン比較表 */
+        .pcs-comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .pcs-comparison-table th,
+        .pcs-comparison-table td {
+            border: 1px solid var(--medium-gray);
+            padding: 8px;
+            text-align: center;
+        }
+        
+        .pcs-comparison-table th {
+            background-color: var(--light-blue);
+            color: var(--corporate-color);
+            font-weight: bold;
+        }
+        
+        .pcs-comparison-table tr:nth-child(even) {
+            background-color: var(--light-gray);
+        }
+        
+        /* 最適化提案バッジ */
+        .optimization-badge {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+            vertical-align: middle;
+            font-weight: bold;
+        }
+        
+        /* PCS情報ラベルのスタイル修正 */
+        .pcs-connection-info {
+            position: absolute;
+            right: -120px; /* -150pxから-120pxに変更 */
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(63, 81, 181, 0.13);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            color: #3f51b5;
+            border: 1px solid #3f51b5;
+            width: 120px; /* 幅を固定して確実に表示されるようにする */
+            z-index: 10; /* 重なり順序を上位に */
+        }
+        
+        /* 昇圧回路の視覚化用スタイル */
+        .boost-circuit {
+            fill: none;
+            stroke-width: 1.5;
+        }
+        
+        .circuit-path {
+            stroke: #FF961C;
+        }
+        
+        .circuit-component {
+            stroke: #3f51b5;
+            fill: #E0EEF9;
+        }
+        
+        .circuit-label {
+            font-family: Arial, sans-serif;
+            font-size: 6px;
+            fill: #333;
+            text-anchor: middle;
+        }
+        
+        .current-flow {
+            fill: #FF961C;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+        
+        /* タブ切り替え用のスタイル */
+        .tab-navigation {
+            display: flex;
+            background-color: #e0eef9;
+            padding: 0 20px;
+            border-bottom: 2px solid var(--corporate-color);
+        }
+        
+        .tab-button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+        }
+        
+        .tab-button:hover {
+            background-color: rgba(0, 91, 171, 0.1);
+        }
+        
+        .tab-button.active {
+            background-color: var(--corporate-color);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 用語集のスタイル */
+        .glossary-container {
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .glossary-search {
+            margin-bottom: 20px;
+        }
+        
+        .glossary-search input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .glossary-category {
+            margin-bottom: 20px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: var(--light-blue);
+            cursor: pointer;
+        }
+        
+        .category-header h2 {
+            margin: 0;
+            color: var(--corporate-color);
+            font-size: 18px;
+        }
+        
+        .toggle-icon {
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+        
+        .category-content {
+            padding: 15px;
+            display: none;
+        }
+        
+        .glossary-category.active .category-content {
+            display: block;
+        }
+        
+        .glossary-category.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+        
+        .term-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--light-blue);
+        }
+        
+        .term-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .term-item h3 {
+            color: var(--corporate-color);
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .term-item p {
+            margin: 5px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .term-item ul {
+            padding-left: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+                                        .cable-sheath {
+                                          fill: #4a4a4a; /* ケーブル外装色 (濃いグレー) */
+                                          stroke: #303030;
+                                          stroke-width: 0.4;
+                                        }
+                                        .cable-core-red { fill: #d32f2f; /* 芯線 赤 (プラス線) */ }
+                                        .cable-core-blue { fill: #1976d2; /* 芯線 青 (マイナス線) */ }
+
+                                        /* コネクタ共通スタイル */
+                                        .connector-housing { stroke: #111111; stroke-width: 0.2; }
+                                        .connector-grip { }
+                                        .connector-lock-clip { fill: #555555; } /* ロッククリップ部分 */
+                                        .connector-insulator { }
+
+                                        /* オスコネクタ */
+                                        .connector-housing-male { fill: #222222; /* 黒 */ }
+                                        .connector-grip-male { fill: #333333; }
+                                        .connector-pin { fill: #b0bec5; /* 金属ピン: 明るい青灰色 */ }
+                                        .connector-insulator-male { fill: #1e1e1e; }
+
+                                        /* メスコネクタ */
+                                        .connector-housing-female { fill: #2a2a2a; /* やや明るい黒 */ }
+                                        .connector-grip-female { fill: #3a3a3a; }
+                                        .connector-socket-ring { fill: #b0bec5; stroke: #78909c; stroke-width: 0.2; } /* ソケットリング */
+                                        .connector-socket-hole { fill: #2a2a2a; } /* ソケットの穴 */
+                                        .connector-insulator-female { fill: #242424; }
+                                    .pcs-body { fill: #e0e0e0; stroke: #b0b0b0; stroke-width: 0.8; }
+                                    .pcs-front-panel { fill: #f0f0f0; stroke: #c0c0c0; stroke-width: 0.4; }
+                                    .pcs-display-screen { fill: ${pcsColor}; rx:1; ry:1; }
+                                    .pcs-display-text-main { font-family: 'Segoe UI', Arial, sans-serif; font-size: 5px; fill: #e8eaf6; text-anchor: middle; }
+                                    .pcs-display-text-sub { font-family: 'Segoe UI', Arial, sans-serif; font-size: 3.5px; fill: #c5cae9; text-anchor: middle; }
+                                    .pcs-indicator-label { font-family: 'Segoe UI', Arial, sans-serif; font-size: 2.5px; fill: #424242; text-anchor: middle; }
+                                    .indicator-on { fill: #66bb6a; }
+                                    .indicator-warn { fill: #ffa726; }
+                                    .indicator-error { fill: #ef5350; }
+                                    .pcs-button { fill: #cfd8dc; stroke: #90a4ae; stroke-width: 0.3; rx:1; ry:1; cursor: pointer; }
+                                    .pcs-button:hover { fill: #b0bec5; }
+                                    .pcs-button-text { font-family: 'Segoe UI', Arial, sans-serif; font-size: 3px; fill: #263238; text-anchor: middle; dominant-baseline: central; pointer-events: none;}
+                                    .pcs-vent-slot { fill: #bdbdbd; }
+                                    .pcs-logo { font-family: 'Arial Black', Gadget, sans-serif; font-size: 6px; fill: #757575; text-anchor: start;}
