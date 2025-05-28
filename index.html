@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>統合電気シミュレーター</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --primary-dark: #004590;
+            --primary-light: #E0EEF9;
+            --accent-color: #FF961C;
+            --secondary-color: #4D8BC9;
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --gray-light: #e0e0e0;
+            --gray-medium: #9e9e9e;
+            --gray-dark: #616161;
+            --red-color: #d32f2f;
+            --green-color: #388e3c;
+            --yellow-color: #ffc107;
+            --blue-light: #e3f2fd;
+            --blue-dark: #1e3a8a;
+            --wire-red: #ff0000;
+            --wire-white: #ffffff;
+            --wire-black: #000000;
+            --breaker-green: #5cb85c;
+            --mlb-color: #ffa366;
+            --seismic-color: #e91e63;
+            --elcb-color: #9c27b0;
+            --grid-tie-color: #2196f3;
+            --solar-color: #4caf50;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            
+            --border-radius: 8px;
+            --padding-standard: 16px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+
+            --transition-standard: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', 'Meiryo', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* ヘッダー */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 20px 0;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        /* タブナビゲーション */
+        .tab-nav {
+            background-color: white;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 60px;
+            z-index: 99;
+        }
+
+        .tab-nav-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+        }
+
+        .tab-nav button {
+            background: none;
+            border: none;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 15px;
+            color: var(--gray-medium);
+            transition: var(--transition-standard);
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .tab-nav button:hover {
+            background-color: rgba(0, 91, 171, 0.05);
+        }
+
+        .tab-nav button.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            background-color: rgba(0, 91, 171, 0.05);
+        }
+
+        /* メインコンテナ */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* タブコンテンツ */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 共通パネルスタイル */
+        .panel {
+            background: white;
+            padding: var(--padding-standard);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 20px;
+            transition: var(--transition-standard);
+        }
+
+        .panel:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .panel h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 20px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+        }
+
+        /* ボタンスタイル */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 14px;
+            transition: var(--transition-standard);
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--primary-color);
+        }
+
+        /* レスポンシブグリッド */
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @media (max-width: 768px) {
+            .grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* アニメーション効果 */
+        .current-path {
+            stroke-dasharray: 5;
+            animation: flow 0.5s linear infinite;
+        }
+
+        @keyframes flow {
+            to {
+                stroke-dashoffset: -10;
+            }
+        }
+
+        /* SVGコンテナ */
+        .svg-container {
+            width: 100%;
+            overflow: auto;
+            position: relative;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            background-color: #f8f8f8;
+            min-height: 400px;
+        }
+
+        /* ローディング表示 */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--gray-medium);
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(3, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* プレースホルダーメッセージ */
+        .placeholder-message {
+            text-align: center;
+            padding: 100px 20px;
+            color: var(--gray-medium);
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>統合電気シミュレーター</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="resetAll()">全てリセット</button>
+            </div>
+        </div>
+    </header>
+
+    <nav class="tab-nav">
+        <div class="tab-nav-content">
+            <button class="tab-btn active" onclick="showTab('circuit-rich')">
+                回路シミュレーター
+            </button>
+            <button class="tab-btn" onclick="showTab('circuit-config')">
+                分電盤回路構成シミュレーター
+            </button>
+            <button class="tab-btn" onclick="showTab('breaker')">
+                分電盤ブレーカー遮断シミュレーター
+            </button>
+            <button class="tab-btn" onclick="showTab('solar')">
+                太陽光発電システム
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 回路シミュレーター（リッチ版） -->
+        <div id="circuit-rich" class="tab-content active">
+            <iframe src="circuit-simulator-rich.html" 
+                    style="width: 100%; height: calc(100vh - 200px); border: none; border-radius: var(--border-radius);"
+                    onload="this.style.height = this.contentWindow.document.body.scrollHeight + 'px';">
+            </iframe>
+        </div>
+
+        <!-- 分電盤回路構成シミュレーター -->
+        <div id="circuit-config" class="tab-content">
+            <iframe src="distribution-board-simulator.html" 
+                    style="width: 100%; height: calc(100vh - 200px); border: none; border-radius: var(--border-radius);"
+                    onload="this.style.height = this.contentWindow.document.body.scrollHeight + 'px';">
+            </iframe>
+        </div>
+
+        <!-- 住宅分電盤ブレーカー遮断シミュレーター -->
+        <div id="breaker" class="tab-content">
+            <iframe src="residential-breaker-simulator.html" 
+                    style="width: 100%; height: calc(100vh - 200px); border: none; border-radius: var(--border-radius);"
+                    onload="this.style.height = this.contentWindow.document.body.scrollHeight + 'px';">
+            </iframe>
+        </div>
+
+        <!-- 太陽光発電システムシミュレーター -->
+        <div id="solar" class="tab-content">
+            <iframe src="solar-power-simulator.html" 
+                    style="width: 100%; height: calc(100vh - 200px); border: none; border-radius: var(--border-radius);"
+                    onload="this.style.height = this.contentWindow.document.body.scrollHeight + 'px';">
+            </iframe>
+        </div>
+    </div>
+
+    <script>
+        // タブ切り替え機能
+        function showTab(tabId) {
+            // すべてのタブコンテンツを非表示
+            const allTabs = document.querySelectorAll('.tab-content');
+            allTabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // すべてのタブボタンの非アクティブ化
+            const allButtons = document.querySelectorAll('.tab-btn');
+            allButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // 選択されたタブを表示
+            const selectedTab = document.getElementById(tabId);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+
+            // 対応するボタンをアクティブ化
+            const activeButton = Array.from(allButtons).find(btn => 
+                btn.textContent.includes(getTabName(tabId))
+            );
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+
+            // タブ切り替え時にコンテンツを動的に読み込む（将来の実装用）
+            loadTabContent(tabId);
+        }
+
+        // タブ名を取得
+        function getTabName(tabId) {
+            const tabNames = {
+                'breaker': '住宅分電盤ブレーカー',
+                'circuit-config': '分電盤回路構成',
+                'circuit-rich': '回路シミュレーター',
+                'solar': '太陽光発電システム'
+            };
+            return tabNames[tabId] || '';
+        }
+
+        // タブコンテンツを動的に読み込む（プレースホルダー）
+        function loadTabContent(tabId) {
+            console.log(`Loading content for: ${tabId}`);
+            // 実際の実装では、ここで各シミュレーターのコンテンツを
+            // 動的に読み込んで表示します
+        }
+
+        // 全リセット機能
+        function resetAll() {
+            if (confirm('すべてのシミュレーターをリセットしますか？')) {
+                // 各シミュレーターのリセット処理
+                console.log('Resetting all simulators...');
+                location.reload();
+            }
+        }
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初期タブを表示（回路シミュレーターを最初に表示）
+            showTab('circuit-rich');
+        });
+    </script>
+</body>
+</html>
