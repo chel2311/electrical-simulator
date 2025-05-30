@@ -1,0 +1,3744 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>太陽光発電システムシミュレーター</title>
+    <style>
+        :root {
+            --corporate-color: #005BAB;
+            --accent-color: #FF961C;
+            --light-blue: #E0EEF9;
+            --medium-blue: #4D8BC9;
+            --light-gray: #F5F5F5;
+            --medium-gray: #E0E0E0;
+            --dark-gray: #9E9E9E;
+            --darker-gray: #616161;
+        }
+        
+        body {
+            font-family: 'Meiryo', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-gray);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: min(1200px, 95vw);
+            margin: 0 auto;
+            padding: clamp(10px, 2vw, 20px);
+        }
+        
+        header {
+            background-color: var(--corporate-color);
+            color: white;
+            padding: 15px 0;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            margin: 0;
+            padding: 0 clamp(10px, 2vw, 20px);
+            font-size: clamp(18px, 3vw, 24px);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));
+            gap: clamp(15px, 2vw, 20px);
+        }
+        
+        @media (max-width: 992px) {
+            .container {
+                max-width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel h2 {
+            color: var(--corporate-color);
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-blue);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="number"],
+        input[type="range"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        input[type="range"] {
+            padding: 0;
+        }
+        
+        .range-value {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+            margin-left: 10px;
+        }
+        
+        button {
+            background-color: var(--corporate-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: var(--medium-blue);
+            transform: scale(1.03);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .results-panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .results-panel h2 {
+            color: var(--corporate-color);
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-blue);
+        }
+        
+        .result-item {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .result-item strong {
+            font-weight: bold;
+        }
+        
+        .result-value {
+            font-weight: bold;
+            color: var(--corporate-color);
+        }
+        
+        .system-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+            position: relative;
+        }
+        
+        .diagram-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .component {
+            margin: 15px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .component-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--corporate-color);
+        }
+        
+        .component-svg {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .connection-line {
+            width: 3px;
+            background-color: var(--corporate-color);
+            position: absolute;
+            z-index: -1;
+        }
+        
+        .power-flow {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            animation: flow 3s linear infinite;
+        }
+
+        .efficiency-label {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--corporate-color);
+            border: 1px solid var(--light-blue);
+        }
+        
+        @keyframes flow {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100px); opacity: 0; }
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .chart-panel h3 {
+            color: var(--corporate-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        canvas {
+            width: 100% !important;
+            max-height: 300px;
+        }
+
+        /* ストリング設定パネル */
+        .string-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .string-config {
+            background-color: var(--light-blue);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .string-config h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: var(--corporate-color);
+        }
+        
+        /* ソーラーパネル表示用のスタイル */
+        .solar-panel-grid {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .solar-panel-string {
+            position: relative;
+            display: grid;
+            gap: 0.5rem;
+        }
+        
+        .string-connection {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #FFD700;
+            z-index: 1;
+        }
+        
+        .solar-panel-container {
+            position: relative;
+            z-index: 2;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 0.25rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* パワコン表示用のスタイル */
+        .pcs-container {
+            margin-top: 30px;
+            border: 1px dashed var(--medium-blue);
+            border-radius: 8px;
+            padding: 15px;
+            background-color: rgba(224, 238, 249, 0.3);
+        }
+
+        .pcs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .pcs-title {
+            color: var(--corporate-color);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .pcs-info {
+            font-size: 0.9rem;
+            color: var(--darker-gray);
+        }
+
+        .pcs-details {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .pcs-detail-item {
+            background-color: white;
+            padding: 8px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .pcs-detail-label {
+            font-size: 0.8rem;
+            color: var(--dark-gray);
+            margin-bottom: 2px;
+        }
+
+        .pcs-detail-value {
+            font-weight: bold;
+            color: var(--corporate-color);
+        }
+
+        /* マルチパワコン用のタブ */
+        .pcs-tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--medium-gray);
+            flex-wrap: wrap;
+        }
+
+        .pcs-tab {
+            padding: 8px 16px;
+            background-color: var(--light-gray);
+            border: 1px solid var(--medium-gray);
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            margin-right: 5px;
+            margin-bottom: -1px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .pcs-tab:hover {
+            background-color: var(--light-blue);
+        }
+
+        .pcs-tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+            font-weight: bold;
+            color: var(--corporate-color);
+        }
+
+        .pcs-tab-content {
+            display: none;
+        }
+
+        .pcs-tab-content.active {
+            display: block;
+        }
+
+        .string-assignment-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--light-blue);
+            border-radius: 8px;
+        }
+
+        .string-assignment-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--corporate-color);
+        }
+
+        .string-assignment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .string-assignment-item {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        /* 追加: 共通設定ボタン */
+        .common-settings-btn {
+            background-color: var(--light-blue);
+            color: var(--corporate-color);
+            border: 1px solid var(--medium-blue);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 15px;
+            transition: background-color 0.2s;
+        }
+        
+        .common-settings-btn:hover {
+            background-color: var(--medium-blue);
+            color: white;
+        }
+        
+        /* 追加: パワコン比較表 */
+        .pcs-comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .pcs-comparison-table th,
+        .pcs-comparison-table td {
+            border: 1px solid var(--medium-gray);
+            padding: 8px;
+            text-align: center;
+        }
+        
+        .pcs-comparison-table th {
+            background-color: var(--light-blue);
+            color: var(--corporate-color);
+            font-weight: bold;
+        }
+        
+        .pcs-comparison-table tr:nth-child(even) {
+            background-color: var(--light-gray);
+        }
+        
+        /* 最適化提案バッジ */
+        .optimization-badge {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+            vertical-align: middle;
+            font-weight: bold;
+        }
+        
+        /* PCS情報ラベルのスタイル修正 */
+        .pcs-connection-info {
+            position: absolute;
+            right: -120px; /* -150pxから-120pxに変更 */
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(63, 81, 181, 0.13);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            color: #3f51b5;
+            border: 1px solid #3f51b5;
+            width: 120px; /* 幅を固定して確実に表示されるようにする */
+            z-index: 10; /* 重なり順序を上位に */
+        }
+        
+        /* 昇圧回路の視覚化用スタイル */
+        .boost-circuit {
+            fill: none;
+            stroke-width: 1.5;
+        }
+        
+        .circuit-path {
+            stroke: #FF961C;
+        }
+        
+        .circuit-component {
+            stroke: #3f51b5;
+            fill: #E0EEF9;
+        }
+        
+        .circuit-label {
+            font-family: Arial, sans-serif;
+            font-size: 6px;
+            fill: #333;
+            text-anchor: middle;
+        }
+        
+        .current-flow {
+            fill: #FF961C;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+        
+        /* タブ切り替え用のスタイル */
+        .tab-navigation {
+            display: flex;
+            background-color: var(--corporate-color);
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+        }
+        
+        .tab-button {
+            padding: 12px 24px;
+            margin-right: 5px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid transparent;color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 8px 8px 0 0;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s ease; position: relative;
+        }
+        
+        .tab-button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: white; transform: translateY(-2px);
+        }
+        
+        .tab-button.active {
+            background-color:white;
+            color: var(--corporate-color);
+            font-weight: bold;
+            border: 1px solid var(--medium-blue);
+            border-bottom: 1px solid white;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(0); 
+        }
+        
+        .tab-button.active::after {
+            content: ''; position: absolute;
+            bottom: -3px;
+            left: 0; right: 0;
+            height: 3px;
+            background-color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 用語集のスタイル */
+        .glossary-container {
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .glossary-search {
+            margin-bottom: 20px;
+        }
+        
+        .glossary-search input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .glossary-category {
+            margin-bottom: 20px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: var(--light-blue);
+            cursor: pointer;
+        }
+        
+        .category-header h2 {
+            margin: 0;
+            color: var(--corporate-color);
+            font-size: 18px;
+        }
+        
+        .toggle-icon {
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+        
+        .category-content {
+            padding: 15px;
+            display: none;
+        }
+        
+        .glossary-category.active .category-content {
+            display: block;
+        }
+        
+        .glossary-category.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+        
+        .term-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--light-blue);
+        }
+        
+        .term-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .term-item h3 {
+            color: var(--corporate-color);
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .term-item p {
+            margin: 5px 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .term-item ul {
+            padding-left: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 地域情報パネルのスタイル */
+        .location-info-panel {
+            background-color: #fff3e0;
+            border: 1px solid #ffcc80;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .location-info-panel strong {
+            color: var(--corporate-color);
+        }
+        
+        /* 日照データタブのスタイル */
+        .sunshine-region-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .region-tab {
+            padding: 8px 16px;
+            background-color: var(--light-gray);
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .region-tab:hover {
+            background-color: var(--light-blue);
+        }
+
+        .region-tab.active {
+            background-color: var(--corporate-color);
+            color: white;
+        }
+
+        .sunshine-controls {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sunshine-table-container {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+
+        .sunshine-data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+
+        .sunshine-data-table th,
+        .sunshine-data-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+
+        .sunshine-data-table th {
+            background-color: var(--light-blue);
+            font-weight: bold;
+            color: var(--corporate-color);
+            position: sticky;
+            top: 0;
+        }
+
+        .sunshine-data-table tr:hover {
+            background-color: var(--light-gray);
+        }
+
+        .sunshine-bar {
+            height: 20px;
+            background-color: var(--accent-color);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .sunshine-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background-color: white;
+            border: 1px solid var(--medium-gray);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            color: var(--corporate-color);
+            margin: 0 0 10px 0;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>太陽光発電システムシミュレーター</h1>
+        <div class="tab-navigation">
+            <button class="tab-button active" data-tab="simulator">シミュレーター</button>
+            <button class="tab-button" data-tab="glossary">用語と説明</button>
+            <button class="tab-button" data-tab="sunshine">都道府県別日照データ</button>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- シミュレータータブコンテンツ -->
+        <div class="tab-content active" id="simulator-content">
+            <div class="grid">
+                <div>
+                    <!-- 左側のパネル：設定 -->
+                    <div class="panel">
+                        <h2>設置地域情報</h2>
+                        <div class="form-group">
+                            <label for="prefecture">都道府県: <span class="tooltip">ⓘ<span class="tooltiptext">設置場所の都道府県を選択してください。地域により日照時間が異なります。</span></span></label>
+                            <select id="prefecture">
+                                <option value="">都道府県を選択してください</option>
+                                <option value="北海道">北海道</option>
+                                <option value="青森県">青森県</option>
+                                <option value="岩手県">岩手県</option>
+                                <option value="宮城県">宮城県</option>
+                                <option value="秋田県">秋田県</option>
+                                <option value="山形県">山形県</option>
+                                <option value="福島県">福島県</option>
+                                <option value="茨城県">茨城県</option>
+                                <option value="栃木県">栃木県</option>
+                                <option value="群馬県">群馬県</option>
+                                <option value="埼玉県">埼玉県</option>
+                                <option value="千葉県">千葉県</option>
+                                <option value="東京都">東京都</option>
+                                <option value="神奈川県">神奈川県</option>
+                                <option value="新潟県">新潟県</option>
+                                <option value="富山県">富山県</option>
+                                <option value="石川県">石川県</option>
+                                <option value="福井県">福井県</option>
+                                <option value="山梨県">山梨県</option>
+                                <option value="長野県">長野県</option>
+                                <option value="岐阜県">岐阜県</option>
+                                <option value="静岡県">静岡県</option>
+                                <option value="愛知県">愛知県</option>
+                                <option value="三重県">三重県</option>
+                                <option value="滋賀県">滋賀県</option>
+                                <option value="京都府">京都府</option>
+                                <option value="大阪府">大阪府</option>
+                                <option value="兵庫県">兵庫県</option>
+                                <option value="奈良県">奈良県</option>
+                                <option value="和歌山県">和歌山県</option>
+                                <option value="鳥取県">鳥取県</option>
+                                <option value="島根県">島根県</option>
+                                <option value="岡山県">岡山県</option>
+                                <option value="広島県">広島県</option>
+                                <option value="山口県">山口県</option>
+                                <option value="徳島県">徳島県</option>
+                                <option value="香川県">香川県</option>
+                                <option value="愛媛県">愛媛県</option>
+                                <option value="高知県">高知県</option>
+                                <option value="福岡県">福岡県</option>
+                                <option value="佐賀県">佐賀県</option>
+                                <option value="長崎県">長崎県</option>
+                                <option value="熊本県">熊本県</option>
+                                <option value="大分県">大分県</option>
+                                <option value="宮崎県">宮崎県</option>
+                                <option value="鹿児島県">鹿児島県</option>
+                                <option value="沖縄県">沖縄県</option>
+                            </select>
+                        </div>
+                        
+                        <div id="locationInfoPanel" class="location-info-panel" style="display:none;">
+                            <strong>地域情報:</strong><br>
+                            年間日照時間: <span id="annualSunshineHours">-</span> 時間<br>
+                            全国平均との比: <span id="sunshineRatio">-</span>%<br>
+                            <small>※この地域の日照特性が発電量計算に反映されます</small>
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <h2>モジュール・ストリング設定</h2>
+                        <div class="form-group">
+                            <label for="panelPower">パネル定格出力 (W): <span class="tooltip">ⓘ<span class="tooltiptext">単一パネルの最大発電能力（Watt）</span></span></label>
+                            <input type="number" id="panelPower" min="100" max="1000" value="330">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="panelEfficiency">パネル変換効率 (%): <span class="tooltip">ⓘ<span class="tooltiptext">太陽光をどれだけ電気エネルギーに変換できるか</span></span></label>
+                            <input type="number" id="panelEfficiency" min="15" max="25" step="0.1" value="19.5">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="panelCount">パネル枚数: <span class="tooltip">ⓘ<span class="tooltiptext">設置するパネルの総枚数</span></span></label>
+                            <input type="number" id="panelCount" min="1" max="100" value="12">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="stringCount">ストリング数: <span class="tooltip">ⓘ<span class="tooltiptext">パネルの直列接続のグループ数</span></span></label>
+                            <input type="number" id="stringCount" min="1" max="10" value="3">
+                        </div>
+                        
+                        <div id="stringConfigPanel" class="string-panel">
+                            <!-- ストリング構成はJSで動的に生成 -->
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <h2>パワーコンディショナー設定</h2>
+                        
+                        <!-- 新規追加：パワコン台数設定 -->
+                        <div class="form-group">
+                            <label for="pcsCount">パワコン台数: <span class="tooltip">ⓘ<span class="tooltiptext">設置するパワーコンディショナーの台数</span></span></label>
+                            <input type="number" id="pcsCount" min="1" max="10" value="1">
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #666;">※ 容量が大きい場合は複数台設置することで効率的に発電できます</p>
+                        </div>
+                        
+                        <!-- 追加: パワコン設定タブ -->
+                        <div id="pcsTabsContainer">
+                            <div class="pcs-tabs" id="pcsTabs">
+                                <div class="pcs-tab active" data-pcs-index="0">パワコン 1</div>
+                            </div>
+                            
+                            <div id="pcsTabContents">
+                                <div class="pcs-tab-content active" data-pcs-index="0">
+                                    <div class="form-group">
+                                        <label for="pcsType-0">パワコンタイプ: <span class="tooltip">ⓘ<span class="tooltiptext">パワーコンディショナーの種類によって特性が異なります</span></span></label>
+                                        <select id="pcsType-0" class="pcs-type-select" data-pcs-index="0">
+                                            <option value="standard">標準型(ストリング型)</option>
+                                            <option value="multi-string">マルチストリング型</option>
+                                            <option value="hybrid">ハイブリッド型</option>
+                                            <option value="micro">マイクロインバーター型</option>
+                                        </select>
+                                        <p id="pcsTypeDescription-0" class="pcs-type-description" style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #666;">最も一般的なタイプ。1つのMPPT回路で全ストリングを制御</p>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="pcsRatedPower-0">定格出力 (kW): <span class="tooltip">ⓘ<span class="tooltiptext">パワコンが出力できる最大電力</span></span></label>
+                                        <input type="number" id="pcsRatedPower-0" class="pcs-rated-power" data-pcs-index="0" min="1" max="50" step="0.1" value="5.5">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="pcsEfficiency-0">変換効率 (%): <span class="tooltip">ⓘ<span class="tooltiptext">DCからACへの変換効率</span></span></label>
+                                        <input type="number" id="pcsEfficiency-0" class="pcs-efficiency" data-pcs-index="0" min="80" max="99" step="0.1" value="95.0">
+                                    </div>
+                                    
+                                    <div id="mpptCountContainer-0" class="mppt-count-container form-group" style="display: none;">
+                                        <label for="mpptCount-0">MPPT回路数: <span class="tooltip">ⓘ<span class="tooltiptext">Maximum Power Point Tracking回路の数。各ストリングを個別に最適制御できます。1台あたり最大4系統まで接続可能</span></span></label>
+                                        <input type="number" id="mpptCount-0" class="mppt-count" data-pcs-index="0" min="1" max="4" value="1">
+                                        <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #666;">※ MPPT回路数はストリング数以下である必要があります。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 追加: 共通設定ボタン (複数台の場合) -->
+                        <button id="applyCommonSettingsBtn" class="common-settings-btn" style="display: none;">すべてのパワコンに共通設定を適用</button>
+                        
+                        <!-- 複数パワコン時のストリング割り当て -->
+                        <div id="stringAssignmentPanel" class="string-assignment-panel" style="display: none;">
+                            <div class="string-assignment-title">ストリングの割り当て</div>
+                            <div id="stringAssignmentGrid" class="string-assignment-grid">
+                                <!-- 動的に生成 -->
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="useBooster">昇圧ユニット: <span class="tooltip">ⓘ<span class="tooltiptext">DC-DCコンバータで電圧を昇圧。低電圧システムで効率向上</span></span></label>
+                            <div style="display: flex; align-items: center;">
+                                <input type="checkbox" id="useBooster">
+                                <span style="margin-left: 0.5rem;">使用する（DC-DCコンバータ）</span>
+                            </div>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #666;">※ 低電圧システムで効率向上のために使用</p>
+                            
+                            <!-- 追加：昇圧ストリング選択パネル -->
+                            <div id="boosterStringSelectionPanel" style="margin-top: 10px; padding: 10px; background-color: #f0f7ff; border-radius: 5px; display: none;">
+                                <div style="font-weight: bold; margin-bottom: 8px; color: #005BAB;">昇圧するストリングを選択：</div>
+                                <div id="boosterStringSelection" class="string-panel">
+                                    <!-- チェックボックスはJSで動的に生成 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <h2>環境条件</h2>
+                        <div class="form-group">
+                            <label for="weatherCondition">天候条件: <span class="tooltip">ⓘ<span class="tooltiptext">日射量に影響する天候状態</span></span></label>
+                            <select id="weatherCondition">
+                                <option value="晴れ">晴れ</option>
+                                <option value="薄曇り">薄曇り</option>
+                                <option value="曇り">曇り</option>
+                                <option value="雨">雨</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="temperature">周囲温度 (℃): <span class="tooltip">ⓘ<span class="tooltiptext">パネル周辺の気温。高温でパネル効率が低下</span></span></label>
+                            <input type="range" id="temperature" min="-10" max="50" value="25" step="1">
+                            <span id="temperatureValue" class="range-value">25℃</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="tiltAngle">パネル傾斜角 (°): <span class="tooltip">ⓘ<span class="tooltiptext">地面に対するパネルの角度。30°前後が一般的に最適</span></span></label>
+                            <input type="range" id="tiltAngle" min="0" max="90" value="30" step="1">
+                            <span id="tiltAngleValue" class="range-value">30°</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="orientationAngle">方位角 (°): <span class="tooltip">ⓘ<span class="tooltiptext">真南を0°として、東がマイナス、西がプラス</span></span></label>
+                            <input type="range" id="orientationAngle" min="-90" max="90" value="0" step="1">
+                            <span id="orientationAngleValue" class="range-value">0° (真南)</span>
+                        </div>
+                    </div>
+                    
+                    <button id="calculateBtn">シミュレーション実行</button>
+                </div>
+                
+                <div>
+                    <!-- 右側のパネル：結果 -->
+                    <div class="panel results-panel">
+                        <h2>シミュレーション結果</h2>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div>
+                                <h3 style="color: #005BAB; font-size: 1.1rem; margin-bottom: 0.5rem;">システム情報</h3>
+                                <div class="result-item">
+                                    <strong>システム容量:</strong>
+                                    <span id="systemCapacity" class="result-value">-</span>
+                                </div>
+                                <div class="result-item">
+                                    <strong>モジュール枚数:</strong>
+                                    <span id="modulesCount" class="result-value">-</span>
+                                </div>
+                                <div class="result-item">
+                                    <strong>ストリング数:</strong>
+                                    <span id="stringsCount" class="result-value">-</span>
+                                </div>
+                                <div class="result-item">
+                                    <strong>パワコン台数:</strong>
+                                    <span id="powerConditionerCount" class="result-value">-</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 style="color: #005BAB; font-size: 1.1rem; margin-bottom: 0.5rem;">発電量予測</h3>
+                                <div class="result-item">
+                                    <strong>発電電力（瞬時）:</strong>
+                                    <span id="instantPower" class="result-value">-</span>
+                                </div>
+                                <div class="result-item">
+                                    <strong>日間発電量（推定）:</strong>
+                                    <span id="dailyGeneration" class="result-value">-</span>
+                                </div>
+                                <div class="result-item">
+                                    <strong>月間発電量（推定）:</strong>
+                                    <span id="monthlyGeneration" class="result-value">-</span>
+                                </div>
+                                <div class="result-item">
+                                    <strong>年間発電量（推定）:</strong>
+                                    <span id="yearlyGeneration" class="result-value">-</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 style="color: #005BAB; font-size: 1.1rem; margin-bottom: 0.5rem;">各種効率係数</h3>
+                                <div class="result-item">
+                                    <strong>地域日照係数:</strong>
+                                    <span id="regionalSunshineFactor" class="result-value">-</span>
+                                </div>
+                                <div class="result-item">
+                                    <strong>天候の影響:</strong>
+                                    <span id="weatherFactor" class="result-value">-</span>
+                                </div>
+                                <div class="result-item">
+                                    <strong>傾斜・方位角の影響:</strong>
+                                    <span id="orientationFactor" class="result-value">-</span>
+                                </div>
+                                <div class="result-item">
+                                    <strong>温度の影響:</strong>
+                                    <span id="temperatureFactor" class="result-value">-</span>
+                                </div>
+                                <div class="result-item">
+                                    <strong>システム効率:</strong>
+                                    <span id="totalEfficiency" class="result-value">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- パワコン比較表 (複数台の場合) -->
+                        <div id="pcsComparisonContainer" style="display: none; margin-top: 20px;">
+                            <h3 style="color: #005BAB; font-size: 1.1rem; margin-bottom: 0.5rem;">パワーコンディショナー比較</h3>
+                            <table class="pcs-comparison-table" id="pcsComparisonTable">
+                                <thead>
+                                    <tr>
+                                        <th>パワコン</th>
+                                        <th>タイプ</th>
+                                        <th>定格出力</th>
+                                        <th>変換効率</th>
+                                        <th>接続ストリング</th>
+                                        <th>発電量(kWh/日)</th>
+                                        <th>使用率</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pcsComparisonBody">
+                                    <!-- 動的に生成 -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- グラフ表示部分 -->
+                        <div class="charts-container">
+                            <div class="chart-panel">
+                                <h3>月別発電量予測</h3>
+                                <canvas id="monthlyChart"></canvas>
+                            </div>
+                            <div class="chart-panel">
+                                <h3>効率ロス分析</h3>
+                                <canvas id="lossChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- システム構成図 -->
+                    <div class="panel">
+                        <h2>システム構成図</h2>
+                        
+                        <!-- ①ソーラーパネル -->
+                        <div id="solarPanelVisualization" class="system-diagram">
+                            <h3 style="color: #005BAB; font-size: 1.1rem; margin-bottom: 1rem;">ソーラーパネル配置</h3>
+                            <div id="panelGridContainer" class="solar-panel-grid">
+                                <!-- パネル配置はJSで動的に生成 -->
+                            </div>
+                        </div>
+                        
+                        <!-- ②アレイケーブル -->
+                        <div id="arrayCableContainer" class="system-diagram" style="margin-top: 30px;">
+                            <div class="diagram-container" style="text-align: center;">
+                                <div class="component">
+                                    <svg width="320" height="80" viewBox="0 0 160 40" xmlns="http://www.w3.org/2000/svg">
+                                      <style>
+                                        .cable-sheath {
+                                          fill: #4a4a4a; /* ケーブル外装色 (濃いグレー) */
+                                          stroke: #303030;
+                                          stroke-width: 0.4;
+                                        }
+                                        .cable-core-red { fill: #d32f2f; /* 芯線 赤 (プラス線) */ }
+                                        .cable-core-blue { fill: #1976d2; /* 芯線 青 (マイナス線) */ }
+
+                                        /* コネクタ共通スタイル */
+                                        .connector-housing { stroke: #111111; stroke-width: 0.2; }
+                                        .connector-grip { }
+                                        .connector-lock-clip { fill: #555555; } /* ロッククリップ部分 */
+                                        .connector-insulator { }
+
+                                        /* オスコネクタ */
+                                        .connector-housing-male { fill: #222222; /* 黒 */ }
+                                        .connector-grip-male { fill: #333333; }
+                                        .connector-pin { fill: #b0bec5; /* 金属ピン: 明るい青灰色 */ }
+                                        .connector-insulator-male { fill: #1e1e1e; }
+
+                                        /* メスコネクタ */
+                                        .connector-housing-female { fill: #2a2a2a; /* やや明るい黒 */ }
+                                        .connector-grip-female { fill: #3a3a3a; }
+                                        .connector-socket-ring { fill: #b0bec5; stroke: #78909c; stroke-width: 0.2; } /* ソケットリング */
+                                        .connector-socket-hole { fill: #2a2a2a; } /* ソケットの穴 */
+                                        .connector-insulator-female { fill: #242424; }
+                                      </style>
+
+                                      <defs>
+                                        <!-- オスコネクタ (MC4風、簡略版) - ケーブル接続側が x=0, y=0 -->
+                                        <g id="mc4-male-connector">
+                                          <rect class="connector-grip-male connector-grip" x="-6" y="-3.5" width="6" height="7" rx="1" ry="1"/>
+                                          <rect class="connector-housing-male connector-housing" x="0" y="-4.5" width="10" height="9" rx="1.5" ry="1.5"/>
+                                          <!-- ピン部分 -->
+                                          <rect class="connector-insulator-male connector-insulator" x="9.5" y="-2.5" width="4.5" height="5" rx="0.8" ry="0.8"/>
+                                          <circle class="connector-pin" cx="13.5" cy="0" r="0.8"/>
+                                          <!-- ロック用クリップの溝 (簡易表現) -->
+                                          <rect class="connector-lock-clip" x="2" y="-5.2" width="6" height="0.8" rx="0.3"/>
+                                          <rect class="connector-lock-clip" x="2" y="4.4" width="6" height="0.8" rx="0.3"/>
+                                        </g>
+
+                                        <!-- メスコネクタ (MC4風、簡略版) - ケーブル接続側が x=0, y=0 -->
+                                        <g id="mc4-female-connector">
+                                          <rect class="connector-grip-female connector-grip" x="-7" y="-4.5" width="7" height="9" rx="1" ry="1"/>
+                                          <rect class="connector-housing-female connector-housing" x="0" y="-5.5" width="12" height="11" rx="1.5" ry="1.5"/>
+                                          <!-- ソケット部分 -->
+                                          <rect class="connector-insulator-female connector-insulator" x="11.5" y="-3.5" width="4" height="7" rx="0.8" ry="0.8"/>
+                                          <circle class="connector-socket-ring" cx="12.5" cy="0" r="1.6"/>
+                                          <circle class="connector-socket-hole" cx="12.5" cy="0" r="1.0"/>
+                                          <!-- ロック用クリップ (簡易表現) -->
+                                          <rect class="connector-lock-clip" x="3" y="-2" width="1.2" height="4" rx="0.3"/>
+                                          <rect class="connector-lock-clip" x="7.8" y="-2" width="1.2" height="4" rx="0.3"/>
+                                        </g>
+                                      </defs>
+
+                                      <!-- ケーブルアセンブリ -->
+                                      <g id="cable-assembly">
+                                        <rect class="cable-sheath"
+                                              x="20"
+                                              y="17"
+                                              width="119"
+                                              height="6"
+                                              rx="1.5" ry="1.5"/>
+
+                                        <!-- 芯線 (2本) -->
+                                        <rect class="cable-core-red"
+                                              x="20.5"
+                                              y="18"
+                                              width="118"
+                                              height="1.2"
+                                              rx="0.5" ry="0.5"/>
+                                        <rect class="cable-core-blue"
+                                              x="20.5"
+                                              y="19.8"
+                                              width="118"
+                                              height="1.2"
+                                              rx="0.5" ry="0.5"/>
+
+                                        <!-- 左側コネクタ (オス) - ケーブルの左端 (x=20) に接続, Y中心(y=20)に配置 -->
+                                        <use href="#mc4-male-connector" x="20" y="20"/>
+
+                                        <!-- 右側コネクタ (メス) - ケーブルの右端 (x=139) に接続, Y中心(y=20)に配置, 左右反転 -->
+                                        <use href="#mc4-female-connector" x="139" y="20" transform="scale(-1, 1)"/>
+                                      </g>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ③昇圧ユニット -->
+                        <div id="boosterUnitContainer" class="system-diagram" style="margin-top: 30px; display: none;">
+                            <h3 style="color: #005BAB; font-size: 1.1rem; margin-bottom: 1rem;">昇圧ユニット</h3>
+                            <div class="diagram-container" style="text-align: center;">
+                                <div class="component">
+                                    <svg width="320" height="240" viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg">
+                                      <defs>
+                                        <!-- 本体用の微妙なグラデーション -->
+                                        <linearGradient id="unitBodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                          <stop offset="0%" style="stop-color:#E5E5E5; stop-opacity:1" />
+                                          <stop offset="100%" style="stop-color:#D0D0D0; stop-opacity:1" />
+                                        </linearGradient>
+                                        <!-- LEDのハイライト用 -->
+                                        <radialGradient id="ledHighlight" cx="0.3" cy="0.3" r="0.7">
+                                          <stop offset="0%" style="stop-color:white; stop-opacity:0.8;" />
+                                          <stop offset="100%" style="stop-color:transparent; stop-opacity:0.1;" />
+                                        </radialGradient>
+                                        <!-- 昇圧回路のグラデーション -->
+                                        <linearGradient id="circuitGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                          <stop offset="0%" style="stop-color:#FF961C; stop-opacity:1" />
+                                          <stop offset="100%" style="stop-color:#FF5722; stop-opacity:1" />
+                                        </linearGradient>
+                                      </defs>
+
+                                      <!-- 本体ケーシング -->
+                                      <rect x="110" y="5" width="100" height="170" rx="3" ry="3" fill="url(#unitBodyGradient)" stroke="#A0A0A0" stroke-width="1"/>
+
+                                      <!-- ロゴ・型番エリア -->
+                                      <rect x="115" y="15" width="90" height="35" fill="#F0F0F0" rx="2" ry="2" stroke="#C0C0C0" stroke-width="0.5"/>
+                                      <text x="120" y="30" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#333">OMRON</text>
+                                      <text x="120" y="43" font-family="Arial, sans-serif" font-size="7" fill="#555">MODEL SU-1000</text>
+
+                                      <!-- LEDインジケーターエリア -->
+                                      <rect x="115" y="55" width="90" height="60" fill="#E8E8E8" rx="2" ry="2" stroke="#C8C8C8" stroke-width="0.5"/>
+
+                                      <!-- POWER LED -->
+                                      <circle cx="130" cy="70" r="4" fill="#4CAF50"/> <!-- 緑 -->
+                                      <circle cx="130" cy="70" r="4" fill="url(#ledHighlight)"/>
+                                      <text x="140" y="73" font-family="Arial, sans-serif" font-size="7" fill="#333">POWER</text>
+
+                                      <!-- ALARM LED -->
+                                      <circle cx="130" cy="85" r="4" fill="#F44336"/> <!-- 赤 -->
+                                      <circle cx="130" cy="85" r="4" fill="url(#ledHighlight)"/>
+                                      <text x="140" y="88" font-family="Arial, sans-serif" font-size="7" fill="#333">ALARM</text>
+
+                                      <!-- OUTPUT LED -->
+                                      <circle cx="130" cy="100" r="4" fill="#FF9800"/> <!-- オレンジ -->
+                                      <circle cx="130" cy="100" r="4" fill="url(#ledHighlight)"/>
+                                      <text x="140" y="103" font-family="Arial, sans-serif" font-size="7" fill="#333">OUTPUT</text>
+
+                                      <!-- 端子台カバー (下部) -->
+                                      <rect x="115" y="120" width="90" height="45" fill="#4A4A4A" rx="2" ry="2" stroke="#333333" stroke-width="1"/>
+                                      <!-- 端子台カバーのネジ (装飾) -->
+                                      <circle cx="125" cy="128" r="1.5" fill="#777"/>
+                                      <circle cx="195" cy="128" r="1.5" fill="#777"/>
+                                      <circle cx="125" cy="157" r="1.5" fill="#777"/>
+                                      <circle cx="195" cy="157" r="1.5" fill="#777"/>
+                                      <!-- 端子番号のラベル風 (簡略) -->
+                                      <rect x="122" y="135" width="76" height="18" fill="#5A5A5A" rx="1" ry="1"/>
+                                      <text x="125" y="147" font-family="monospace" font-size="7" fill="#C0C0C0">L1 L2 PE +V -V SG</text>
+
+                                      <!-- 元画像の底面に見える黒い部分 -->
+                                      <rect x="110" y="175" width="100" height="8" fill="#303030" stroke="#1A1A1A" stroke-width="0.5"/>
+                                      
+                                      <!-- 昇圧回路図を追加 -->
+                                      <g id="boost-circuit" transform="translate(10, 190)">
+                                        <text x="150" y="-5" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#333">DC-DC昇圧回路</text>
+                                        
+                                        <!-- 入力端 -->
+                                        <text x="20" y="25" font-family="Arial, sans-serif" font-size="8" fill="#333">入力</text>
+                                        <text x="20" y="35" font-family="Arial, sans-serif" font-size="8" fill="#333" id="circuit-input-voltage">150V</text>
+                                        
+                                        <!-- DC入力ライン -->
+                                        <line x1="40" y1="30" x2="80" y2="30" class="boost-circuit circuit-path" />
+                                        
+                                        <!-- インダクタ -->
+                                        <path d="M80,30 C85,30 90,15 95,30 C100,45 105,15 110,30" class="boost-circuit circuit-component" />
+                                        <text x="95" y="10" class="circuit-label">インダクタ</text>
+                                        
+                                        <!-- 中間ライン -->
+                                        <line x1="110" y1="30" x2="140" y2="30" class="boost-circuit circuit-path" />
+                                        
+                                        <!-- ダイオード -->
+                                        <path d="M140,30 L160,30 M150,20 L150,40 M155,30 L165,20 L165,40 Z" class="boost-circuit circuit-component" />
+                                        <text x="150" y="10" class="circuit-label">ダイオード</text>
+                                        
+                                        <!-- スイッチング素子（MOSFET表現） -->
+                                        <rect x="140" y="40" width="20" height="15" rx="2" class="boost-circuit circuit-component" />
+                                        <text x="150" y="65" class="circuit-label">MOSFET</text>
+                                        <line x1="150" y1="40" x2="150" y2="30" class="boost-circuit circuit-component" />
+                                        <line x1="150" y1="55" x2="150" y2="60" class="boost-circuit circuit-path" />
+                                        <line x1="140" y1="60" x2="160" y2="60" class="boost-circuit circuit-path" />
+                                        
+                                        <!-- GND -->
+                                        <path d="M145,60 L155,60 M147,62 L153,62 M149,64 L151,64" class="boost-circuit circuit-component" />
+                                        
+                                        <!-- コンデンサ -->
+                                        <path d="M165,30 L180,30 M180,20 L180,40" class="boost-circuit circuit-path" />
+                                        <path d="M180,25 L180,35 M190,25 L190,35" class="boost-circuit circuit-component" />
+                                        <line x1="190" y1="30" x2="200" y2="30" class="boost-circuit circuit-path" />
+                                        <text x="185" y="10" class="circuit-label">コンデンサ</text>
+                                        
+                                        <!-- 制御回路 -->
+                                        <rect x="120" y="70" width="60" height="20" rx="2" class="boost-circuit circuit-component" />
+                                        <text x="150" y="84" class="circuit-label">制御回路</text>
+                                        <line x1="150" y1="70" x2="150" y2="60" class="boost-circuit circuit-path" stroke-dasharray="2,1" />
+                                        
+                                        <!-- 出力端 -->
+                                        <text x="220" y="25" font-family="Arial, sans-serif" font-size="8" fill="#333">出力</text>
+                                        <text x="220" y="35" font-family="Arial, sans-serif" font-size="8" fill="#333" id="circuit-output-voltage">300V</text>
+                                        <line x1="200" y1="30" x2="220" y2="30" class="boost-circuit circuit-path" />
+                                        
+                                        <!-- 電流フロー表現 -->
+                                        <circle cx="60" cy="30" r="3" class="current-flow" />
+                                        <circle cx="120" cy="30" r="3" class="current-flow" />
+                                        <circle cx="170" cy="30" r="3" class="current-flow" />
+                                      </g>
+                                    </svg>
+                                    <div style="margin-top: 5px;"><span id="boosterInputVoltage">150V</span> → <span id="boosterOutputVoltage">300V</span></div>
+                                    <div style="margin-top: 5px;">変換効率: <span id="boosterEfficiencyValue">97.5%</span></div>
+                                </div>
+                            </div>
+                            
+                            <!-- 各ストリングの昇圧回路表示 -->
+                            <div id="boosterCircuitContainer" class="system-diagram" style="margin-top: 20px;">
+                                <!-- ストリングごとの昇圧回路はJSで動的に生成 -->
+                            </div>
+                        </div>
+                        
+                        <!-- ④接続箱 -->
+                        <div id="junctionBoxContainer" class="system-diagram" style="margin-top: 30px;">
+                            <h3 style="color: #005BAB; font-size: 1.1rem; margin-bottom: 1rem;">接続箱</h3>
+                            <div class="diagram-container" style="text-align: center;">
+                                <div class="component">
+                                    <svg width="200" height="230" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
+                                      <defs>
+                                        <!-- 本体・蓋用のグラデーション -->
+                                        <linearGradient id="connBoxFrontGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                          <stop offset="0%" style="stop-color:#E8E8E8;" />
+                                          <stop offset="100%" style="stop-color:#C8C8C8;" />
+                                        </linearGradient>
+                                        <linearGradient id="connBoxSideGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                          <stop offset="0%" style="stop-color:#D0D0D0;" />
+                                          <stop offset="100%" style="stop-color:#B0B0B0;" />
+                                        </linearGradient>
+                                        <!-- 金属部品（蝶番、ラッチ）用グラデーション -->
+                                        <linearGradient id="connMetalGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                          <stop offset="0%" style="stop-color:#C0C0C0;" />
+                                          <stop offset="100%" style="stop-color:#A0A0A0;" />
+                                        </linearGradient>
+                                        <!-- ケーブルグランド用グラデーション -->
+                                        <linearGradient id="connGlandCoreGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                          <stop offset="0%" style="stop-color:#888888;" />
+                                          <stop offset="100%" style="stop-color:#686868;" />
+                                        </linearGradient>
+                                      </defs>
+
+                                      <!-- 箱本体 (蓋の背景となり、縁が見えることで奥行きを表現) -->
+                                      <rect x="5" y="5" width="190" height="200" rx="6" ry="6" fill="url(#connBoxSideGradient)" stroke="#7A7A7A" stroke-width="1"/>
+
+                                      <!-- 蓋 -->
+                                      <rect x="12" y="12" width="176" height="186" rx="3" ry="3" fill="url(#connBoxFrontGradient)" stroke="#999999" stroke-width="1.2"/>
+
+                                      <!-- 蝶番 (左側) -->
+                                      <g class="hinge">
+                                        <!-- 蓋側プレート -->
+                                        <rect x="12" y="45" width="12" height="25" rx="1.5" ry="1.5" fill="url(#connMetalGradient)" stroke="#707070" stroke-width="0.5"/>
+                                        <rect x="12" y="140" width="12" height="25" rx="1.5" ry="1.5" fill="url(#connMetalGradient)" stroke="#707070" stroke-width="0.5"/>
+                                        <!-- 本体側プレート (少し隠れる) -->
+                                        <rect x="7" y="45" width="8" height="25" rx="1.5" ry="1.5" fill="url(#connMetalGradient)" stroke="#707070" stroke-width="0.5"/>
+                                        <rect x="7" y="140" width="8" height="25" rx="1.5" ry="1.5" fill="url(#connMetalGradient)" stroke="#707070" stroke-width="0.5"/>
+                                        <!-- ピン部分 -->
+                                        <rect x="10.5" y="43" width="5" height="29" rx="1" ry="1" fill="#808080" stroke="#606060" stroke-width="0.5"/>
+                                        <rect x="10.5" y="138" width="5" height="29" rx="1" ry="1" fill="#808080" stroke="#606060" stroke-width="0.5"/>
+                                      </g>
+
+                                      <!-- ラッチ (右側、簡易的なパッチン錠風) -->
+                                      <g class="latch">
+                                        <!-- 本体側フック受け -->
+                                        <rect x="182" y="97.5" width="7" height="25" rx="2" ry="2" fill="url(#connMetalGradient)" stroke="#707070" stroke-width="0.5"/>
+                                        <rect x="183" y="100" width="3" height="20" fill="#909090"/>
+                                        <!-- 蓋側レバー -->
+                                        <path d="M170 100 L182 103 L182 117 L170 120 Q168 110 170 100 Z"
+                                              fill="#D8D8D8" stroke="#888" stroke-width="0.7"/>
+                                        <ellipse cx="176" cy="110" rx="6" ry="3.5" fill="#B8B8B8" stroke="#707070" stroke-width="0.5"/>
+                                      </g>
+
+                                      <!-- 銘板エリア -->
+                                      <rect x="70" y="22" width="60" height="22" fill="#F8F8F8" rx="1.5" ry="1.5" stroke="#B0B0B0" stroke-width="0.5"/>
+                                      <text x="74" y="31" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="#444">接続箱</text>
+                                      <text x="74" y="39" font-family="Arial, sans-serif" font-size="5" fill="#666">TYPE: JB-21A</text>
+
+                                      <!-- ケーブルグランド (下部) - 箱の底面のY座標は約205 -->
+                                      <g class="cable-glands">
+                                        <!-- グランド1 -->
+                                        <g transform="translate(30, 203)">
+                                          <ellipse cx="10" cy="0.5" rx="11" ry="3.5" fill="#A0A0A0" stroke="#505050" stroke-width="0.5"/> <!-- フランジ/箱との接合部 -->
+                                          <rect x="4" y="0" width="12" height="16" rx="1" ry="1" fill="url(#connGlandCoreGradient)" stroke="#484848" stroke-width="0.7"/> <!-- 本体 -->
+                                          <ellipse cx="10" cy="16" rx="8" ry="3" fill="#B0B0B0" stroke="#505050" stroke-width="0.5"/> <!-- ナット先端 -->
+                                        </g>
+                                        <!-- グランド2 -->
+                                        <g transform="translate(70, 203)">
+                                          <ellipse cx="10" cy="0.5" rx="11" ry="3.5" fill="#A0A0A0" stroke="#505050" stroke-width="0.5"/>
+                                          <rect x="4" y="0" width="12" height="16" rx="1" ry="1" fill="url(#connGlandCoreGradient)" stroke="#484848" stroke-width="0.7"/>
+                                          <ellipse cx="10" cy="16" rx="8" ry="3" fill="#B0B0B0" stroke="#505050" stroke-width="0.5"/>
+                                        </g>
+                                        <!-- グランド3 -->
+                                        <g transform="translate(110, 203)">
+                                          <ellipse cx="10" cy="0.5" rx="11" ry="3.5" fill="#A0A0A0" stroke="#505050" stroke-width="0.5"/>
+                                          <rect x="4" y="0" width="12" height="16" rx="1" ry="1" fill="url(#connGlandCoreGradient)" stroke="#484848" stroke-width="0.7"/>
+                                          <ellipse cx="10" cy="16" rx="8" ry="3" fill="#B0B0B0" stroke="#505050" stroke-width="0.5"/>
+                                        </g>
+                                        <!-- グランド4 -->
+                                        <g transform="translate(150, 203)">
+                                          <ellipse cx="10" cy="0.5" rx="11" ry="3.5" fill="#A0A0A0" stroke="#505050" stroke-width="0.5"/>
+                                          <rect x="4" y="0" width="12" height="16" rx="1" ry="1" fill="url(#connGlandCoreGradient)" stroke="#484848" stroke-width="0.7"/>
+                                          <ellipse cx="10" cy="16" rx="8" ry="3" fill="#B0B0B0" stroke="#505050" stroke-width="0.5"/>
+                                        </g>
+                                      </g>
+                                    </svg>
+                                    <div style="margin-top: 5px;">ストリング数: <span id="junctionBoxStringCount">3</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ⑤パワコン（複数パワコン対応版） -->
+                        <div id="powerConditionerContainer">
+                            <!-- パワコンはJSで動的に生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 用語と説明タブコンテンツ -->
+        <div class="tab-content" id="glossary-content">
+            <div class="glossary-container">
+                <div class="glossary-search">
+                    <input type="text" id="termSearch" placeholder="用語を検索...">
+                </div>
+                
+                <div class="glossary-categories">
+                    <!-- カテゴリーアコーディオン -->
+                    <div class="glossary-category">
+                        <div class="category-header">
+                            <h2>基本用語</h2>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="category-content">
+                            <!-- 基本用語の説明 -->
+                            <div class="term-item">
+                                <h3>太陽電池モジュール（パネル）</h3>
+                                <p>太陽光を電気エネルギーに変換する装置です。複数の太陽電池セル（光電変換素子）が直列・並列に接続され、耐候性のあるガラスやフレームで保護されています。一般的には「パネル」と呼ばれています。</p>
+                                <p>現在主流のものは、単結晶シリコン、多結晶シリコン、薄膜系などがあります。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>パネル定格出力</h3>
+                                <p>標準試験条件（STC：放射照度1000W/m²、セル温度25℃、エアマス1.5の光スペクトル）で測定された、太陽電池モジュールが発電できる最大電力です。単位はワット（W）で表します。</p>
+                                <p>現在の一般的な住宅用パネルでは330W～450W程度、産業用では400W～550W程度が主流です。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>パネル変換効率</h3>
+                                <p>太陽電池モジュールに入射する太陽光エネルギーに対する、発電される電気エネルギーの割合です。パーセント（%）で表示されます。</p>
+                                <p>現在の主流シリコン系モジュールでは約15-22%程度の効率が一般的ですが、高効率パネルでは24%を超えるものもあります。変換効率が高いほど、同じ面積でより多くの電力を得られます。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>システム容量</h3>
+                                <p>太陽光発電システム全体の総出力容量で、パネルの定格出力とパネル枚数の積で計算されます。単位はキロワット（kW）で表します。</p>
+                                <p>例：330Wのパネルを12枚設置した場合、システム容量は330W×12枚÷1000=3.96kWとなります。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glossary-category">
+                        <div class="category-header">
+                            <h2>システム構成</h2>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="category-content">
+                            <!-- システム構成の説明 -->
+                            <div class="term-item">
+                                <h3>ストリング</h3>
+                                <p>複数の太陽電池モジュールを直列に接続したものです。直列接続することで電圧を高めます。</p>
+                                <p>一般的なパワーコンディショナーへの入力電圧範囲（例：DC250V-540V）に合わせて、適切な数のパネルを直列接続します。一般的には5-10枚程度のパネルで1ストリングを構成します。</p>
+                                <p>発電システムでは、複数のストリングを並列接続することで必要な電流を得ます。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>接続箱</h3>
+                                <p>複数のストリングを並列に接続し、パワーコンディショナーへの入力を一本化する装置です。保護装置（ヒューズや開閉器）も内蔵されています。</p>
+                                <p>ストリング毎の電流モニタリングや過電流保護、サージ保護などの機能を持つ接続箱もあります。マルチストリング型パワコンでは不要な場合もあります。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>パワーコンディショナー（パワコン）</h3>
+                                <p>太陽電池モジュールで発電されたDC（直流）電力をAC（交流）電力に変換する装置です。系統連系型の太陽光発電システムでは、商用電力系統と適合するように電力を調整します。</p>
+                                <p>主な機能：</p>
+                                <ul>
+                                    <li>DC-AC変換（インバーター機能）</li>
+                                    <li>最大電力点追従制御（MPPT制御）</li>
+                                    <li>系統連系保護機能（単独運転検出、電圧上昇抑制など）</li>
+                                    <li>直流地絡検出</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>パワコンタイプ</h3>
+                                <p><strong>標準型(ストリング型)：</strong> 最も一般的なタイプで、1つのMPPT回路で全ストリングを制御します。</p>
+                                <p><strong>マルチストリング型：</strong> 複数のMPPT回路を搭載し、各ストリングを個別に最適制御します。方位や傾斜が異なるパネル配置や部分的な影がある場合に有効です。</p>
+                                <p><strong>ハイブリッド型：</strong> 太陽光発電と蓄電池を統合管理できる型で、自家消費率の向上や非常時のバックアップ電源として機能します。</p>
+                                <p><strong>マイクロインバーター型：</strong> 各パネルに1つのインバーターを設置し、パネル単位で最適化します。部分的な影響を受けた場合でも他のパネルへの影響を最小化できます。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>MPPT回路</h3>
+                                <p>Maximum Power Point Tracking（最大電力点追従）の略。太陽電池モジュールが常に最大出力を発揮できるよう、負荷を調整する機能です。</p>
+                                <p>日射条件や温度変化によって太陽電池の出力特性（IV曲線）は刻々と変化します。MPPT回路は、その変化に応じて常に最大出力が得られる動作点を自動で追従することで、発電量を最大化します。</p>
+                                <p>マルチストリング型パワコンでは、複数のMPPT回路があるため、ストリングごとに異なる条件（方位、傾斜、影の影響など）でも最適な発電ができます。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>昇圧ユニット（DC-DCコンバータ）</h3>
+                                <p>太陽電池モジュールの出力電圧を昇圧して、パワーコンディショナーの動作に適した電圧にする装置です。</p>
+                                <p>以下のような場合に使用されます：</p>
+                                <ul>
+                                    <li>パネル設置枚数が少なく電圧が低い場合</li>
+                                    <li>部分影の影響でストリング電圧が変動する場合</li>
+                                    <li>パワコンの最低動作電圧を確保するため</li>
+                                </ul>
+                                <p>昇圧ユニットを使用すると約2-3%の変換損失が発生しますが、低電圧によるパワコンの動作不安定や効率低下を防ぐことができます。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glossary-category">
+                        <div class="category-header">
+                            <h2>設置・環境要因</h2>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="category-content">
+                            <!-- 設置・環境要因の説明 -->
+                            <div class="term-item">
+                                <h3>都道府県別日照時間</h3>
+                                <p>各都道府県で年間に太陽光が地表を照射する時間の総計です。地域により大きく異なり、太陽光発電の発電量に直接影響します。</p>
+                                <p>日本の年間日照時間は以下のような特徴があります：</p>
+                                <ul>
+                                    <li>最も長い地域：山梨県（約2,226時間）、高知県（約2,160時間）、群馬県（約2,154時間）</li>
+                                    <li>最も短い地域：秋田県（約1,527時間）、青森県（約1,589時間）、山形県（約1,618時間）</li>
+                                    <li>全国平均：約1,916時間</li>
+                                </ul>
+                                <p>内陸部と太平洋岸で日照時間が長く、日本海側で短い傾向があります。これは冬季の日本海側の降雪・曇天が主な要因です。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>傾斜角</h3>
+                                <p>太陽電池モジュールが水平面となす角度です。最適な発電量を得るために調整されます。</p>
+                                <p>日本では、年間発電量を最大化する場合、緯度とほぼ同じ角度（北海道で約40°、東京で約35°、沖縄で約25°）が理論上の最適値です。ただし、設置コストや積雪対策なども考慮し、実際には20〜30°程度に設定されることが多いです。</p>
+                                <p>夏季の発電量を重視する場合は浅め（10-20°）に、冬季の発電量を重視する場合は深め（30-40°）に設定します。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>方位角</h3>
+                                <p>太陽電池モジュールが向いている方角を表す角度です。真南を0度として、東がマイナス、西がプラスで表現します。</p>
+                                <p>一般的に、北半球では真南向き（0度）が年間発電量を最大化します。ただし、完全な真南でなくても、東西に30度程度ずれていても年間発電量への影響は5%程度に留まります。</p>
+                                <p>電力需要パターンによっては、西向き（午後の発電量増加）や東向き（午前の発電量増加）が有利な場合もあります。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>天候条件</h3>
+                                <p>日射量に影響する気象状態です。本シミュレーターでは、晴れ、薄曇り、曇り、雨の4段階で設定できます。</p>
+                                <p>天候による日射強度の目安：</p>
+                                <ul>
+                                    <li>晴れ：800-1000W/m²</li>
+                                    <li>薄曇り：500-700W/m²</li>
+                                    <li>曇り：200-400W/m²</li>
+                                    <li>雨：100-200W/m²</li>
+                                </ul>
+                                <p>年間の天候パターンは地域によって大きく異なり、日本では平均して年間約1,500時間の日照があります。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>周囲温度</h3>
+                                <p>太陽電池モジュールの周辺の気温です。高温になるほどモジュールの発電効率が低下します。</p>
+                                <p>一般的なシリコン系モジュールでは、温度係数は約-0.4%/℃で、標準試験条件（25℃）より温度が1℃上昇するごとに、出力が約0.4%低下します。</p>
+                                <p>実際のパネル温度は周囲温度より夏場で20-30℃、冬場で5-15℃高くなることがあります。例えば、気温が35℃の夏場では、パネル温度が55-65℃に達し、定格出力から12-16%程度低下することになります。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glossary-category">
+                        <div class="category-header">
+                            <h2>効率と損失</h2>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="category-content">
+                            <!-- 効率と損失の説明 -->
+                            <div class="term-item">
+                                <h3>地域日照係数</h3>
+                                <p>都道府県別の年間日照時間を全国平均と比較した係数です。地域による発電量の差を表します。</p>
+                                <p>計算式：地域日照係数 = 該当地域の年間日照時間 ÷ 全国平均日照時間</p>
+                                <p>例：</p>
+                                <ul>
+                                    <li>山梨県：2,226時間 ÷ 1,916時間 = 1.16（全国平均の116%）</li>
+                                    <li>秋田県：1,527時間 ÷ 1,916時間 = 0.80（全国平均の80%）</li>
+                                </ul>
+                                <p>この係数により、同じシステムでも地域によって年間発電量が20%以上変わることがあります。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>システム効率</h3>
+                                <p>太陽光発電システム全体の変換効率で、太陽光エネルギーから実際に得られる電力の割合を示します。以下の要素が複合的に作用します：</p>
+                                <ul>
+                                    <li>パネル変換効率（15-22%）</li>
+                                    <li>パワコン変換効率（92-97%）</li>
+                                    <li>配線損失（1-3%）</li>
+                                    <li>温度による損失（5-15%）</li>
+                                    <li>その他の損失（3-8%）</li>
+                                </ul>
+                                <p>総合的なシステム効率は、理想的な条件下でも70-85%程度となります。つまり、パネルの定格容量に対して、実際の年間発電量は理論値の70-85%になります。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>クリッピングロス</h3>
+                                <p>パワーコンディショナーの定格容量を超える発電があった場合に発生する損失です。パワコンは入力電力が定格を超えた場合、電力を制限（クリッピング）します。</p>
+                                <p>例えば、4kWのパワコンに対して4.2kWのパネルを接続すると、晴天時には0.2kW分の電力が制限されます。しかし、曇りや朝夕の日射量の少ない時間帯では、パネル出力が4kWを下回るため、クリッピングは発生しません。</p>
+                                <p>年間ベースでは、パネル容量をパワコン容量の110-120%程度にすると、クリッピングロスは年間発電量の1-3%程度に抑えられ、むしろシステム全体の経済性が向上することがあります。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>温度ロス</h3>
+                                <p>高温によるパネル効率の低下です。太陽電池モジュールは温度が上昇すると変換効率が低下します。</p>
+                                <p>温度係数（一般的に約-0.4%/℃）に基づいて計算され、夏季の高温時には10%以上の損失が生じることもあります。</p>
+                                <p>パネル裏面の通気を確保することで、温度上昇を抑制し、損失を軽減することができます。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>配線ロス</h3>
+                                <p>配線の抵抗による電力損失です。特に直流側の低電圧・高電流の条件で顕著になります。</p>
+                                <p>配線径の適切な選定やケーブル長の最小化により、1-3%程度に抑えることが可能です。</p>
+                                <p>電流（A）の2乗に比例して損失が増加するため、大規模システムでは特に重要な検討要素となります。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>ミスマッチロス</h3>
+                                <p>直列接続されたモジュール間の出力差による損失です。直列接続では、最も出力の低いモジュールに合わせて電流が制限されます。</p>
+                                <p>製造時の出力ばらつき（1-3%）や、部分的な影、汚れ、劣化差などによって生じます。</p>
+                                <p>マルチストリング型パワコンやマイクロインバーター型システムでは、この影響を軽減できます。</p>
+                            </div>
+                            
+                            <div class="term-item">
+                                <h3>汚れや影による損失</h3>
+                                <p>モジュール表面の汚れや部分的な影による発電効率の低下です。</p>
+                                <p>汚れによる損失は地域環境によって異なり、都市部や工業地域、花粉の多い地域などでは5%以上になることもあります。定期的な清掃により軽減可能です。</p>
+                                <p>影による損失は、ストリング全体に影響を及ぼす場合があります。設計時に周辺の建物や樹木などの影響を考慮し、最小化することが重要です。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 都道府県別日照データタブコンテンツ -->
+        <div class="tab-content" id="sunshine-content">
+            <div class="panel">
+                <h2>都道府県別日照データ</h2>
+                
+                <!-- 地域別グループ表示 -->
+                <div class="sunshine-region-tabs">
+                    <button class="region-tab active" data-region="all">全国</button>
+                    <button class="region-tab" data-region="hokkaido-tohoku">北海道・東北</button>
+                    <button class="region-tab" data-region="kanto">関東</button>
+                    <button class="region-tab" data-region="chubu">中部</button>
+                    <button class="region-tab" data-region="kinki">近畿</button>
+                    <button class="region-tab" data-region="chugoku-shikoku">中国・四国</button>
+                    <button class="region-tab" data-region="kyushu-okinawa">九州・沖縄</button>
+                </div>
+                
+                <!-- ソート機能 -->
+                <div class="sunshine-controls">
+                    <label for="sunshineSort">並び順：</label>
+                    <select id="sunshineSort">
+                        <option value="name">都道府県名順</option>
+                        <option value="hours-desc">日照時間が多い順</option>
+                        <option value="hours-asc">日照時間が少ない順</option>
+                        <option value="ratio-desc">全国平均比が高い順</option>
+                        <option value="ratio-asc">全国平均比が低い順</option>
+                    </select>
+                </div>
+                
+                <!-- 日照データテーブル -->
+                <div class="sunshine-table-container">
+                    <table class="sunshine-data-table" id="sunshineDataTable">
+                        <thead>
+                            <tr>
+                                <th>順位</th>
+                                <th>都道府県</th>
+                                <th>年間日照時間</th>
+                                <th>全国平均比</th>
+                                <th>グラフ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sunshineTableBody">
+                            <!-- JavaScriptで動的に生成 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 日照マップ（簡易版） -->
+                <div class="sunshine-summary">
+                    <h3>日照時間の特徴</h3>
+                    <div class="sunshine-stats">
+                        <div class="stat-card">
+                            <h4>最も日照時間が長い</h4>
+                            <div class="stat-value" id="maxSunshinePrefecture">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>最も日照時間が短い</h4>
+                            <div class="stat-value" id="minSunshinePrefecture">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>全国平均</h4>
+                            <div class="stat-value" id="avgSunshineHours">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // 都道府県別日照時間データ（1991-2020年平年値）
+        const prefectureSunshineData = {
+            '北海道': { hours: 1740.4, ratio: 0.908 },
+            '青森県': { hours: 1589.2, ratio: 0.829 },
+            '岩手県': { hours: 1667.5, ratio: 0.870 },
+            '宮城県': { hours: 1796.1, ratio: 0.937 },
+            '秋田県': { hours: 1527.4, ratio: 0.797 },
+            '山形県': { hours: 1617.9, ratio: 0.844 },
+            '福島県': { hours: 1766.4, ratio: 0.922 },
+            '茨城県': { hours: 1897.2, ratio: 0.990 },
+            '栃木県': { hours: 1938.4, ratio: 1.011 },
+            '群馬県': { hours: 2153.7, ratio: 1.124 },
+            '埼玉県': { hours: 2056.6, ratio: 1.073 },
+            '千葉県': { hours: 1851.5, ratio: 0.966 },
+            '東京都': { hours: 1881.3, ratio: 0.982 },
+            '神奈川県': { hours: 2020.5, ratio: 1.054 },
+            '新潟県': { hours: 1639.6, ratio: 0.856 },
+            '富山県': { hours: 1647.2, ratio: 0.860 },
+            '石川県': { hours: 1680.9, ratio: 0.877 },
+            '福井県': { hours: 1689.4, ratio: 0.882 },
+            '山梨県': { hours: 2225.8, ratio: 1.162 },
+            '長野県': { hours: 2061.0, ratio: 1.076 },
+            '岐阜県': { hours: 2108.6, ratio: 1.101 },
+            '静岡県': { hours: 2151.5, ratio: 1.123 },
+            '愛知県': { hours: 2141.0, ratio: 1.118 },
+            '三重県': { hours: 2030.5, ratio: 1.060 },
+            '滋賀県': { hours: 1832.4, ratio: 0.956 },
+            '京都府': { hours: 1851.4, ratio: 0.966 },
+            '大阪府': { hours: 1996.3, ratio: 1.042 },
+            '兵庫県': { hours: 2044.1, ratio: 1.067 },
+            '奈良県': { hours: 1990.7, ratio: 1.039 },
+            '和歌山県': { hours: 2116.9, ratio: 1.105 },
+            '鳥取県': { hours: 1707.0, ratio: 0.891 },
+            '島根県': { hours: 1720.5, ratio: 0.898 },
+            '岡山県': { hours: 2089.5, ratio: 1.091 },
+            '広島県': { hours: 2033.2, ratio: 1.061 },
+            '山口県': { hours: 1956.6, ratio: 1.021 },
+            '徳島県': { hours: 2092.6, ratio: 1.092 },
+            '香川県': { hours: 2085.2, ratio: 1.089 },
+            '愛媛県': { hours: 2017.4, ratio: 1.053 },
+            '高知県': { hours: 2159.7, ratio: 1.127 },
+            '福岡県': { hours: 1869.0, ratio: 0.975 },
+            '佐賀県': { hours: 1852.4, ratio: 0.967 },
+            '長崎県': { hours: 1861.4, ratio: 0.971 },
+            '熊本県': { hours: 1925.3, ratio: 1.005 },
+            '大分県': { hours: 1928.0, ratio: 1.006 },
+            '宮崎県': { hours: 2121.7, ratio: 1.107 },
+            '鹿児島県': { hours: 1935.6, ratio: 1.010 },
+            '沖縄県': { hours: 1812.9, ratio: 0.946 }
+        };
+        
+        // DOM要素の取得
+        const prefectureSelect = document.getElementById('prefecture');
+        const locationInfoPanel = document.getElementById('locationInfoPanel');
+        const annualSunshineHours = document.getElementById('annualSunshineHours');
+        const sunshineRatio = document.getElementById('sunshineRatio');
+        const regionalSunshineFactor = document.getElementById('regionalSunshineFactor');
+        const panelPowerInput = document.getElementById('panelPower');
+        const panelEfficiencyInput = document.getElementById('panelEfficiency');
+        const panelCountInput = document.getElementById('panelCount');
+        const stringCountInput = document.getElementById('stringCount');
+        const pcsCountInput = document.getElementById('pcsCount'); // パワコン台数入力
+        const stringAssignmentPanel = document.getElementById('stringAssignmentPanel'); // ストリング割り当てパネル
+        const stringAssignmentGrid = document.getElementById('stringAssignmentGrid'); // ストリング割り当てグリッド
+        const useBoosterCheckbox = document.getElementById('useBooster');
+        const boosterStringSelectionPanel = document.getElementById('boosterStringSelectionPanel'); // 追加：昇圧ストリング選択パネル
+        const boosterStringSelection = document.getElementById('boosterStringSelection'); // 追加：昇圧ストリング選択コンテナ
+        const weatherConditionSelect = document.getElementById('weatherCondition');
+        const temperatureInput = document.getElementById('temperature');
+        const temperatureValue = document.getElementById('temperatureValue');
+        const tiltAngleInput = document.getElementById('tiltAngle');
+        const tiltAngleValue = document.getElementById('tiltAngleValue');
+        const orientationAngleInput = document.getElementById('orientationAngle');
+        const orientationAngleValue = document.getElementById('orientationAngleValue');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const stringConfigPanel = document.getElementById('stringConfigPanel');
+        const panelGridContainer = document.getElementById('panelGridContainer');
+        const powerConditionerContainer = document.getElementById('powerConditionerContainer'); // パワコンコンテナ
+        const pcsTabs = document.getElementById('pcsTabs'); // パワコンタブ
+        const pcsTabContents = document.getElementById('pcsTabContents'); // パワコンタブコンテンツ
+        const applyCommonSettingsBtn = document.getElementById('applyCommonSettingsBtn'); // 共通設定適用ボタン
+        const pcsComparisonContainer = document.getElementById('pcsComparisonContainer'); // パワコン比較表コンテナ
+        const pcsComparisonBody = document.getElementById('pcsComparisonBody'); // パワコン比較表ボディ
+        
+        // 昇圧ユニット関連の要素
+        const boosterUnitContainer = document.getElementById('boosterUnitContainer');
+        const boosterInputVoltage = document.getElementById('boosterInputVoltage');
+        const boosterOutputVoltage = document.getElementById('boosterOutputVoltage');
+        const boosterEfficiencyValue = document.getElementById('boosterEfficiencyValue');
+        
+        // 昇圧回路図用の要素
+        const circuitInputVoltage = document.getElementById('circuit-input-voltage');
+        const circuitOutputVoltage = document.getElementById('circuit-output-voltage');
+        
+        // 接続箱関連の要素
+        const junctionBoxContainer = document.getElementById('junctionBoxContainer');
+        const junctionBoxStringCount = document.getElementById('junctionBoxStringCount');
+        
+        // 結果表示要素
+        const systemCapacityEl = document.getElementById('systemCapacity');
+        const modulesCountEl = document.getElementById('modulesCount');
+        const stringsCountEl = document.getElementById('stringsCount');
+        const powerConditionerCountEl = document.getElementById('powerConditionerCount'); // パワコン台数表示
+        const instantPowerEl = document.getElementById('instantPower');
+        const dailyGenerationEl = document.getElementById('dailyGeneration');
+        const monthlyGenerationEl = document.getElementById('monthlyGeneration');
+        const yearlyGenerationEl = document.getElementById('yearlyGeneration');
+        const weatherFactorEl = document.getElementById('weatherFactor');
+        const orientationFactorEl = document.getElementById('orientationFactor');
+        const temperatureFactorEl = document.getElementById('temperatureFactor');
+        const totalEfficiencyEl = document.getElementById('totalEfficiency');
+        
+        // チャート要素
+        let monthlyChart = null;
+        let lossChart = null;
+        
+        // パワコンタイプ定義
+        const pcsTypes = [
+            { id: 'standard', name: '標準型(ストリング型)', efficiency: 95.0, description: '最も一般的なタイプ。1つのMPPT回路で全ストリングを制御', color: '#3f51b5', minVoltage: 250 },
+            { id: 'multi-string', name: 'マルチストリング型', efficiency: 97.0, description: '複数のMPPTを搭載(最大4系統)。異なる方位や傾斜のパネルに最適。接続箱不要', color: '#2196f3', minVoltage: 200 },
+            { id: 'hybrid', name: 'ハイブリッド型', efficiency: 94.0, description: '太陽光と蓄電池の両方を管理できる統合型パワコン', color: '#009688', minVoltage: 220 },
+            { id: 'micro', name: 'マイクロインバーター型', efficiency: 92.0, description: '各パネルに1つのインバーターを設置。パネル単位の最適化が可能', color: '#673ab7', minVoltage: 20 }
+        ];
+        
+        // 設定オブジェクト
+        let config = {
+            // 地域設定
+            prefecture: '',
+            regionalSunshineFactor: 1.0, // 地域日照係数
+            
+            // パネル設定
+            panelCount: 12,
+            panelPower: 330, // 1パネルあたりの定格出力(W)
+            panelEfficiency: 19.5, // パネル変換効率(%)
+            
+            // ストリング設定
+            stringCount: 3,
+            panelsPerString: [],
+            
+            // 環境条件
+            weatherCondition: '晴れ', // 天候
+            temperature: 25, // 周囲温度(℃)
+            tiltAngle: 30, // 傾斜角(°)
+            orientationAngle: 0, // 方位角(°) 0=真南
+            
+            // パワーコンディショナー設定（配列に変更）
+            pcsCount: 1, // パワコン台数
+            pcsConfigs: [
+                {
+                    type: 'standard', // 標準型、マルチストリング型、ハイブリッド型など
+                    ratedPower: 5.5, // パワコン定格出力(kW)
+                    efficiency: 95.0, // パワコン変換効率(%)
+                    mpptCount: 1, // MPPT回路数（マルチストリング型の場合）
+                    userChangedEfficiency: false // ユーザーが効率値を変更したかどうか
+                }
+            ],
+            stringToPcsMap: [], // ストリングとパワコンのマッピング
+            useBooster: false, // 昇圧ユニット使用有無 - 初期値を無に
+            autoBooster: false, // 昇圧ユニットの自動判定も無効に
+            boosterStrings: [], // 昇圧対象のストリング配列（真偽値） - 新規追加
+        };
+        
+        // 結果オブジェクト
+        let results = {
+            totalCapacity: 0, // システム容量(kW)
+            instantPower: 0, // 瞬時発電電力(kW)
+            dailyGeneration: 0, // 日間発電量(kWh)
+            monthlyGeneration: 0, // 月間発電量(kWh)
+            yearlyGeneration: 0, // 年間発電量(kWh)
+            systemEfficiency: 0, // システム効率(%)
+            totalEfficiency: 0, // 総合変換効率(%)
+            regionalSunshineFactor: 100, // 地域日照係数(%)
+            losses: {}, // 各種損失内訳
+            monthlyGenerations: [], // 月別発電量
+            needsBooster: false, // 昇圧ユニットが必要かどうか
+            stringVoltages: [], // 各ストリングの電圧
+            boosterInputVoltage: [], // 昇圧ユニット入力電圧（ストリングごと）
+            boosterOutputVoltage: [], // 昇圧ユニット出力電圧（ストリングごと）
+            // パワコンごとの結果
+            pcsResults: []
+        };
+        
+        // 都道府県選択時の処理
+        prefectureSelect.addEventListener('change', () => {
+            config.prefecture = prefectureSelect.value;
+            
+            if (config.prefecture && prefectureSunshineData[config.prefecture]) {
+                const prefData = prefectureSunshineData[config.prefecture];
+                config.regionalSunshineFactor = prefData.ratio;
+                
+                // 地域情報パネルの表示
+                locationInfoPanel.style.display = 'block';
+                annualSunshineHours.textContent = prefData.hours.toFixed(1);
+                sunshineRatio.textContent = (prefData.ratio * 100).toFixed(1);
+            } else {
+                locationInfoPanel.style.display = 'none';
+                config.regionalSunshineFactor = 1.0;
+            }
+        });
+        
+        // タブクリックのイベントハンドラ
+        function setupTabEvents() {
+            // すべてのタブにイベントリスナーを追加
+            document.querySelectorAll('.pcs-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // タブのインデックスを取得
+                    const pcsIndex = parseInt(tab.getAttribute('data-pcs-index'), 10);
+                    
+                    // すべてのタブを非アクティブにする
+                    document.querySelectorAll('.pcs-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.pcs-tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // クリックされたタブとそれに対応するコンテンツをアクティブにする
+                    tab.classList.add('active');
+                    document.querySelector(`.pcs-tab-content[data-pcs-index="${pcsIndex}"]`).classList.add('active');
+                });
+            });
+        }
+        
+        // パワコンタブを更新する関数
+        function updatePcsTabs() {
+            // パワコン台数を取得
+            const pcsCount = parseInt(pcsCountInput.value, 10) || 1;
+            
+            // パワコン設定データの更新
+            updatePcsConfigsArray(pcsCount);
+            
+            // タブの更新
+            pcsTabs.innerHTML = '';
+            pcsTabContents.innerHTML = '';
+            
+            // 各パワコンのタブとコンテンツを生成
+            for (let i = 0; i < pcsCount; i++) {
+                // タブの生成
+                const tab = document.createElement('div');
+                tab.className = `pcs-tab ${i === 0 ? 'active' : ''}`;
+                tab.setAttribute('data-pcs-index', i);
+                tab.textContent = `パワコン ${i + 1}`;
+                pcsTabs.appendChild(tab);
+                
+                // コンテンツの生成
+                const content = document.createElement('div');
+                content.className = `pcs-tab-content ${i === 0 ? 'active' : ''}`;
+                content.setAttribute('data-pcs-index', i);
+                
+                // パワコン設定を取得
+                const pcsConfig = config.pcsConfigs[i] || {
+                    type: 'standard',
+                    ratedPower: 5.5,
+                    efficiency: 95.0,
+                    mpptCount: 1,
+                    userChangedEfficiency: false
+                };
+                
+                // パワコンタイプの説明を取得
+                const pcsTypeObj = pcsTypes.find(type => type.id === pcsConfig.type);
+                const pcsTypeDescription = pcsTypeObj ? pcsTypeObj.description : '最も一般的なタイプ。1つのMPPT回路で全ストリングを制御';
+                
+                // コンテンツの内容を設定
+                content.innerHTML = `
+                    <div class="form-group">
+                        <label for="pcsType-${i}">パワコンタイプ: <span class="tooltip">ⓘ<span class="tooltiptext">パワーコンディショナーの種類によって特性が異なります</span></span></label>
+                        <select id="pcsType-${i}" class="pcs-type-select" data-pcs-index="${i}">
+                            <option value="standard" ${pcsConfig.type === 'standard' ? 'selected' : ''}>標準型(ストリング型)</option>
+                            <option value="multi-string" ${pcsConfig.type === 'multi-string' ? 'selected' : ''}>マルチストリング型</option>
+                            <option value="hybrid" ${pcsConfig.type === 'hybrid' ? 'selected' : ''}>ハイブリッド型</option>
+                            <option value="micro" ${pcsConfig.type === 'micro' ? 'selected' : ''}>マイクロインバーター型</option>
+                        </select>
+                        <p id="pcsTypeDescription-${i}" class="pcs-type-description" style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #666;">${pcsTypeDescription}</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="pcsRatedPower-${i}">定格出力 (kW): <span class="tooltip">ⓘ<span class="tooltiptext">パワコンが出力できる最大電力</span></span></label>
+                        <input type="number" id="pcsRatedPower-${i}" class="pcs-rated-power" data-pcs-index="${i}" min="1" max="50" step="0.1" value="${pcsConfig.ratedPower}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="pcsEfficiency-${i}">変換効率 (%): <span class="tooltip">ⓘ<span class="tooltiptext">DCからACへの変換効率</span></span></label>
+                        <input type="number" id="pcsEfficiency-${i}" class="pcs-efficiency" data-pcs-index="${i}" min="80" max="99" step="0.1" value="${pcsConfig.efficiency}">
+                    </div>
+                    
+                    <div id="mpptCountContainer-${i}" class="mppt-count-container form-group" style="display: ${pcsConfig.type === 'multi-string' ? 'block' : 'none'};">
+                        <label for="mpptCount-${i}">MPPT回路数: <span class="tooltip">ⓘ<span class="tooltiptext">Maximum Power Point Tracking回路の数。各ストリングを個別に最適制御できます。1台あたり最大4系統まで接続可能</span></span></label>
+                        <input type="number" id="mpptCount-${i}" class="mppt-count" data-pcs-index="${i}" min="1" max="4" value="${pcsConfig.mpptCount}">
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: #666;">※ MPPT回路数はストリング数以下である必要があります。</p>
+                    </div>
+                `;
+                
+                pcsTabContents.appendChild(content);
+            }
+            
+            // 共通設定ボタンの表示/非表示
+            applyCommonSettingsBtn.style.display = pcsCount > 1 ? 'block' : 'none';
+            
+            // タブイベントの設定
+            setupTabEvents();
+            
+            // 各パワコン設定の変更イベントを設定
+            setupPcsConfigEvents();
+        }
+        
+        // パワコン設定の配列を更新する関数
+        function updatePcsConfigsArray(pcsCount) {
+            // 現在のパワコン設定を保持
+            const currentConfigs = [...config.pcsConfigs];
+            
+            // パワコン台数が増えた場合は設定を追加
+            if (pcsCount > currentConfigs.length) {
+                for (let i = currentConfigs.length; i < pcsCount; i++) {
+                    // デフォルト設定（最初のパワコンの設定をコピー）
+                    const defaultConfig = { ...currentConfigs[0] };
+                    currentConfigs.push(defaultConfig);
+                }
+            }
+            // パワコン台数が減った場合は設定を削除
+            else if (pcsCount < currentConfigs.length) {
+                currentConfigs.splice(pcsCount);
+            }
+            
+            // 更新された設定を保存
+            config.pcsConfigs = currentConfigs;
+        }
+        
+        // パワコン設定の変更イベントをセットアップする関数
+        function setupPcsConfigEvents() {
+            // パワコンタイプの変更イベント
+            document.querySelectorAll('.pcs-type-select').forEach(select => {
+                select.addEventListener('change', function() {
+                    const pcsIndex = parseInt(this.getAttribute('data-pcs-index'), 10);
+                    const selectedType = this.value;
+                    const pcsTypeObj = pcsTypes.find(type => type.id === selectedType);
+                    
+                    if (pcsTypeObj) {
+                        // タイプ説明の更新
+                        const descEl = document.getElementById(`pcsTypeDescription-${pcsIndex}`);
+                        if (descEl) descEl.textContent = pcsTypeObj.description;
+                        
+                        // MPPT回路数の表示/非表示
+                        const mpptContainer = document.getElementById(`mpptCountContainer-${pcsIndex}`);
+                        if (mpptContainer) {
+                            mpptContainer.style.display = selectedType === 'multi-string' ? 'block' : 'none';
+                        }
+                        
+                        // MPPT回路数の更新
+                        const mpptInput = document.getElementById(`mpptCount-${pcsIndex}`);
+                        if (mpptInput && selectedType === 'multi-string') {
+                            const stringCount = parseInt(stringCountInput.value, 10) || 1;
+                            mpptInput.max = Math.min(stringCount, 4); // 最大値を4に変更
+                            mpptInput.value = Math.min(3, stringCount);
+                            config.pcsConfigs[pcsIndex].mpptCount = Math.min(3, stringCount);
+                        } else {
+                            config.pcsConfigs[pcsIndex].mpptCount = 1;
+                        }
+                        
+                        // ユーザーが効率値を変更していない場合は、デフォルト値を設定
+                        if (!config.pcsConfigs[pcsIndex].userChangedEfficiency) {
+                            const effInput = document.getElementById(`pcsEfficiency-${pcsIndex}`);
+                            if (effInput) {
+                                effInput.value = pcsTypeObj.efficiency;
+                                config.pcsConfigs[pcsIndex].efficiency = pcsTypeObj.efficiency;
+                            }
+                        }
+                        
+                        // 設定の更新
+                        config.pcsConfigs[pcsIndex].type = selectedType;
+                        
+                        // マイクロインバーター型の場合は昇圧ユニットを無効化
+                        if (selectedType === 'micro') {
+                            // 他のパワコンでマイクロインバーター型以外があるかチェック
+                            const hasMixedTypes = config.pcsConfigs.some(cfg => cfg.type !== 'micro');
+                            
+                            if (!hasMixedTypes) {
+                                useBoosterCheckbox.checked = false;
+                                useBoosterCheckbox.disabled = true;
+                                config.useBooster = false;
+                            }
+                        } else {
+                            useBoosterCheckbox.disabled = false;
+                        }
+                        
+                        // ストリング割り当ての更新
+                        updateStringAssignmentPanel();
+                        
+                        // パワコン表示の更新
+                        updatePcsVisualization();
+                    }
+                });
+            });
+            
+            // パワコン定格出力の変更イベント
+            document.querySelectorAll('.pcs-rated-power').forEach(input => {
+                input.addEventListener('change', function() {
+                    const pcsIndex = parseInt(this.getAttribute('data-pcs-index'), 10);
+                    config.pcsConfigs[pcsIndex].ratedPower = parseFloat(this.value) || 5.5;
+                    
+                    // パワコン表示の更新
+                    updatePcsVisualization();
+                });
+            });
+            
+            // パワコン効率の変更イベント
+            document.querySelectorAll('.pcs-efficiency').forEach(input => {
+                input.addEventListener('input', function() {
+                    const pcsIndex = parseInt(this.getAttribute('data-pcs-index'), 10);
+                    config.pcsConfigs[pcsIndex].efficiency = parseFloat(this.value) || 95.0;
+                    config.pcsConfigs[pcsIndex].userChangedEfficiency = true;
+                    
+                    // パワコン表示の更新
+                    updatePcsVisualization();
+                });
+            });
+            
+            // MPPT回路数の変更イベント
+            document.querySelectorAll('.mppt-count').forEach(input => {
+                input.addEventListener('change', function() {
+                    const pcsIndex = parseInt(this.getAttribute('data-pcs-index'), 10);
+                    
+                    // ストリング数を取得
+                    const stringCount = parseInt(stringCountInput.value, 10) || 1;
+                    
+                    // このパワコンに割り当てられたストリング数を計算
+                    const assignedStrings = config.stringToPcsMap.filter(pcs => pcs === pcsIndex).length;
+                    
+                    // MPPT回路数の制限（割り当てられたストリング数以下、最大4まで）
+                    const mpptCount = parseInt(this.value, 10) || 1;
+                    const limitedMpptCount = Math.min(mpptCount, assignedStrings, 4);
+                    
+                    // 値を更新
+                    config.pcsConfigs[pcsIndex].mpptCount = limitedMpptCount;
+                    this.value = limitedMpptCount;
+                    
+                    // パワコン表示の更新
+                    updatePcsVisualization();
+                });
+            });
+        }
+        
+        // 共通設定適用ボタンのイベントリスナー
+        applyCommonSettingsBtn.addEventListener('click', () => {
+            // 最初のパワコンの設定を取得
+            const firstConfig = config.pcsConfigs[0];
+            
+            // すべてのパワコンに適用
+            for (let i = 1; i < config.pcsConfigs.length; i++) {
+                config.pcsConfigs[i] = { ...firstConfig };
+            }
+            
+            // UI更新
+            updatePcsTabs();
+            updatePcsVisualization();
+            
+            // 通知
+            alert('すべてのパワコンに共通設定を適用しました。');
+        });
+        
+        // UI要素のイベントリスナー
+        // パワコンタイプが変更されたときの処理
+        
+        // パワコン台数が変更されたときの処理
+        pcsCountInput.addEventListener('change', () => {
+            config.pcsCount = parseInt(pcsCountInput.value, 10) || 1;
+            
+            // パワコンタブの更新
+            updatePcsTabs();
+            
+            // ストリングの割り当てを更新
+            updateStringToPcsMapping();
+            
+            // ストリング割り当てパネルの表示/非表示
+            if (config.pcsCount > 1) {
+                stringAssignmentPanel.style.display = 'block';
+                updateStringAssignmentPanel();
+            } else {
+                stringAssignmentPanel.style.display = 'none';
+            }
+            
+            // パワコン比較表の表示/非表示
+            pcsComparisonContainer.style.display = config.pcsCount > 1 ? 'block' : 'none';
+            
+            // パワコン表示の更新
+            updatePcsVisualization();
+        });
+        
+        // ストリング数が変更されたときの処理
+        stringCountInput.addEventListener('change', () => {
+            config.stringCount = parseInt(stringCountInput.value, 10) || 1;
+            
+            // 昇圧対象ストリング配列のサイズを調整
+            // 新しいストリングは自動的に昇圧対象とする
+            if (config.boosterStrings.length < config.stringCount) {
+                const additionalStrings = Array(config.stringCount - config.boosterStrings.length).fill(true);
+                config.boosterStrings = [...config.boosterStrings, ...additionalStrings];
+            } else if (config.boosterStrings.length > config.stringCount) {
+                config.boosterStrings = config.boosterStrings.slice(0, config.stringCount);
+            }
+            
+            // 昇圧ストリング選択パネルの更新
+            if (config.useBooster) {
+                updateBoosterStringSelection();
+            }
+            
+            // マルチストリング型のパワコンがある場合の処理
+            config.pcsConfigs.forEach((pcsConfig, pcsIndex) => {
+                if (pcsConfig.type === 'multi-string') {
+                    // このパワコンに割り当てられたストリング数を計算
+                    const assignedStrings = config.stringToPcsMap.filter(pcs => pcs === pcsIndex).length;
+                    
+                    // MPPT回路数の上限を更新
+                    const mpptInput = document.getElementById(`mpptCount-${pcsIndex}`);
+                    if (mpptInput) {
+                        mpptInput.max = Math.min(assignedStrings, 4); // 最大値を4に変更
+                        
+                        // 現在の値がストリング数を超えている場合は調整
+                        if (parseInt(mpptInput.value, 10) > assignedStrings) {
+                            mpptInput.value = assignedStrings;
+                            pcsConfig.mpptCount = assignedStrings;
+                        }
+                    }
+                    
+                    // ストリング数が4を超える警告
+                    if (assignedStrings > 4 && config.pcsCount === 1) {
+                        alert(`マルチストリング型パワコン1台で接続できるのは最大4系統までです。ストリングを分散するためパワコンを${Math.ceil(config.stringCount / 4)}台に変更します。`);
+                        config.pcsCount = Math.ceil(config.stringCount / 4);
+                        pcsCountInput.value = config.pcsCount;
+                        
+                        // パワコンタブの更新
+                        updatePcsTabs();
+                        
+                        // ストリング割り当てパネルの表示/非表示
+                        if (config.pcsCount > 1) {
+                            stringAssignmentPanel.style.display = 'block';
+                        }
+                    }
+                }
+            });
+            
+            updateStringConfig();
+            
+            // ストリングの割り当てを更新
+            updateStringToPcsMapping();
+            
+            if (config.pcsCount > 1) {
+                updateStringAssignmentPanel();
+            }
+            
+            // 接続箱のストリング数表示を更新
+            junctionBoxStringCount.textContent = config.stringCount;
+            
+            // ストリング数変更で昇圧ユニットの必要性を再評価
+            checkBoosterNeed();
+            
+            // パワコン表示の更新
+            updatePcsVisualization();
+        });
+        
+        // パネル数が変更されたときの処理
+        panelCountInput.addEventListener('change', () => {
+            config.panelCount = parseInt(panelCountInput.value, 10) || 0;
+            updateStringConfig();
+            
+            // パネル数変更で昇圧ユニットの必要性を再評価
+            checkBoosterNeed();
+            
+            // システム容量に基づいて必要なパワコン数を推奨
+            recommendPcsCount();
+        });
+        
+        // パネル出力が変更されたときの処理
+        panelPowerInput.addEventListener('change', () => {
+            config.panelPower = parseInt(panelPowerInput.value, 10) || 0;
+            
+            // 昇圧ユニットの必要性を再評価
+            checkBoosterNeed();
+            
+            // システム容量に基づいて必要なパワコン数を推奨
+            recommendPcsCount();
+        });
+        
+        // パネル効率が変更されたときの処理
+        panelEfficiencyInput.addEventListener('change', () => {
+            config.panelEfficiency = parseFloat(panelEfficiencyInput.value) || 0;
+        });
+        
+        // 昇圧ユニットの設定が変更されたときの処理
+        useBoosterCheckbox.addEventListener('change', () => {
+            config.useBooster = useBoosterCheckbox.checked;
+            // 手動で設定を変更した場合は自動判定をオフ
+            config.autoBooster = false;
+            
+            // 昇圧ユニットの表示/非表示
+            boosterUnitContainer.style.display = config.useBooster ? 'block' : 'none';
+            
+            // 昇圧ストリング選択パネルの表示/非表示
+            boosterStringSelectionPanel.style.display = config.useBooster ? 'block' : 'none';
+            
+            if (config.useBooster) {
+                // 初期化: パネル枚数が最小のストリングを自動選択
+                if (!config.boosterStrings || config.boosterStrings.length !== config.stringCount) {
+                    config.boosterStrings = Array(config.stringCount).fill(false);
+                }
+                
+                // 全てのストリングを一旦未選択状態に
+                config.boosterStrings.fill(false);
+                
+                // 最小容量のストリングを検索
+                let minPanels = Infinity;
+                let minStringIndex = 0;
+                
+                config.panelsPerString.forEach((count, index) => {
+                    if (count < minPanels) {
+                        minPanels = count;
+                        minStringIndex = index;
+                    }
+                });
+                
+                // 最小容量のストリングを選択
+                config.boosterStrings[minStringIndex] = true;
+            }
+            
+            // 昇圧ストリング選択の更新
+            updateBoosterStringSelection();
+            
+            // 使用中の昇圧ユニット情報を更新
+            updateBoosterInfo();
+        });
+        
+        // 昇圧ストリング選択パネルの更新
+        function updateBoosterStringSelection() {
+            boosterStringSelection.innerHTML = '';
+            
+            // 初期化: 必要に応じてboosterStrings配列を調整
+            if (!config.boosterStrings || config.boosterStrings.length !== config.stringCount) {
+                // デフォルトですべてのストリングを昇圧対象に
+                config.boosterStrings = Array(config.stringCount).fill(true);
+            }
+            
+            // 各ストリングの昇圧選択チェックボックスを生成
+            for (let i = 0; i < config.stringCount; i++) {
+                const stringDiv = document.createElement('div');
+                stringDiv.className = 'string-config';
+                stringDiv.style.padding = '5px';
+                
+                const checkboxId = `boostString${i}`;
+                
+                stringDiv.innerHTML = `
+                    <div style="display: flex; align-items: center;">
+                        <input type="checkbox" id="${checkboxId}" ${config.boosterStrings[i] ? 'checked' : ''} 
+                            data-string-index="${i}" class="boost-string-checkbox">
+                        <label for="${checkboxId}" style="margin-left: 8px; font-weight: normal;">
+                            ストリング ${i + 1} (${config.panelsPerString[i] || 0}枚, ${(config.panelsPerString[i] || 0) * 30}V)
+                        </label>
+                    </div>
+                `;
+                
+                boosterStringSelection.appendChild(stringDiv);
+            }
+            
+            // チェックボックスの変更イベントを設定
+            document.querySelectorAll('.boost-string-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const stringIndex = parseInt(this.getAttribute('data-string-index'), 10);
+                    config.boosterStrings[stringIndex] = this.checked;
+                    
+                    // ビジュアルを更新
+                    updateBoosterInfo();
+                });
+            });
+        }
+        
+        // 天候条件が変更されたときの処理
+        weatherConditionSelect.addEventListener('change', () => {
+            config.weatherCondition = weatherConditionSelect.value;
+        });
+        
+        // 温度設定が変更されたときの処理
+        temperatureInput.addEventListener('input', () => {
+            config.temperature = parseInt(temperatureInput.value, 10) || 25;
+            temperatureValue.textContent = `${config.temperature}℃`;
+        });
+        
+        // 傾斜角設定が変更されたときの処理
+        tiltAngleInput.addEventListener('input', () => {
+            config.tiltAngle = parseInt(tiltAngleInput.value, 10) || 30;
+            tiltAngleValue.textContent = `${config.tiltAngle}°`;
+        });
+        
+        // 方位角設定が変更されたときの処理
+        orientationAngleInput.addEventListener('input', () => {
+            config.orientationAngle = parseInt(orientationAngleInput.value, 10) || 0;
+            
+            let orientationText = `${config.orientationAngle}°`;
+            if (config.orientationAngle === 0) {
+                orientationText += ' (真南)';
+            } else if (config.orientationAngle < 0) {
+                orientationText += ` (東${Math.abs(config.orientationAngle)}°)`;
+            } else {
+                orientationText += ` (西${config.orientationAngle}°)`;
+            }
+            
+            orientationAngleValue.textContent = orientationText;
+        });
+        
+        // システム容量に基づいてパワコン台数を推奨する関数
+        function recommendPcsCount() {
+            const totalCapacity = (config.panelCount * config.panelPower) / 1000;
+            
+            // 各パワコンの定格出力からシステム全体をカバーできるか確認
+            const totalPcsCapacity = config.pcsConfigs.reduce((sum, pcsConfig) => sum + pcsConfig.ratedPower, 0);
+            
+            // 10%マージンを考慮
+            if (totalCapacity > totalPcsCapacity * 1.1) {
+                // 1台あたりの平均定格出力を計算
+                const avgRatedPower = totalPcsCapacity / config.pcsCount;
+                
+                // 推奨台数の計算
+                const recommendedCount = Math.ceil(totalCapacity / (avgRatedPower * 1.1));
+                
+                if (recommendedCount > config.pcsCount) {
+                    const confirmChange = confirm(`システム容量 ${totalCapacity.toFixed(2)}kW に対して、現在のパワコン設定 (平均${avgRatedPower.toFixed(2)}kW) では ${recommendedCount} 台の設置が推奨されます。\n\nパワコン台数を ${recommendedCount} 台に変更しますか？`);
+                    
+                    if (confirmChange) {
+                        config.pcsCount = recommendedCount;
+                        pcsCountInput.value = recommendedCount;
+                        
+                        // パワコンタブの更新
+                        updatePcsTabs();
+                        
+                        // ストリングの割り当てを更新
+                        updateStringToPcsMapping();
+                        
+                        // ストリング割り当てパネルの表示/非表示
+                        if (config.pcsCount > 1) {
+                            stringAssignmentPanel.style.display = 'block';
+                            updateStringAssignmentPanel();
+                        } else {
+                            stringAssignmentPanel.style.display = 'none';
+                        }
+                        
+                        // パワコン比較表の表示/非表示
+                        pcsComparisonContainer.style.display = config.pcsCount > 1 ? 'block' : 'none';
+                        
+                        // パワコン表示の更新
+                        updatePcsVisualization();
+                    }
+                }
+            }
+        }
+        
+        // ストリングのパワコン割り当てを更新する関数
+        function updateStringToPcsMapping() {
+            const stringCount = config.stringCount;
+            const pcsCount = config.pcsCount;
+            
+            // ストリングが均等になるように分配
+            if (pcsCount > 0) {
+                config.stringToPcsMap = Array(stringCount).fill(0).map((_, i) => Math.min(Math.floor(i / Math.ceil(stringCount / pcsCount)), pcsCount - 1));
+            } else {
+                config.stringToPcsMap = Array(stringCount).fill(0);
+            }
+        }
+        
+        // ストリング割り当てパネルを更新する関数
+        function updateStringAssignmentPanel() {
+            stringAssignmentGrid.innerHTML = '';
+            
+            for (let i = 0; i < config.stringCount; i++) {
+                const assignmentItem = document.createElement('div');
+                assignmentItem.className = 'string-assignment-item';
+                
+                const selectHtml = `
+                    <div>
+                        <div class="pcs-detail-label">ストリング ${i + 1}</div>
+                        <select id="stringAssign${i}" data-string-index="${i}" class="string-assign-select">
+                            ${Array.from({length: config.pcsCount}, (_, j) => `
+                                <option value="${j}" ${config.stringToPcsMap[i] === j ? 'selected' : ''}>パワコン ${j + 1} (${getPcsTypeDisplayName(config.pcsConfigs[j].type)})</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                `;
+                
+                assignmentItem.innerHTML = selectHtml;
+                stringAssignmentGrid.appendChild(assignmentItem);
+            }
+            
+            // 選択イベントの登録
+            document.querySelectorAll('.string-assign-select').forEach(select => {
+                select.addEventListener('change', function() {
+                    const stringIndex = parseInt(this.getAttribute('data-string-index'), 10);
+                    const pcsIndex = parseInt(this.value, 10);
+                    config.stringToPcsMap[stringIndex] = pcsIndex;
+                    
+                    // マルチストリング型パワコンのMPPT回路数の上限を更新
+                    if (config.pcsConfigs[pcsIndex].type === 'multi-string') {
+                        // このパワコンに割り当てられたストリング数を計算
+                        const assignedStrings = config.stringToPcsMap.filter(pcs => pcs === pcsIndex).length;
+                        
+                        // MPPT回路数の上限を更新
+                        const mpptInput = document.getElementById(`mpptCount-${pcsIndex}`);
+                        if (mpptInput) {
+                            mpptInput.max = Math.min(assignedStrings, 4); // 最大値を4に変更
+                            
+                            // 現在の値がストリング数を超えている場合は調整
+                            if (parseInt(mpptInput.value, 10) > assignedStrings) {
+                                mpptInput.value = assignedStrings;
+                                config.pcsConfigs[pcsIndex].mpptCount = assignedStrings;
+                            }
+                        }
+                    }
+                    
+                    // パワコン表示を更新
+                    updatePcsVisualization();
+                });
+            });
+        }
+        
+        // パワコン表示を更新する関数
+        function updatePcsVisualization() {
+            powerConditionerContainer.innerHTML = '';
+            
+            // 各パワコンの表示を生成
+            for (let i = 0; i < config.pcsCount; i++) {
+                // このパワコンに接続されたストリングを取得
+                const connectedStrings = config.stringToPcsMap.map((pcs, idx) => pcs === i ? (idx + 1) : null).filter(s => s !== null);
+                
+                // このパワコンに接続されたパネル数を計算
+                const connectedPanelCount = connectedStrings.reduce((sum, strIdx) => {
+                    const stringIndex = strIdx - 1;
+                    return sum + (config.panelsPerString[stringIndex] || 0);
+                }, 0);
+                
+                // このパワコンの容量計算
+                const pcsTotalCapacity = (connectedPanelCount * config.panelPower) / 1000;
+                
+                const pcsContainer = document.createElement('div');
+                pcsContainer.className = 'pcs-container';
+                
+                const pcsConfig = config.pcsConfigs[i];
+                const pcsTypeObj = pcsTypes.find(type => type.id === pcsConfig.type);
+                const pcsColor = pcsTypeObj ? pcsTypeObj.color : '#3f51b5';
+                
+                // SVGのパワコン表示を生成
+                pcsContainer.innerHTML = `
+                    <div class="pcs-header">
+                        <h3 class="pcs-title">パワーコンディショナー ${i + 1}</h3>
+                        <div class="pcs-info">接続ストリング: ${connectedStrings.join(', ') || 'なし'}</div>
+                    </div>
+                    
+                    <div class="diagram-container">
+                        <div class="component">
+                            <div class="component-label">${getPcsTypeDisplayName(pcsConfig.type)} (${pcsConfig.ratedPower}kW)</div>
+                            <svg id="powerConditionerSvg${i}" class="component-svg" width="320" height="180" viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg">
+                                <style>
+                                    .pcs-body { fill: #e0e0e0; stroke: #b0b0b0; stroke-width: 0.8; }
+                                    .pcs-front-panel { fill: #f0f0f0; stroke: #c0c0c0; stroke-width: 0.4; }
+                                    .pcs-display-screen { fill: ${pcsColor}; rx:1; ry:1; }
+                                    .pcs-display-text-main { font-family: 'Segoe UI', Arial, sans-serif; font-size: 5px; fill: #e8eaf6; text-anchor: middle; }
+                                    .pcs-display-text-sub { font-family: 'Segoe UI', Arial, sans-serif; font-size: 3.5px; fill: #c5cae9; text-anchor: middle; }
+                                    .pcs-indicator-label { font-family: 'Segoe UI', Arial, sans-serif; font-size: 2.5px; fill: #424242; text-anchor: middle; }
+                                    .indicator-on { fill: #66bb6a; }
+                                    .indicator-warn { fill: #ffa726; }
+                                    .indicator-error { fill: #ef5350; }
+                                    .pcs-button { fill: #cfd8dc; stroke: #90a4ae; stroke-width: 0.3; rx:1; ry:1; cursor: pointer; }
+                                    .pcs-button:hover { fill: #b0bec5; }
+                                    .pcs-button-text { font-family: 'Segoe UI', Arial, sans-serif; font-size: 3px; fill: #263238; text-anchor: middle; dominant-baseline: central; pointer-events: none;}
+                                    .pcs-vent-slot { fill: #bdbdbd; }
+                                    .pcs-logo { font-family: 'Arial Black', Gadget, sans-serif; font-size: 6px; fill: #757575; text-anchor: start;}
+                                </style>
+                            
+                                <rect class="pcs-body" x="5" y="5" width="150" height="80" rx="4" ry="4" />
+                                <text class="pcs-logo" x="12" y="15">PCS</text>
+                                <rect class="pcs-front-panel" x="10" y="20" width="140" height="60" rx="2" ry="2" />
+                            
+                                <g id="display-unit" transform="translate(18, 25)">
+                                    <rect class="pcs-display-screen" x="0" y="0" width="55" height="28" />
+                                    <text id="pcs-display-power${i}" class="pcs-display-text-main" x="27.5" y="11">${pcsTotalCapacity.toFixed(2)}kW</text>
+                                    <text id="pcs-display-efficiency${i}" class="pcs-display-text-sub" x="27.5" y="19">効率: ${pcsConfig.efficiency.toFixed(1)}%</text>
+                                    <rect fill="#7986cb" x="5" y="22" width="7" height="2.5" rx="0.5"/>
+                                    <rect fill="#5c6bc0" x="14" y="21.5" width="7" height="3" rx="0.5"/>
+                                    <rect fill="#3f51b5" x="23" y="21" width="7" height="3.5" rx="0.5"/>
+                                    <rect fill="#3949ab" x="32" y="21.5" width="7" height="3" rx="0.5"/>
+                                    <rect fill="#303f9f" x="41" y="22" width="7" height="2.5" rx="0.5"/>
+                                </g>
+                            
+                                <g id="controls-indicators" transform="translate(80, 25)">
+                                    <g id="indicator-lights">
+                                        <circle class="indicator-on" cx="10" cy="7" r="2.5" />
+                                        <text class="pcs-indicator-label" x="10" y="12">運転</text>
+                                        
+                                        <circle class="indicator-warn" cx="22" cy="7" r="2.5" />
+                                        <text class="pcs-indicator-label" x="22" y="12">警告</text>
+                                        
+                                        <circle class="indicator-error" cx="34" cy="7" r="2.5" />
+                                        <text class="pcs-indicator-label" x="34" y="12">エラー</text>
+                                    </g>
+                                
+                                    <g id="control-buttons" transform="translate(0, 20)">
+                                        <rect class="pcs-button" x="0" y="0" width="12" height="6"/>
+                                        <text class="pcs-button-text" x="6" y="3">MENU</text>
+                                        
+                                        <rect class="pcs-button" x="15" y="0" width="12" height="6"/>
+                                        <text class="pcs-button-text" x="21" y="3">▲</text>
+                                        
+                                        <rect class="pcs-button" x="30" y="0" width="12" height="6"/>
+                                        <text class="pcs-button-text" x="36" y="3">▼</text>
+                                        
+                                        <rect class="pcs-button" x="0" y="8" width="20" height="6"/>
+                                        <text class="pcs-button-text" x="10" y="11">ENTER</text>
+                                        
+                                        <rect class="pcs-button" x="23" y="8" width="20" height="6"/>
+                                        <text class="pcs-button-text" x="33" y="11">ESC</text>
+                                    </g>
+                                </g>
+                            
+                                <g id="top-vents">
+                                    <rect class="pcs-vent-slot" x="15" y="7" width="130" height="1.2" rx="0.5"/>
+                                    <rect class="pcs-vent-slot" x="15" y="9.2" width="130" height="1.2" rx="0.5"/>
+                                </g>
+                            
+                                <g id="bottom-vents" transform="translate(0, 75)">
+                                    <rect class="pcs-vent-slot" x="15" y="0" width="130" height="1.2" rx="0.5"/>
+                                    <rect class="pcs-vent-slot" x="15" y="2.2" width="130" height="1.2" rx="0.5"/>
+                                </g>
+                            </svg>
+                            <div class="efficiency-label">変換効率: ${pcsConfig.efficiency.toFixed(1)}%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="pcs-details">
+                        <div class="pcs-detail-item">
+                            <div class="pcs-detail-label">容量</div>
+                            <div class="pcs-detail-value">${pcsTotalCapacity.toFixed(2)} kW</div>
+                        </div>
+                        <div class="pcs-detail-item">
+                            <div class="pcs-detail-label">接続モジュール</div>
+                            <div class="pcs-detail-value">${connectedPanelCount} 枚</div>
+                        </div>
+                        <div class="pcs-detail-item">
+                            <div class="pcs-detail-label">使用率</div>
+                            <div class="pcs-detail-value">${Math.min(100, (pcsTotalCapacity / pcsConfig.ratedPower * 100)).toFixed(1)}%</div>
+                        </div>
+                        <div class="pcs-detail-item">
+                            <div class="pcs-detail-label">出力電力</div>
+                            <div class="pcs-detail-value" id="pcs${i}OutputPower">- kW</div>
+                        </div>
+                    </div>
+                `;
+                
+                powerConditionerContainer.appendChild(pcsContainer);
+            }
+        }
+        
+        // パワコンタイプ名を表示用に変換する関数
+        function getPcsTypeDisplayName(typeId) {
+            const pcsTypeObj = pcsTypes.find(type => type.id === typeId);
+            return pcsTypeObj ? pcsTypeObj.name : '標準型(ストリング型)';
+        }
+        
+        // 昇圧ユニットの必要性を判断するロジック
+        function checkBoosterNeed() {
+            // 自動判定がオフの場合は何もしない
+            if (!config.autoBooster) return;
+            
+            // 各ストリングの電圧を計算（1パネルあたり30Vと仮定）
+            const stringVoltages = [];
+            let minVoltage = Infinity;
+            
+            config.panelsPerString.forEach(panelCount => {
+                const voltage = panelCount * 30; // 1パネルあたり30V
+                stringVoltages.push(voltage);
+                if (voltage < minVoltage) {
+                    minVoltage = voltage;
+                }
+            });
+            
+            // 各パワコンタイプの最低入力電圧をチェック
+            let needsBooster = false;
+            
+            config.pcsConfigs.forEach(pcsConfig => {
+                const pcsTypeObj = pcsTypes.find(type => type.id === pcsConfig.type);
+                const minRequiredVoltage = pcsTypeObj ? pcsTypeObj.minVoltage : 250;
+                
+                // 最低電圧が必要電圧を下回っている場合は昇圧ユニットが必要
+                if (minVoltage < minRequiredVoltage) {
+                    needsBooster = true;
+                }
+            });
+            
+            // 結果を保存
+            results.needsBooster = needsBooster;
+            results.stringVoltages = stringVoltages;
+            
+            // 昇圧ユニットが必要かつ自動判定がオンの場合は昇圧ユニットを使用
+            if (needsBooster && config.autoBooster) {
+                config.useBooster = true;
+                useBoosterCheckbox.checked = true;
+                
+                // 昇圧ユニットのパラメータを計算
+                if (stringVoltages.length > 0) {
+                    let avgVoltage = stringVoltages.reduce((sum, voltage) => sum + voltage, 0) / stringVoltages.length;
+                    results.boosterInputVoltage = Math.min(...stringVoltages);
+                    results.boosterOutputVoltage = Math.max(250, avgVoltage * 1.5); // 最低でも250V、それより高ければ1.5倍程度に
+                    // 値を丸める
+                    results.boosterOutputVoltage = Math.round(results.boosterOutputVoltage / 10) * 10;
+                    
+                    // 昇圧ユニット情報の更新
+                    updateBoosterInfo();
+                }
+                
+                // 昇圧ユニットの表示
+                boosterUnitContainer.style.display = 'block';
+            } else if (!needsBooster && config.autoBooster) {
+                config.useBooster = false;
+                useBoosterCheckbox.checked = false;
+                
+                // 昇圧ユニットの非表示
+                boosterUnitContainer.style.display = 'none';
+            }
+        }
+        
+        // 昇圧ユニット情報の更新
+        function updateBoosterInfo() {
+            if (config.useBooster) {
+                boosterInputVoltage.textContent = `${results.boosterInputVoltage}V`;
+                boosterOutputVoltage.textContent = `${results.boosterOutputVoltage}V`;
+                boosterEfficiencyValue.textContent = '97.5%';
+                
+                // 昇圧回路図の電圧値も更新
+                circuitInputVoltage.textContent = `${results.boosterInputVoltage}V`;
+                circuitOutputVoltage.textContent = `${results.boosterOutputVoltage}V`;
+            }
+        }
+        
+        // ストリング構成の更新
+        function updateStringConfig() {
+            const panelCount = config.panelCount;
+            const stringCount = config.stringCount;
+            
+            if (isNaN(stringCount) || isNaN(panelCount) || stringCount <= 0 || panelCount <= 0) {
+                return;
+            }
+            
+            // 均等分配の基本パネル数
+            const basePerString = Math.floor(panelCount / stringCount);
+            const remainder = panelCount % stringCount;
+            
+            // 各ストリングあたりのパネル数を配列で計算
+            // 余りは最後のストリングに全て割り当てる
+            config.panelsPerString = Array(stringCount).fill(basePerString);
+            if (remainder > 0) {
+                config.panelsPerString[stringCount - 1] += remainder;
+            }
+            
+            // ストリング構成パネルの更新
+            stringConfigPanel.innerHTML = '';
+            
+            config.panelsPerString.forEach((count, index) => {
+                const stringDiv = document.createElement('div');
+                stringDiv.className = 'string-config';
+                
+                const pcsIndex = config.stringToPcsMap[index] !== undefined ? config.stringToPcsMap[index] : 0;
+                const pcsConfig = config.pcsConfigs[pcsIndex];
+                
+                let pcsSelectHtml = '';
+                if (config.pcsCount > 1) {
+                    pcsSelectHtml = `
+                        <p>接続先: パワコン ${pcsIndex + 1} (${getPcsTypeDisplayName(pcsConfig.type)})</p>
+                    `;
+                }
+                
+                stringDiv.innerHTML = `
+                    <h4>ストリング ${index + 1}</h4>
+                    <p>パネル数: ${count} 枚</p>
+                    <p>電圧: ${count * 30}V</p>
+                    ${pcsSelectHtml}
+                `;
+                
+                stringConfigPanel.appendChild(stringDiv);
+            });
+            
+            // パネル配置の視覚化を更新
+            renderPanelGrid();
+            
+            // 昇圧ユニットの必要性を判断
+            checkBoosterNeed();
+        }
+        
+        // パネル配置の視覚化
+        function renderPanelGrid() {
+            // パネル効率（環境要因を含む）を計算
+            const orientationFactor = calculateOrientationFactor(config.tiltAngle, config.orientationAngle);
+            const temperatureFactor = calculateTemperatureImpact(config.temperature);
+            const panelEfficiency = orientationFactor * temperatureFactor * 100;
+            
+            // パネルグリッドコンテナをクリア
+            panelGridContainer.innerHTML = '';
+            
+            // 各ストリングとパネルの生成
+            config.panelsPerString.forEach((panelCount, stringIndex) => {
+                const stringDiv = document.createElement('div');
+                stringDiv.className = 'solar-panel-string';
+                stringDiv.style.display = 'grid';
+                stringDiv.style.gridTemplateColumns = `repeat(${panelCount}, 1fr)`;
+                stringDiv.style.gap = '0.5rem';
+                stringDiv.style.position = 'relative';
+                
+                // 接続先パワコンのラベル表示（複数パワコンの場合）
+                if (config.stringToPcsMap[stringIndex] !== undefined) {
+                    const pcsIndex = config.stringToPcsMap[stringIndex];
+                    const pcsConfig = config.pcsConfigs[pcsIndex];
+                    const pcsColor = pcsTypes.find(type => type.id === pcsConfig.type)?.color || '#3f51b5';
+                    
+                    const pcsLabel = document.createElement('div');
+                    pcsLabel.className = 'pcs-connection-info';
+                    pcsLabel.textContent = `→ PCS ${pcsIndex + 1} (${getPcsTypeDisplayName(pcsConfig.type)})`;
+                    stringDiv.appendChild(pcsLabel);
+                }
+                
+                // ストリング接続線
+                const connectionDiv = document.createElement('div');
+                connectionDiv.className = 'string-connection';
+                stringDiv.appendChild(connectionDiv);
+                
+                // パネルの生成
+                for (let i = 0; i < panelCount; i++) {
+                    const panelContainer = document.createElement('div');
+                    panelContainer.className = 'solar-panel-container';
+                    
+                    // パネルSVGの作成
+                    const panelSvg = createSolarPanelSvg(panelEfficiency);
+                    panelContainer.innerHTML = panelSvg;
+                    
+                    stringDiv.appendChild(panelContainer);
+                }
+                
+                panelGridContainer.appendChild(stringDiv);
+            });
+        }
+        
+        // ソーラーパネルSVGの作成関数
+        function createSolarPanelSvg(efficiency) {
+            // 効率に応じた色の濃さを計算（効率が低いほど暗くなる）
+            const efficiencyFactor = Math.max(0.5, efficiency / 100); // 最低50%の明るさを保持
+            const baseColor = [0, 80, 158]; // #00509e (基本の青色)
+            const adjustedColor = baseColor.map(channel => Math.round(channel * efficiencyFactor));
+            const bgColor = `rgb(${adjustedColor[0]}, ${adjustedColor[1]}, ${adjustedColor[2]})`;
+            
+            // セルユニットの定義
+            const cellUnit = `
+                <g id="solar-cell-unit">
+                    <rect class="cell-rect" x="0" y="0" width="15" height="15" rx="1" ry="1" fill="${bgColor}" stroke="#003366" stroke-width="0.5" />
+                    <line class="busbar" x1="5" y1="0" x2="5" y2="15" stroke="#b0c4de" stroke-width="0.7" />
+                    <line class="busbar" x1="10" y1="0" x2="10" y2="15" stroke="#b0c4de" stroke-width="0.7" />
+                </g>
+            `;
+            
+            // ソーラーパネルSVG
+            return `
+                <svg width="100%" height="100%" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        ${cellUnit}
+                    </defs>
+                    
+                    <rect class="module-frame" x="1.5" y="1.5" width="197" height="117" rx="3" ry="3" fill="none" stroke="#cccccc" stroke-width="3" />
+                    <rect class="module-background" x="3" y="3" width="194" height="114" rx="2" ry="2" fill="#002244" />
+                    
+                    <!-- ソーラーセルのグリッド配置 -->
+                    <g>
+                        ${Array.from({ length: 6 }).map((_, rowIndex) => (
+                            Array.from({ length: 10 }).map((_, colIndex) => `
+                                <use href="#solar-cell-unit" x="${11.5 + colIndex * 18}" y="${7.5 + rowIndex * 18}" />
+                            `).join('')
+                        )).join('')}
+                    </g>
+                    
+                    <!-- 効率表示ラベル -->
+                    <g>
+                        <rect x="50" y="50" width="100" height="20" fill="rgba(0,0,0,0.7)" rx="4" />
+                        <text x="100" y="65" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${efficiency.toFixed(1)}%</text>
+                    </g>
+                </svg>
+            `;
+        }
+        
+        // 計算ボタンのイベントリスナー
+        calculateBtn.addEventListener('click', () => {
+            // システム性能計算
+            calculateSystemPerformance();
+            
+            // 結果の表示
+            displayResults();
+            
+            // チャートの更新
+            updateCharts();
+            
+            // パワコン比較の更新
+            if (config.pcsCount > 1) {
+                updatePcsComparison();
+            }
+        });
+        
+        // パワコン比較表を更新する関数
+        function updatePcsComparison() {
+            pcsComparisonBody.innerHTML = '';
+            
+            // 各パワコンの情報行を生成
+            for (let i = 0; i < results.pcsResults.length; i++) {
+                const pcsResult = results.pcsResults[i];
+                const pcsConfig = config.pcsConfigs[i];
+                
+                // 接続ストリングの一覧を取得
+                const connectedStrings = config.stringToPcsMap.map((pcs, idx) => pcs === i ? (idx + 1) : null).filter(s => s !== null);
+                
+                // 使用率の計算 (利用可能な容量に対する実際の出力の割合)
+                const utilizationRate = pcsResult.capacity > 0 ? (pcsResult.instantPower / pcsResult.capacity) * 100 : 0;
+                
+                // 最適化提案の判定
+                let optimizationBadge = '';
+                if (utilizationRate < 70) {
+                    optimizationBadge = '<span class="optimization-badge">容量見直し推奨</span>';
+                } else if (utilizationRate > 95) {
+                    optimizationBadge = '<span class="optimization-badge">クリッピングロス注意</span>';
+                }
+                
+                // 行の作成
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>パワコン ${i + 1} ${optimizationBadge}</td>
+                    <td>${getPcsTypeDisplayName(pcsConfig.type)}</td>
+                    <td>${pcsConfig.ratedPower.toFixed(1)} kW</td>
+                    <td>${pcsConfig.efficiency.toFixed(1)}%</td>
+                    <td>${connectedStrings.join(', ') || 'なし'}</td>
+                    <td>${pcsResult.dailyGeneration.toFixed(2)} kWh</td>
+                    <td>${Math.min(100, (pcsResult.utilizationRate)).toFixed(1)}%</td>
+                `;
+                
+                pcsComparisonBody.appendChild(row);
+            }
+            
+            // 比較表の表示
+            pcsComparisonContainer.style.display = 'block';
+        }
+        
+        // システム性能計算関数
+        function calculateSystemPerformance() {
+            // 1. システム総容量計算(kW)
+            const panelPower = parseFloat(config.panelPower) || 0;
+            const panelCount = parseInt(config.panelCount, 10) || 0;
+            const totalCapacity = (panelPower * panelCount) / 1000;
+            
+            // 2. 天候係数
+            const weatherFactors = {
+                '晴れ': 1.0,
+                '薄曇り': 0.7,
+                '曇り': 0.4,
+                '雨': 0.2
+            };
+            const weatherFactor = weatherFactors[config.weatherCondition] || 0.7;
+            
+            // 3. 方位・傾斜角の影響
+            const orientationFactor = calculateOrientationFactor(config.tiltAngle, config.orientationAngle);
+            
+            // 4. 温度の影響
+            const temperatureFactor = calculateTemperatureImpact(config.temperature);
+            
+            // 5. パネル変換効率
+            const panelEfficiency = parseFloat(config.panelEfficiency) / 100 || 0.195;
+            
+            // 6. その他のシステム損失
+            const wiringLoss = 0.98; // 配線損失: 2%
+            const mismatchLoss = 0.98; // モジュール間のミスマッチ損失: 2%
+            const dustShadingLoss = 0.97; // 汚れや影による損失: 3%
+            
+            // 7. 昇圧ユニット効率
+            const boosterEfficiency = 0.975;
+            
+            // 8. 日射強度（kW/m²）- 標準テスト条件は1kW/m²
+            const solarIrradiance = 1.0 * weatherFactor;
+            
+            // 9. 地域日照係数を適用した日照時間
+            const baseDailySunHours = {
+                "晴れ": 5.0,
+                "薄曇り": 4.0,
+                "曇り": 3.0,
+                "雨": 1.5
+            };
+            const dailySunHours = baseDailySunHours[config.weatherCondition] * config.regionalSunshineFactor;
+            
+            // 10. パワコンごとの発電量計算
+            let totalInstantPower = 0;
+            let totalDailyGeneration = 0;
+            let totalClippingLoss = 0;
+            
+            // パワコンごとの結果を初期化
+            results.pcsResults = [];
+            
+            for (let i = 0; i < config.pcsCount; i++) {
+                const pcsConfig = config.pcsConfigs[i];
+                
+                // このパワコンに接続されたストリングを取得
+                const connectedStringIndices = config.stringToPcsMap.map((pcs, idx) => pcs === i ? idx : -1).filter(idx => idx !== -1);
+                
+                // このパワコンに接続されたパネル数を計算
+                const connectedPanelCount = connectedStringIndices.reduce((sum, strIdx) => sum + config.panelsPerString[strIdx], 0);
+                
+                // このパワコンの容量計算
+                const pcsTotalCapacity = (connectedPanelCount * panelPower) / 1000;
+                
+                // マルチストリング型の場合のストリング効率向上
+                let stringEfficiencyBoost = 1.0;
+                if (pcsConfig.type === 'multi-string') {
+                    const mpptCount = parseInt(pcsConfig.mpptCount, 10) || 1;
+                    // MPPTとストリングの比率に応じた効率向上
+                    const assignedStrings = connectedStringIndices.length;
+                    if (assignedStrings > 0) {
+                        stringEfficiencyBoost = 1.0 + Math.min(mpptCount / assignedStrings, 1) * 0.05;
+                    }
+                }
+                
+                // パワコン効率
+                const pcsEfficiency = parseFloat(pcsConfig.efficiency) / 100 || 0.945;
+                
+                // このパワコンのシステム効率計算
+                const systemEfficiency = wiringLoss * mismatchLoss * dustShadingLoss * stringEfficiencyBoost;
+                
+                // ストリングごとの電力計算
+                let pcsTheoreticalPower = 0;
+                
+                // ストリング毎に計算
+                for (const strIdx of connectedStringIndices) {
+                    // このストリングのパネル数と電圧
+                    const stringPanelCount = config.panelsPerString[strIdx];
+                    const stringVoltage = stringPanelCount * 30; // 1パネルあたり30V
+                    
+                    // 昇圧ユニットを使用する場合、昇圧効果を考慮
+                    let thisStringBoosterEffect = 1.0;
+                    if (config.useBooster && config.boosterStrings[strIdx]) {
+                        thisStringBoosterEffect = boosterEfficiency;
+                    }
+                    
+                    // ストリングの理論発電電力を計算
+                    const stringPower = (stringPanelCount * panelPower / 1000) * solarIrradiance * orientationFactor
+                                       * temperatureFactor * systemEfficiency * thisStringBoosterEffect;
+                    
+                    // パワコン全体の理論電力に加算
+                    pcsTheoreticalPower += stringPower;
+                }
+                
+                // パワコン定格上限でクリップ
+                const pcsInstantPower = Math.min(pcsTheoreticalPower, parseFloat(pcsConfig.ratedPower) || 5.5) * pcsEfficiency;
+                
+                // クリッピングロス
+                const pcsClippingLoss = Math.max(0, pcsTheoreticalPower - pcsInstantPower / pcsEfficiency);
+                
+                // 日間発電量
+                const pcsDailyGeneration = pcsInstantPower * dailySunHours;
+                
+                // 合計に加算
+                totalInstantPower += pcsInstantPower;
+                totalDailyGeneration += pcsDailyGeneration;
+                totalClippingLoss += pcsClippingLoss;
+                
+                // パワコンごとの結果を保存
+                results.pcsResults.push({
+                    capacity: pcsTotalCapacity,
+                    connectedPanelCount,
+                    instantPower: pcsInstantPower,
+                    dailyGeneration: pcsDailyGeneration,
+                    utilizationRate: pcsTotalCapacity > 0 ? (pcsInstantPower / pcsTotalCapacity) * 100 : 0,
+                    clippingLoss: pcsClippingLoss,
+                    systemEfficiency: systemEfficiency * 100,
+                    pcsEfficiency: pcsEfficiency * 100
+                });
+                
+                // パワコン出力表示を更新
+                const outputPowerEl = document.getElementById(`pcs${i}OutputPower`);
+                if (outputPowerEl) {
+                    outputPowerEl.textContent = `${pcsInstantPower.toFixed(2)} kW`;
+                }
+            }
+            
+            // 月間発電量(kWh)
+            const monthlyGeneration = totalDailyGeneration * 30; // 月30日と仮定
+            
+            // 年間月別発電量の推定（月ごとの日照時間と天候を考慮）
+            const monthlyMultipliers = [
+                0.7,  // 1月
+                0.8,  // 2月
+                0.9,  // 3月
+                1.0,  // 4月
+                1.05, // 5月
+                0.9,  // 6月（梅雨）
+                1.0,  // 7月
+                1.0,  // 8月
+                0.85, // 9月（秋雨）
+                0.8,  // 10月
+                0.7,  // 11月
+                0.65  // 12月
+            ];
+            
+            // 月別発電量の計算
+            const monthlyGenerations = monthlyMultipliers.map(mult => monthlyGeneration * mult);
+            const yearlyGeneration = monthlyGenerations.reduce((sum, val) => sum + val, 0);
+            
+            // システム全体の効率を計算（パワコンの平均値）
+            const avgPcsEfficiency = results.pcsResults.reduce((sum, pcsResult) => sum + pcsResult.pcsEfficiency, 0) / results.pcsResults.length / 100;
+            const avgSystemEfficiency = results.pcsResults.reduce((sum, pcsResult) => sum + pcsResult.systemEfficiency, 0) / results.pcsResults.length / 100;
+            
+            // 昇圧ユニット効率の計算（使用ストリングの割合に基づく）
+            let avgBoosterEfficiency = 1.0;
+            if (config.useBooster && config.boosterStrings.some(b => b)) {
+                const boosterStringCount = config.boosterStrings.filter(b => b).length;
+                avgBoosterEfficiency = 1.0 - (boosterStringCount / config.stringCount) * (1.0 - boosterEfficiency);
+            }
+            
+            // 総合効率
+            const totalEfficiency = orientationFactor * temperatureFactor * avgSystemEfficiency * avgPcsEfficiency * avgBoosterEfficiency;
+            
+            // 損失内訳の計算（クリッピングロスを含む）
+            const theoreticalMax = totalCapacity * solarIrradiance;
+            const clippingLossFactor = totalInstantPower > 0 ? totalClippingLoss / theoreticalMax : 0;
+            
+            // パワコン効率損失（平均値）
+            const inverterLossFactor = 1 - avgPcsEfficiency;
+            
+            // 昇圧ユニット損失係数
+            const boosterLossFactor = 1 - avgBoosterEfficiency;
+            
+            const lossFactors = {
+                weather: 1 - weatherFactor,
+                orientation: weatherFactor * (1 - orientationFactor),
+                temperature: weatherFactor * orientationFactor * (1 - temperatureFactor),
+                system: weatherFactor * orientationFactor * temperatureFactor * (1 - avgSystemEfficiency),
+                inverter: weatherFactor * orientationFactor * temperatureFactor * avgSystemEfficiency * inverterLossFactor,
+                booster: weatherFactor * orientationFactor * temperatureFactor * avgSystemEfficiency * avgPcsEfficiency * boosterLossFactor,
+                clipping: clippingLossFactor
+            };
+            
+            // 結果を更新
+            results = {
+                ...results,
+                totalCapacity,
+                instantPower: totalInstantPower,
+                dailyGeneration: totalDailyGeneration,
+                monthlyGeneration,
+                yearlyGeneration,
+                systemEfficiency: avgSystemEfficiency * 100,
+                totalEfficiency: totalEfficiency * 100,
+                regionalSunshineFactor: config.regionalSunshineFactor * 100,
+                losses: lossFactors,
+                weatherFactor: weatherFactor * 100,
+                orientationFactor: orientationFactor * 100,
+                temperatureFactor: temperatureFactor * 100,
+                boosterEfficiency: avgBoosterEfficiency * 100,
+                monthlyGenerations,
+                pcsResults: results.pcsResults
+            };
+        }
+        
+        // 方位・傾斜角の影響を計算
+        function calculateOrientationFactor(tiltAngle, orientationAngle = 0) {
+            const optimalTiltAngle = 30; // 日本における一般的な最適角度
+            
+            // 傾斜角の最適値からの乖離による効率低下
+            let tiltEfficiency = 1.0 - Math.abs(tiltAngle - optimalTiltAngle) * 0.005;
+            if (tiltEfficiency < 0.7) tiltEfficiency = 0.7; // 最低でも70%の効率は確保
+            
+            // 方位角の影響（0度=南向き、東西は効率が落ちる）
+            let orientationEfficiency = 1.0 - Math.abs(orientationAngle) * 0.002;
+            if (orientationEfficiency < 0.8) orientationEfficiency = 0.8; // 最低でも80%の効率は確保
+            
+            return tiltEfficiency * orientationEfficiency;
+        }
+        
+        // 周囲温度の影響を計算
+        function calculateTemperatureImpact(temperature) {
+            const temperatureCoefficient = -0.004; // -0.4%/℃
+            return 1 + temperatureCoefficient * (temperature - 25);
+        }
+        
+        // 結果の表示
+        function displayResults() {
+            // システム情報の更新
+            systemCapacityEl.textContent = `${results.totalCapacity.toFixed(2)} kW`;
+            modulesCountEl.textContent = `${config.panelCount} 枚`;
+            stringsCountEl.textContent = `${config.stringCount} 系統`;
+            
+            // パワコン台数表示
+            powerConditionerCountEl.textContent = `${config.pcsCount} 台`;
+            
+            // 発電量予測の更新
+            instantPowerEl.textContent = `${results.instantPower.toFixed(2)} kW`;
+            dailyGenerationEl.textContent = `${results.dailyGeneration.toFixed(2)} kWh`;
+            monthlyGenerationEl.textContent = `${results.monthlyGeneration.toFixed(2)} kWh`;
+            yearlyGenerationEl.textContent = `${results.yearlyGeneration.toFixed(2)} kWh`;
+            
+            // 効率係数の更新
+            if (regionalSunshineFactor) {
+                regionalSunshineFactor.textContent = `${results.regionalSunshineFactor.toFixed(1)}%`;
+            }
+            weatherFactorEl.textContent = `${results.weatherFactor.toFixed(1)}%`;
+            orientationFactorEl.textContent = `${results.orientationFactor.toFixed(1)}%`;
+            temperatureFactorEl.textContent = `${results.temperatureFactor.toFixed(1)}%`;
+            totalEfficiencyEl.textContent = `${results.totalEfficiency.toFixed(1)}%`;
+            
+            // パネル配置の更新
+            renderPanelGrid();
+            
+            // パワコンタイプに応じた接続箱の表示/非表示
+            let showJunctionBox = false;
+            
+            // 少なくとも1つのパワコンが標準型またはハイブリッド型の場合は接続箱を表示
+            for (let i = 0; i < config.pcsCount; i++) {
+                const pcsType = config.pcsConfigs[i].type;
+                if (pcsType === 'standard' || pcsType === 'hybrid') {
+                    showJunctionBox = true;
+                    break;
+                }
+            }
+            
+            junctionBoxContainer.style.display = showJunctionBox ? 'block' : 'none';
+            
+            // 接続箱のストリング数表示を更新
+            junctionBoxStringCount.textContent = config.stringCount;
+            
+            // パワコン表示の更新
+            updatePcsVisualization();
+            
+            // 各パワコンの出力電力表示を更新
+            results.pcsResults.forEach((pcsResult, index) => {
+                const outputPowerEl = document.getElementById(`pcs${index}OutputPower`);
+                if (outputPowerEl) {
+                    outputPowerEl.textContent = `${pcsResult.instantPower.toFixed(2)} kW`;
+                }
+            });
+            
+            // 昇圧ユニットの自動判定
+            if (config.autoBooster) {
+                checkBoosterNeed();
+            }
+            
+            // パワコン比較表の更新
+            if (config.pcsCount > 1) {
+                updatePcsComparison();
+            }
+        }
+        
+        // チャートの更新
+        function updateCharts() {
+            updateMonthlyChart();
+            updateLossChart();
+        }
+        
+        // 月別発電量チャートの更新
+        function updateMonthlyChart() {
+            const ctx = document.getElementById('monthlyChart').getContext('2d');
+            
+            if (monthlyChart) {
+                monthlyChart.destroy();
+            }
+            
+            const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+            
+            monthlyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: monthNames,
+                    datasets: [{
+                        label: '月間発電量 (kWh)',
+                        data: results.monthlyGenerations,
+                        backgroundColor: 'rgba(0, 91, 171, 0.7)',
+                        borderColor: 'rgba(0, 91, 171, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '発電量 (kWh)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 損失内訳チャートの更新
+        function updateLossChart() {
+            const ctx = document.getElementById('lossChart').getContext('2d');
+            
+            if (lossChart) {
+                lossChart.destroy();
+            }
+            
+            // 損失のラベルとカラー
+            const lossLabels = {
+                weather: '天候による損失',
+                orientation: '方位・傾斜角による損失',
+                temperature: '温度による損失',
+                system: 'システム損失',
+                inverter: 'パワコン変換損失',
+                booster: '昇圧ユニット損失',
+                clipping: 'クリッピング損失'
+            };
+            
+            const lossColors = {
+                weather: '#2196f3',
+                orientation: '#ff9800',
+                temperature: '#f44336',
+                system: '#9c27b0',
+                inverter: '#4caf50',
+                booster: '#ff5722',
+                clipping: '#795548'
+            };
+            
+            // 全体の100%から差し引いた実際の出力率
+            const totalLoss = Object.values(results.losses).reduce((sum, val) => sum + val, 0);
+            const actualOutput = Math.max(0, 1 - totalLoss);
+            
+            // チャートデータ作成
+            const labels = ['実発電量'];
+            const data = [actualOutput];
+            const backgroundColor = ['rgba(76, 175, 80, 0.7)'];
+            const borderColor = ['rgba(76, 175, 80, 1)'];
+            
+            Object.entries(results.losses).forEach(([key, value]) => {
+                if (value > 0.01) { // 1%以上の損失のみ表示
+                    labels.push(lossLabels[key]);
+                    data.push(value);
+                    backgroundColor.push(lossColors[key]);
+                    borderColor.push(lossColors[key]);
+                }
+            });
+            
+            lossChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderColor: borderColor,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    return `${label}: ${(value * 100).toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 初期化関数
+        function initialize() {
+            // 設定項目の初期値を反映
+            panelPowerInput.value = config.panelPower;
+            panelEfficiencyInput.value = config.panelEfficiency;
+            panelCountInput.value = config.panelCount;
+            stringCountInput.value = config.stringCount;
+            pcsCountInput.value = config.pcsCount;
+            weatherConditionSelect.value = config.weatherCondition;
+            temperatureInput.value = config.temperature;
+            temperatureValue.textContent = `${config.temperature}℃`;
+            tiltAngleInput.value = config.tiltAngle;
+            tiltAngleValue.textContent = `${config.tiltAngle}°`;
+            orientationAngleInput.value = config.orientationAngle;
+            
+            // 方位角の表示更新
+            let orientationText = `${config.orientationAngle}°`;
+            if (config.orientationAngle === 0) {
+                orientationText += ' (真南)';
+            } else if (config.orientationAngle < 0) {
+                orientationText += ` (東${Math.abs(config.orientationAngle)}°)`;
+            } else {
+                orientationText += ` (西${config.orientationAngle}°)`;
+            }
+            orientationAngleValue.textContent = orientationText;
+            
+            // パワコンタブの初期化
+            updatePcsTabs();
+            
+            // ストリングの初期割り当て設定
+            updateStringToPcsMapping();
+            
+            // 複数パワコンの場合はストリング割り当てパネルを表示
+            if (config.pcsCount > 1) {
+                stringAssignmentPanel.style.display = 'block';
+                updateStringAssignmentPanel();
+                pcsComparisonContainer.style.display = 'block';
+            } else {
+                stringAssignmentPanel.style.display = 'none';
+                pcsComparisonContainer.style.display = 'none';
+            }
+            
+            // ストリング構成の更新
+            updateStringConfig();
+            
+            // 昇圧ユニットの設定
+            useBoosterCheckbox.checked = config.useBooster;
+            
+            // 昇圧ユニットの表示/非表示設定
+            boosterUnitContainer.style.display = config.useBooster ? 'block' : 'none';
+            boosterStringSelectionPanel.style.display = config.useBooster ? 'block' : 'none';
+            
+            // 昇圧ストリング選択の更新
+            if (config.useBooster) {
+                updateBoosterStringSelection();
+            }
+            
+            // 接続箱のストリング数表示を更新
+            junctionBoxStringCount.textContent = config.stringCount;
+            
+            // パワコン表示の更新
+            updatePcsVisualization();
+            
+            // 結果の初期計算と表示
+            calculateSystemPerformance();
+            displayResults();
+            updateCharts();
+            
+            // 共通設定ボタンの表示/非表示
+            applyCommonSettingsBtn.style.display = config.pcsCount > 1 ? 'block' : 'none';
+        }
+        
+        // 初期化を実行
+        initialize();
+        
+        // 都道府県の地域分類
+        const prefectureRegions = {
+            'hokkaido-tohoku': ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県'],
+            'kanto': ['茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県'],
+            'chubu': ['新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県'],
+            'kinki': ['三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県'],
+            'chugoku-shikoku': ['鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県'],
+            'kyushu-okinawa': ['福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
+        };
+
+        // 日照データテーブルの初期化
+        function initializeSunshineTable() {
+            updateSunshineTable('all', 'hours-desc');
+            updateSunshineStats();
+        }
+
+        // 日照データテーブルの更新
+        function updateSunshineTable(region = 'all', sortBy = 'hours-desc') {
+            const tbody = document.getElementById('sunshineTableBody');
+            tbody.innerHTML = '';
+            
+            // データの準備
+            let prefectureArray = Object.entries(prefectureSunshineData).map(([name, data]) => ({
+                name,
+                hours: data.hours,
+                ratio: data.ratio
+            }));
+            
+            // 地域フィルタリング
+            if (region !== 'all') {
+                const targetPrefectures = prefectureRegions[region] || [];
+                prefectureArray = prefectureArray.filter(pref => targetPrefectures.includes(pref.name));
+            }
+            
+            // ソート
+            switch (sortBy) {
+                case 'name':
+                    prefectureArray.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'hours-desc':
+                    prefectureArray.sort((a, b) => b.hours - a.hours);
+                    break;
+                case 'hours-asc':
+                    prefectureArray.sort((a, b) => a.hours - b.hours);
+                    break;
+                case 'ratio-desc':
+                    prefectureArray.sort((a, b) => b.ratio - a.ratio);
+                    break;
+                case 'ratio-asc':
+                    prefectureArray.sort((a, b) => a.ratio - b.ratio);
+                    break;
+            }
+            
+            // 最大値を取得（バーグラフ用）
+            const maxHours = Math.max(...Object.values(prefectureSunshineData).map(d => d.hours));
+            
+            // テーブル行の生成
+            prefectureArray.forEach((pref, index) => {
+                const barWidth = (pref.hours / maxHours) * 100;
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${pref.name}</td>
+                    <td>${pref.hours.toFixed(1)} 時間</td>
+                    <td>${(pref.ratio * 100).toFixed(1)}%</td>
+                    <td style="width: 200px;">
+                        <div style="background-color: #e0e0e0; border-radius: 3px; overflow: hidden;">
+                            <div class="sunshine-bar" style="width: ${barWidth}%"></div>
+                        </div>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // 日照統計の更新
+        function updateSunshineStats() {
+            const dataArray = Object.entries(prefectureSunshineData);
+            
+            // 最大・最小を見つける
+            let maxPref = dataArray[0];
+            let minPref = dataArray[0];
+            let totalHours = 0;
+            
+            dataArray.forEach(([name, data]) => {
+                if (data.hours > maxPref[1].hours) maxPref = [name, data];
+                if (data.hours < minPref[1].hours) minPref = [name, data];
+                totalHours += data.hours;
+            });
+            
+            const avgHours = totalHours / dataArray.length;
+            
+            // 表示を更新
+            document.getElementById('maxSunshinePrefecture').textContent = 
+                `${maxPref[0]} (${maxPref[1].hours.toFixed(1)}時間)`;
+            document.getElementById('minSunshinePrefecture').textContent = 
+                `${minPref[0]} (${minPref[1].hours.toFixed(1)}時間)`;
+            document.getElementById('avgSunshineHours').textContent = 
+                `${avgHours.toFixed(1)} 時間`;
+        }
+
+        // 地域タブのイベントリスナー
+        document.addEventListener('DOMContentLoaded', function() {
+            // 地域タブ
+            const regionTabs = document.querySelectorAll('.region-tab');
+            regionTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    regionTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const region = this.getAttribute('data-region');
+                    const sortBy = document.getElementById('sunshineSort').value;
+                    updateSunshineTable(region, sortBy);
+                });
+            });
+            
+            // ソート変更
+            const sunshineSort = document.getElementById('sunshineSort');
+            if (sunshineSort) {
+                sunshineSort.addEventListener('change', function() {
+                    const activeRegion = document.querySelector('.region-tab.active')?.getAttribute('data-region') || 'all';
+                    updateSunshineTable(activeRegion, this.value);
+                });
+            }
+            
+            // 初期化
+            if (document.getElementById('sunshine-content')) {
+                initializeSunshineTable();
+            }
+        });
+        
+        
+        // タブ切り替え機能
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // アクティブなタブを切り替え
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // クリックされたタブをアクティブに
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(`${tabId}-content`).classList.add('active');
+            });
+        });
+        
+        // カテゴリーアコーディオン機能
+        const categoryHeaders = document.querySelectorAll('.category-header');
+        
+        categoryHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const category = header.parentElement;
+                category.classList.toggle('active');
+            });
+            
+            // 初期状態で最初のカテゴリーを開く
+            if (header === categoryHeaders[0]) {
+                header.parentElement.classList.add('active');
+            }
+        });
+        
+        // 用語検索機能
+        const searchInput = document.getElementById('termSearch');
+        const termItems = document.querySelectorAll('.term-item');
+        
+        searchInput.addEventListener('input', () => {
+            const searchText = searchInput.value.toLowerCase();
+            
+            termItems.forEach(item => {
+                const termTitle = item.querySelector('h3').textContent.toLowerCase();
+                const termContent = item.textContent.toLowerCase();
+                
+                if (termTitle.includes(searchText) || termContent.includes(searchText)) {
+                    item.style.display = 'block';
+                    // 検索にヒットしたカテゴリーを開く
+                    const category = item.closest('.glossary-category');
+                    category.classList.add('active');
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // 検索が空の場合は全て表示に戻す
+            if (searchText === '') {
+                termItems.forEach(item => {
+                    item.style.display = 'block';
+                });
+            }
+        });
+
+        // ウィンドウサイズに応じた自動スケーリング
+        function adjustScale() {
+            const viewportWidth = window.innerWidth;
+            
+            // ビューポートサイズに基づいたフォントサイズの調整
+            if (viewportWidth < 768) {
+                document.documentElement.style.fontSize = '14px';
+            } else if (viewportWidth < 992) {
+                document.documentElement.style.fontSize = '15px';
+            } else {
+                document.documentElement.style.fontSize = '16px';
+            }
+            
+            // チャートのリサイズ
+            if (window.solarChart && window.solarChart.resize) {
+                window.solarChart.resize();
+            }
+            if (window.economicChart && window.economicChart.resize) {
+                window.economicChart.resize();
+            }
+        }
+
+        // 初期化時とリサイズ時に実行
+        window.addEventListener('DOMContentLoaded', adjustScale);
+        window.addEventListener('resize', adjustScale);
+    </script>
+</body>
+</html>
