@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第二種電気工事士 法令対策シミュレーター</title>
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --secondary-color: #FF961C;
+            --light-blue: #E0EEF9;
+            --medium-blue: #4D8BC9;
+            --neutral-grey: #F5F5F5;
+            --dark-grey: #616161;
+            --text-dark: #333333;
+            --text-light: #FFFFFF;
+            --success-color: #4CAF50;
+            --warning-color: #FFC107;
+            --danger-color: #F44336;
+            --error-bg: #FFEBEE;
+            --error-border: #EF5350;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Meiryo', 'メイリオ', 'Hiragino Kaku Gothic Pro', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        /* ヘッダー */
+        .header {
+            background: var(--primary-color);
+            color: var(--text-light);
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-to-home {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            z-index: 2;
+        }
+
+        .back-to-home:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* 試験情報バナー */
+        .exam-info-banner {
+            background: var(--secondary-color);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* メインコンテナ */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+        
+        /* 概要説明改善 */
+        .overview-card {
+            background: var(--light-blue);
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .source-badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+            font-weight: normal;
+        }
+        
+        /* ナビゲーションタブ */
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .nav-tab {
+            padding: 0.6rem 1.2rem;
+            background: var(--neutral-grey);
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .nav-tab:hover {
+            background: var(--light-blue);
+            border-color: var(--primary-color);
+        }
+        
+        .nav-tab.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        /* コンテンツエリア */
+        .content-area {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .content-area.active {
+            display: block;
+        }
+        
+        /* アニメーション */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        }
+        
+        /* 重要数値カード */
+        .number-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .number-card {
+            background: var(--primary-color);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .number-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,91,171,0.3);
+        }
+        
+        .number-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .number-card .label {
+            font-size: 0.9rem;
+        }
+        
+        /* 警告ボックス */
+        .warning-box {
+            background: var(--error-bg);
+            border: 2px solid var(--error-border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            position: relative;
+            padding-left: 3rem;
+        }
+        
+        .warning-box::before {
+            content: '⚠️';
+            position: absolute;
+            left: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        /* 作業範囲表 */
+        .work-scope-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+        
+        .work-scope-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.8rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .work-scope-table td {
+            padding: 0.8rem;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            transition: all 0.2s ease;
+        }
+        
+        .work-scope-table tr:hover td {
+            background: var(--light-blue);
+        }
+        
+        .work-scope-table .can-do {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        
+        .work-scope-table .cannot-do {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+        
+        /* 過去問題 */
+        .past-question {
+            background: #FFF9E6;
+            border: 1px solid var(--secondary-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .past-question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+        
+        .past-question-badge {
+            background: var(--secondary-color);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        /* クイズ選択肢 */
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+        
+        .quiz-option {
+            background: white;
+            padding: 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .quiz-option:hover {
+            border-color: var(--primary-color);
+            background: var(--light-blue);
+        }
+        
+        .quiz-option.correct {
+            background: #E8F5E9;
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .quiz-option.incorrect {
+            background: #FFEBEE;
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+        
+        /* 暗記ポイント */
+        .memorize-point {
+            background: #FFE082;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-weight: bold;
+        }
+        
+        /* 罰則カード */
+        .penalty-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .penalty-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .penalty-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            border-color: var(--danger-color);
+        }
+        
+        .penalty-card .violation {
+            font-weight: bold;
+            color: var(--danger-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .penalty-card .punishment {
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        
+        .penalty-card small {
+            display: block;
+            margin-top: 0.5rem;
+            color: #666;
+            font-size: 0.8rem;
+        }
+        
+        /* 進捗表示 */
+        .progress-container {
+            margin-bottom: 1rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        /* ボタン */
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0.5rem;
+        }
+        
+        .btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+        }
+        
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 0.8rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        /* 合格ポイント */
+        .success-tips {
+            background: #E8F5E9;
+            border: 1px solid var(--success-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .success-tips h3 {
+            color: var(--success-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        /* 重要マーク */
+        .important-mark {
+            display: inline-block;
+            background: var(--danger-color);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            margin-left: 0.5rem;
+            font-weight: bold;
+        }
+        
+        /* チェックリスト */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.5rem 0;
+            transition: all 0.2s ease;
+        }
+        
+        .checklist-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary-color);
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        .checklist-checkbox.checked {
+            background: var(--primary-color);
+        }
+        
+        .checklist-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        /* 解説ボックス */
+        .explanation-box {
+            background: #E3F2FD;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .explanation-box.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        
+        /* よくある間違い */
+        .common-mistakes {
+            background: #FFF3E0;
+            border-left: 3px solid var(--warning-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .common-mistakes h4 {
+            color: #F57C00;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .nav-tabs {
+                padding: 0.8rem;
+                gap: 0.3rem;
+            }
+            
+            .nav-tab {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            
+            .number-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .quiz-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .penalty-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .overview-card {
+                padding: 1rem;
+            }
+            
+            .work-scope-table {
+                font-size: 0.9rem;
+            }
+            
+            .work-scope-table td, .work-scope-table th {
+                padding: 0.7rem;
+            }
+            
+            .tooltip-text {
+                width: 200px;
+                margin-left: -100px;
+            }
+        }
+        
+        /* スコア表示 */
+        .score-display {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .score-display .score {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        /* スクロールトップボタン */
+        .scroll-top-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 99;
+        }
+        
+        .scroll-top-btn.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .scroll-top-btn:hover {
+            background: var(--secondary-color);
+        }
+        
+        .scroll-top-btn::before {
+            content: '↑';
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        /* ツールチップ */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            color: var(--primary-color);
+            border-bottom: 1px dotted var(--primary-color);
+            cursor: help;
+        }
+        
+        .tooltip-text {
+            visibility: hidden;
+            width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 8px 12px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85rem;
+            font-weight: normal;
+            line-height: 1.4;
+        }
+        
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* 打ち消し線 */
+        s {
+            text-decoration: line-through;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html" class="back-to-home">
+            ← ポータルに戻る
+        </a>
+        <div>
+            <h1>⚡ 第二種電気工事士 法令対策</h1>
+            <p class="subtitle">試験頻出の法令・数値を効率的にマスター</p>
+        </div>
+    </div>
+    
+    <div class="exam-info-banner">
+        📝 筆記試験の法令分野は約10問出題！確実に点数を取りましょう
+    </div>
+    
+    <div class="container">
+        <!-- 概要説明 -->
+        <div class="overview-card">
+            <h2 style="color: var(--primary-color); margin-bottom: 1rem;">📚 法令分野の概要と学習ポイント</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                <div>
+                    <h3 style="color: var(--secondary-color); font-size: 1.1rem; margin-bottom: 0.5rem;">🎯 出題範囲</h3>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>電気事業法</strong>：電気工作物の定義・分類</li>
+                        <li><strong>電気工事士法</strong>：資格の種類・作業範囲</li>
+                        <li><strong>電気工事業法</strong>：工事業の登録・規制</li>
+                        <li><strong>電気設備技術基準</strong>：対地電圧・絶縁抵抗値</li>
+                        <li><strong>電気用品安全法</strong>：PSEマーク・罰則</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 style="color: var(--secondary-color); font-size: 1.1rem; margin-bottom: 0.5rem;">📊 出題傾向（過去5年分析）</h3>
+                    <ul style="line-height: 1.8;">
+                        <li><strong>必出問題</strong>：一般用電気工作物の定義（600V以下）</li>
+                        <li><strong>頻出問題</strong>：第二種の作業範囲、絶縁抵抗値</li>
+                        <li><strong>要注意</strong>：罰則の数値、資格不要の作業</li>
+                        <li><strong>配点</strong>：全50問中約10問（20%）が法令分野</li>
+                        <li><strong>目標</strong>：法令で8問以上正解を目指す</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="background: white; padding: 1rem; border-radius: 8px; margin-top: 1.5rem;">
+                <h4 style="color: var(--danger-color); margin-bottom: 0.5rem;">⚡ 合格への重要ポイント</h4>
+                <p style="margin-bottom: 0.5rem;"><strong>法令分野は「暗記」で確実に点が取れる分野です！</strong></p>
+                <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li>数値（600V、50kW、150V、4年など）は完璧に暗記する</li>
+                    <li>第二種は「一般用電気工作物のみ」という制限を理解する</li>
+                    <li>罰則は正確に覚える（特に無資格工事の罰則）</li>
+                    <li>過去問の類似問題が多いため、パターン学習が効果的</li>
+                </ul>
+            </div>
+            
+            <p style="text-align: right; margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                情報源：電気技術者試験センター、HOZAN電工試験の虎、各電気保安協会
+            </p>
+        </div>
+        
+        <nav class="nav-tabs">
+            <div class="nav-tab active" data-tab="electrical-works">
+                <span>🏭 電気工作物</span>
+            </div>
+            <div class="nav-tab" data-tab="important-numbers">
+                <span>🔢 重要数値</span>
+            </div>
+            <div class="nav-tab" data-tab="work-scope">
+                <span>🔧 作業範囲</span>
+            </div>
+            <div class="nav-tab" data-tab="past-questions">
+                <span>📝 過去問演習</span>
+            </div>
+            <div class="nav-tab" data-tab="penalties">
+                <span>⚖️ 罰則暗記</span>
+            </div>
+            <div class="nav-tab" data-tab="final-check">
+                <span>✅ 最終確認</span>
+            </div>
+        </nav>
+        
+        <!-- 電気工作物 -->
+        <div class="content-area active" id="electrical-works">
+            <div class="card">
+                <h2>🏭 電気工作物の分類（最重要） <span class="source-badge">出典：電気事業法</span></h2>
+                
+                <div class="memorize-point">
+                    電気工作物の分類は試験の基礎中の基礎！必ず理解しましょう
+                </div>
+                
+                <!-- 分類図 -->
+                <div style="background: var(--light-blue); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <h3 style="text-align: center; margin-bottom: 1rem; color: var(--primary-color);">電気工作物の分類</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                        <div style="background: white; padding: 1rem; border-radius: 6px; border: 2px solid var(--success-color);">
+                            <h4 style="color: var(--success-color); margin-bottom: 0.5rem;">一般用電気工作物</h4>
+                            <p style="font-weight: bold; color: var(--danger-color); margin-bottom: 0.5rem;">第二種の作業範囲</p>
+                            <ul style="font-size: 0.9rem; margin: 0; padding-left: 1.2rem;">
+                                <li><span class="tooltip">600V以下で受電<span class="tooltip-text">電力会社から600V以下の電圧で電気を受け取ること。一般家庭は100V/200V</span></span></li>
+                                <li>同一構内で使用</li>
+                                <li><span class="tooltip">小出力発電設備<span class="tooltip-text">太陽光50kW未満、風力20kW未満など、出力が制限された発電設備</span></span></li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: white; padding: 1rem; border-radius: 6px; border: 2px solid var(--warning-color);">
+                            <h4 style="color: #F57C00; margin-bottom: 0.5rem;">自家用電気工作物</h4>
+                            <p style="font-weight: bold; color: var(--primary-color); margin-bottom: 0.5rem;">第一種が必要</p>
+                            <ul style="font-size: 0.9rem; margin: 0; padding-left: 1.2rem;">
+                                <li>600V超で受電</li>
+                                <li>発電設備（一部除く）</li>
+                                <li><span class="tooltip">電気主任技術者<span class="tooltip-text">電気設備の保安監督を行う国家資格者。自家用電気工作物には選任が必要</span></span>要</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: white; padding: 1rem; border-radius: 6px; border: 2px solid var(--dark-grey);">
+                            <h4 style="color: var(--dark-grey); margin-bottom: 0.5rem;">事業用電気工作物</h4>
+                            <p style="font-weight: bold; color: var(--dark-grey); margin-bottom: 0.5rem;">電力会社など</p>
+                            <ul style="font-size: 0.9rem; margin: 0; padding-left: 1.2rem;">
+                                <li>発電所</li>
+                                <li>変電所</li>
+                                <li>送配電設備</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>📌 一般用電気工作物の詳細条件</h3>
+                <table class="work-scope-table">
+                    <tr>
+                        <th>条件</th>
+                        <th>内容</th>
+                        <th>具体例・注意点</th>
+                    </tr>
+                    <tr>
+                        <td><strong>基本条件</strong></td>
+                        <td>600V以下で受電し、同一構内で使用</td>
+                        <td>一般住宅、小規模店舗、事務所など</td>
+                    </tr>
+                    <tr>
+                        <td><strong>小出力発電設備</strong></td>
+                        <td>以下の出力未満なら一般用</td>
+                        <td>
+                            • 太陽光：<span style="color: var(--danger-color); font-weight: bold;">50kW未満</span><br>
+                            • 風力：20kW未満<br>
+                            • 水力：20kW未満<br>
+                            • <span class="tooltip">内燃力<span class="tooltip-text">ガソリンエンジンやディーゼルエンジンなど、燃料を燃焼させて動力を得る発電機</span></span>：10kW未満
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>除外される場所</strong></td>
+                        <td>火薬類取扱所、炭鉱など</td>
+                        <td>危険物を扱う場所は自家用扱い</td>
+                    </tr>
+                </table>
+                
+                <div class="warning-box">
+                    <strong>試験頻出ポイント</strong>：<span class="tooltip">非常用予備発電装置<span class="tooltip-text">停電時に自動的に起動して電力を供給する装置。病院やビルなどに設置される</span></span>は出力に関わらず自家用電気工作物！
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>🔍 自家用電気工作物との見分け方</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                    <div>
+                        <h4 style="color: var(--success-color);">✅ 一般用（第二種でOK）</h4>
+                        <ul style="line-height: 1.8;">
+                            <li>低圧受電の住宅</li>
+                            <li>低圧受電の小規模店舗</li>
+                            <li>49kWの太陽光発電付き住宅</li>
+                            <li>電気温水器のある住宅</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: var(--danger-color);">❌ 自家用（第一種必要）</h4>
+                        <ul style="line-height: 1.8;">
+                            <li><span class="tooltip">高圧受電<span class="tooltip-text">600Vを超える電圧で電気を受けること。工場やビルなど大量の電力を使う施設</span></span>の工場</li>
+                            <li>高圧受電のビル</li>
+                            <li>51kWの太陽光発電設備</li>
+                            <li>非常用発電機のある施設</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="common-mistakes" style="margin-top: 1rem;">
+                    <h4>⚠️ よくある間違い</h4>
+                    <ul>
+                        <li>「低圧受電なら全て一般用」→ <strong>✕</strong> 非常用発電機があれば自家用</li>
+                        <li>「発電設備があれば全て自家用」→ <strong>✕</strong> 小出力なら一般用</li>
+                        <li>「マンションは自家用」→ <strong>✕</strong> 各戸は一般用（共用部は自家用の場合あり）</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>📊 電気工作物の判定フロー</h3>
+                
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; text-align: center;">
+                    <div style="background: var(--primary-color); color: white; padding: 0.8rem; border-radius: 6px; margin-bottom: 1rem;">
+                        <strong>受電電圧は600V以下？</strong>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+                        <div>
+                            <div style="background: var(--success-color); color: white; padding: 0.4rem; border-radius: 4px;">YES</div>
+                            <div style="margin-top: 0.8rem; background: white; padding: 0.8rem; border-radius: 6px; border: 1px solid #ddd;">
+                                <strong>発電設備はある？</strong>
+                            </div>
+                            <div style="margin-top: 0.8rem; font-size: 0.9rem;">
+                                <div style="background: #FFF9C4; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
+                                    太陽光50kW未満 → <strong style="color: var(--success-color);">一般用</strong>
+                                </div>
+                                <div style="background: #FFEBEE; padding: 0.5rem; border-radius: 4px;">
+                                    非常用発電機 → <strong style="color: var(--danger-color);">自家用</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div style="background: var(--danger-color); color: white; padding: 0.4rem; border-radius: 4px;">NO（600V超）</div>
+                            <div style="margin-top: 0.8rem; background: var(--error-bg); padding: 0.8rem; border-radius: 6px;">
+                                <strong style="color: var(--danger-color);">すべて自家用電気工作物</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 重要数値 -->
+        <div class="content-area" id="important-numbers">
+            <div class="card">
+                <h2>🔢 絶対覚える重要数値 <span class="source-badge">出典：電気事業法</span></h2>
+                <div class="memorize-point">
+                    これらの数値は毎回出題される超重要項目です！
+                </div>
+                
+                <div class="number-cards">
+                    <div class="number-card" onclick="showDetail('voltage')">
+                        <div class="value">600V</div>
+                        <div class="label">一般用電気工作物<br>受電電圧</div>
+                    </div>
+                    <div class="number-card" onclick="showDetail('power')">
+                        <div class="value">50kW</div>
+                        <div class="label">太陽光発電<br>出力上限</div>
+                    </div>
+                    <div class="number-card" onclick="showDetail('ground-voltage')">
+                        <div class="value">150V</div>
+                        <div class="label">住宅の対地電圧<br>制限値</div>
+                    </div>
+                    <div class="number-card" onclick="showDetail('inspection')">
+                        <div class="value">4年</div>
+                        <div class="label">定期調査<br>実施間隔</div>
+                    </div>
+                </div>
+                
+                <div id="detail-explanation" class="explanation-box"></div>
+            </div>
+            
+            <div class="card">
+                <h3>📊 絶縁抵抗値（暗記必須） <span class="source-badge">出典：電気設備技術基準</span></h3>
+                
+                <div class="warning-box">
+                    <strong>重要な修正</strong>：<span class="tooltip">対地電圧<span class="tooltip-text">電路と大地（アース）との間の電圧。単相3線式200Vでは対地電圧は100V</span></span>による区分に注意！単相3線式200Vは対地電圧100Vです。
+                </div>
+                
+                <table class="work-scope-table">
+                    <tr>
+                        <th>電路の使用電圧の区分</th>
+                        <th>絶縁抵抗値</th>
+                        <th>具体例と覚え方</th>
+                    </tr>
+                    <tr>
+                        <td><strong>300V以下</strong><br>かつ対地電圧150V以下</td>
+                        <td><strong style="color: var(--danger-color); font-size: 1.2rem;">0.1MΩ以上</strong></td>
+                        <td>・100V、200V（<span class="tooltip">単相3線式<span class="tooltip-text">中性線を含む3本の線で電気を供給する方式。200V機器と100V機器を同時に使える</span></span>）<br>・覚え方：「低圧は0.1」</td>
+                    </tr>
+                    <tr>
+                        <td><strong>300V以下</strong><br>かつ対地電圧150V超過</td>
+                        <td><strong style="color: var(--danger-color); font-size: 1.2rem;">0.2MΩ以上</strong></td>
+                        <td>・<span class="tooltip">三相200V<span class="tooltip-text">3本の線すべてに電圧がかかる方式。主に動力（モーター）用。対地電圧は200V</span></span>（対地電圧200V）<br>・覚え方：「対地高いと倍の0.2」</td>
+                    </tr>
+                    <tr>
+                        <td><strong>300V超過</strong></td>
+                        <td><strong style="color: var(--danger-color); font-size: 1.2rem;">0.4MΩ以上</strong></td>
+                        <td>・400V回路など<br>・覚え方：「300超えたら0.4」</td>
+                    </tr>
+                </table>
+                
+                <div class="common-mistakes">
+                    <h4>⚠️ よくある間違い</h4>
+                    <ul>
+                        <li><s>200V回路は全て0.2MΩ</s> → 対地電圧で判断する</li>
+                        <li>単相3線式200Vは対地電圧100Vなので<strong>0.1MΩ以上</strong>が正解</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 作業範囲 -->
+        <div class="content-area" id="work-scope">
+            <div class="card">
+                <h2>🔧 第二種電気工事士の作業範囲 <span class="source-badge">出典：電気工事士法</span></h2>
+                <div class="success-tips">
+                    <h3>✅ できる作業（一般用電気工作物のみ）</h3>
+                    <ul>
+                        <li>一般住宅の配線工事</li>
+                        <li>小規模店舗（600V以下）の電気工事</li>
+                        <li>50kW未満の太陽光発電設備の設置</li>
+                    </ul>
+                </div>
+                
+                <table class="work-scope-table">
+                    <tr>
+                        <th>作業内容</th>
+                        <th>第二種</th>
+                        <th>備考</th>
+                    </tr>
+                    <tr>
+                        <td>コンセントの増設・移設</td>
+                        <td class="can-do">○ できる</td>
+                        <td>一般用電気工作物に限る</td>
+                    </tr>
+                    <tr>
+                        <td>ブレーカーの交換</td>
+                        <td class="can-do">○ できる</td>
+                        <td>一般用電気工作物に限る</td>
+                    </tr>
+                    <tr>
+                        <td>エアコン専用回路の設置</td>
+                        <td class="can-do">○ できる</td>
+                        <td>200V回路も可能</td>
+                    </tr>
+                    <tr>
+                        <td>工場の動力配線（自家用）</td>
+                        <td class="cannot-do">× できない</td>
+                        <td>第一種が必要<span class="important-mark">頻出</span></td>
+                    </tr>
+                    <tr>
+                        <td>ビルの電気工事</td>
+                        <td class="cannot-do">× できない</td>
+                        <td>第一種が必要<span class="important-mark">頻出</span></td>
+                    </tr>
+                </table>
+                
+                <div class="memorize-point">
+                    第二種 = 一般用のみ（住宅・小規模店舗）と覚える！
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>⚠️ 電気工事士でなくてもできる作業</h3>
+                <table class="work-scope-table">
+                    <tr>
+                        <th>作業内容</th>
+                        <th>資格不要</th>
+                        <th>試験での扱い</th>
+                    </tr>
+                    <tr>
+                        <td>電球・蛍光灯の交換</td>
+                        <td class="can-do">○</td>
+                        <td>よく出題される</td>
+                    </tr>
+                    <tr>
+                        <td><span class="tooltip">ヒューズ<span class="tooltip-text">過電流から回路を保護する部品。一定以上の電流が流れると切れて回路を遮断する</span></span>の交換</td>
+                        <td class="can-do">○</td>
+                        <td>頻出問題</td>
+                    </tr>
+                    <tr>
+                        <td>コンセントにプラグを差す</td>
+                        <td class="can-do">○</td>
+                        <td>基本問題</td>
+                    </tr>
+                    <tr>
+                        <td>インターホンの交換（<span class="tooltip">プラグ式<span class="tooltip-text">コンセントに差し込むだけで使えるタイプ。配線工事が不要</span></span>）</td>
+                        <td class="can-do">○</td>
+                        <td>ひっかけ問題注意</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 過去問演習 -->
+        <div class="content-area" id="past-questions">
+            <div class="card">
+                <h2>📝 実際の過去問で練習</h2>
+                
+                <div class="past-question">
+                    <div class="past-question-header">
+                        <h3>問題1</h3>
+                        <span class="past-question-badge">電気工作物の分類</span>
+                    </div>
+                    <p class="question-text">
+                        次のうち、<span class="tooltip">一般用電気工作物<span class="tooltip-text">600V以下で受電し、同一構内で使用する電気工作物。第二種電気工事士が工事できる範囲</span></span>に該当しないものは？
+                    </p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 1)">
+                            イ. 低圧受電の一般住宅
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 1)">
+                            ロ. 低圧受電で30kWの太陽光発電を設置した住宅
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, true, 1)">
+                            ハ. 低圧受電で5kWの<span class="tooltip">非常用発電機<span class="tooltip-text">停電時に自動的に起動する発電機。出力に関わらず自家用電気工作物となる</span></span>を設置した店舗
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 1)">
+                            ニ. 低圧受電の小規模事務所
+                        </div>
+                    </div>
+                    <div id="explanation-1" class="explanation-box">
+                        <strong>正解：ハ（低圧受電で5kWの非常用発電機を設置した店舗）</strong><br>
+                        <strong>【解説】</strong><br>
+                        非常用発電機（内燃力発電設備）は、出力の大小に関わらず設置すると自家用電気工作物となります。<br><br>
+                        <strong>【ポイント】</strong><br>
+                        • 一般用電気工作物の発電設備は「小出力発電設備」に限定<br>
+                        • 非常用発電機は小出力発電設備に含まれない<br>
+                        • 太陽光発電は50kW未満なら一般用でOK<br><br>
+                        <strong>💡 覚え方：</strong>「非常用」という名前がついたら自家用！
+                    </div>
+                </div>
+                
+                <div class="past-question">
+                    <div class="past-question-header">
+                        <h3>問題2</h3>
+                        <span class="past-question-badge">R5年上期出題</span>
+                    </div>
+                    <p class="question-text">
+                        一般用電気工作物の適用を受けるものは？
+                    </p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 2)">
+                            イ. 出力60kWの太陽光発電設備
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, true, 2)">
+                            ロ. 出力40kWの太陽光発電設備
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 2)">
+                            ハ. 低圧受電で出力30kWの非常用発電設備
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 2)">
+                            ニ. 高圧受電の工場
+                        </div>
+                    </div>
+                    <div id="explanation-2" class="explanation-box">
+                        <strong>正解：ロ（出力40kWの太陽光発電設備）</strong><br>
+                        <strong>【解説】</strong><br>
+                        一般用電気工作物の条件：<br>
+                        ① 600V以下で受電する<br>
+                        ② 同一構内で使用する<br>
+                        ③ 太陽光発電は出力50kW未満<br><br>
+                        <strong>【各選択肢の判定】</strong><br>
+                        イ. 60kW太陽光 → 50kW以上なので<span style="color: var(--danger-color);">自家用電気工作物</span><br>
+                        ロ. 40kW太陽光 → 50kW未満なので<span style="color: var(--success-color);">一般用電気工作物 ✓</span><br>
+                        ハ. 非常用発電設備 → 出力に関わらず<span style="color: var(--danger-color);">自家用電気工作物</span><br>
+                        ニ. 高圧受電 → 600V超なので<span style="color: var(--danger-color);">自家用電気工作物</span><br><br>
+                        <strong>💡 覚え方：</strong>太陽光は「50kW未満」、それ以外の発電設備は全て自家用！
+                    </div>
+                </div>
+                
+                <div class="past-question">
+                    <div class="past-question-header">
+                        <h3>問題3</h3>
+                        <span class="past-question-badge">R4年下期出題</span>
+                    </div>
+                    <p class="question-text">
+                        電気工事士法において、第二種電気工事士が従事できる工事は？
+                    </p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 3)">
+                            イ. 自家用電気工作物（500kW未満）
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, true, 3)">
+                            ロ. 一般用電気工作物
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 3)">
+                            ハ. 事業用電気工作物
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 3)">
+                            ニ. 特別高圧電気工作物
+                        </div>
+                    </div>
+                    <div id="explanation-3" class="explanation-box">
+                        <strong>正解：ロ（一般用電気工作物）</strong><br>
+                        <strong>【解説】</strong><br>
+                        電気工事士の資格と作業範囲：<br>
+                        • <strong>第二種電気工事士</strong> → 一般用電気工作物のみ<br>
+                        • <strong>第一種電気工事士</strong> → 一般用 ＋ 自家用（最大電力500kW未満）<br><br>
+                        <strong>【各選択肢の判定】</strong><br>
+                        イ. 自家用（500kW未満） → <span style="color: var(--danger-color);">第一種が必要 ✕</span><br>
+                        ロ. 一般用 → <span style="color: var(--success-color);">第二種で可能 ✓</span><br>
+                        ハ. 事業用 → <span style="color: var(--danger-color);">電気主任技術者の業務 ✕</span><br>
+                        ニ. 特別高圧 → <span style="color: var(--danger-color);">第一種でも不可 ✕</span><br><br>
+                        <strong>💡 重要：</strong>第二種は「家庭や小規模店舗の電気工事」と覚える！<br>
+                        ビルや工場は第一種が必要です。
+                    </div>
+                </div>
+                
+                <div class="past-question">
+                    <div class="past-question-header">
+                        <h3>問題4</h3>
+                        <span class="past-question-badge">頻出問題</span>
+                    </div>
+                    <p class="question-text">
+                        住宅の屋内電路の対地電圧の制限は？
+                    </p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 4)">
+                            イ. 100V以下
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, true, 4)">
+                            ロ. 150V以下
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 4)">
+                            ハ. 200V以下
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 4)">
+                            ニ. 300V以下
+                        </div>
+                    </div>
+                    <div id="explanation-4" class="explanation-box">
+                        <strong>正解：ロ（150V以下）</strong><br>
+                        <strong>【解説】</strong><br>
+                        電気設備技術基準による対地電圧の制限：<br>
+                        • <strong>住宅の屋内電路</strong> → 原則150V以下<br>
+                        • <strong>例外</strong> → 適切な感電防止措置があれば300V以下まで可<br><br>
+                        <strong>【なぜ150Vなのか】</strong><br>
+                        人体への危険性を考慮した安全基準。150V以下なら感電時の危険が比較的低い。<br><br>
+                        <strong>【各選択肢の判定】</strong><br>
+                        イ. 100V以下 → <span style="color: var(--danger-color);">厳しすぎる ✕</span><br>
+                        ロ. 150V以下 → <span style="color: var(--success-color);">正解 ✓</span><br>
+                        ハ. 200V以下 → <span style="color: var(--danger-color);">基準値を超える ✕</span><br>
+                        ニ. 300V以下 → <span style="color: var(--danger-color);">例外規定の値 ✕</span><br><br>
+                        <strong>💡 試験での出題パターン：</strong><br>
+                        「原則は？」→ 150V以下<br>
+                        「感電防止措置があれば？」→ 300V以下
+                    </div>
+                </div>
+                
+                <div class="past-question">
+                    <div class="past-question-header">
+                        <h3>問題5</h3>
+                        <span class="past-question-badge">R5年下期出題</span>
+                    </div>
+                    <p class="question-text">
+                        電気工事士でなければできない作業は？
+                    </p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 5)">
+                            イ. 電球を交換する
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, true, 5)">
+                            ロ. コンセントを増設する
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 5)">
+                            ハ. ヒューズを交換する
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 5)">
+                            ニ. プラグをコンセントに差し込む
+                        </div>
+                    </div>
+                    <div id="explanation-5" class="explanation-box">
+                        <strong>正解：ロ（コンセントを増設する）</strong><br>
+                        <strong>【解説】</strong><br>
+                        電気工事士の資格が<strong>不要</strong>な作業（軽微な作業）：<br>
+                        • 電球・蛍光灯の交換<br>
+                        • ヒューズの交換<br>
+                        • プラグの抜き差し<br>
+                        • コードの接続（差込み接続器使用）<br><br>
+                        <strong>電気工事士の資格が<strong>必要</strong>な作業：</strong><br>
+                        • コンセントの増設・移設<br>
+                        • 配線工事<br>
+                        • ブレーカーの交換<br>
+                        • スイッチの交換<br><br>
+                        <strong>💡 判断基準：</strong>配線に直接触れる作業は資格必要！<br>
+                        差込み式で簡単に取り外せるものは資格不要と覚える。
+                    </div>
+                </div>
+                
+                <div class="past-question">
+                    <div class="past-question-header">
+                        <h3>問題6</h3>
+                        <span class="past-question-badge">超重要</span>
+                    </div>
+                    <p class="question-text">
+                        <span class="tooltip">無資格<span class="tooltip-text">電気工事士免状を持たない者。電気工事士法により電気工事に従事することは禁止されている</span></span>で電気工事を行った場合の罰則は？
+                    </p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 6)">
+                            イ. 1年以下の懲役又は10万円以下の罰金
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, true, 6)">
+                            ロ. 3か月以下の懲役又は3万円以下の罰金
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 6)">
+                            ハ. 30万円以下の罰金のみ
+                        </div>
+                        <div class="quiz-option" onclick="checkPastAnswer(this, false, 6)">
+                            ニ. 10万円以下の<span class="tooltip">過料<span class="tooltip-text">行政罰の一種。刑事罰の「罰金」より軽い制裁金</span></span>
+                        </div>
+                    </div>
+                    <div id="explanation-6" class="explanation-box">
+                        <strong>正解：ロ（3か月以下の懲役又は3万円以下の罰金）</strong><br>
+                        <strong>【解説】</strong><br>
+                        電気工事士法第14条に基づく正確な罰則：<br><br>
+                        <strong>無資格工事の罰則</strong>：<br>
+                        • <span style="color: var(--danger-color); font-weight: bold;">3か月以下の懲役又は3万円以下の罰金</span><br><br>
+                        <strong>その他の主な罰則（参考）</strong>：<br>
+                        • 電気工事業の無登録営業 → 1年・10万（電気工事業法）<br>
+                        • PSEマークなし販売 → 1年・100万（電気用品安全法）<br><br>
+                        <strong>💡 覚え方：</strong><br>
+                        無資格工事は「3・3」（さんさん）と覚える！<br>
+                        <span style="color: var(--danger-color);">※ 一部のサイトで「3年・30万」と誤記載されているので注意</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 罰則暗記 -->
+        <div class="content-area" id="penalties">
+            <div class="card">
+                <h2>⚖️ 罰則の暗記（正確な情報） <span class="source-badge">出典：電気工事士法</span></h2>
+                
+                <div class="warning-box">
+                    <strong>重要な訂正</strong>：無資格工事の罰則は「3か月・3万円」が正しい法定罰則です。
+                </div>
+                
+                <div class="memorize-point">
+                    覚え方：無資格は「さん・さん（3か月・3万円）」
+                </div>
+                
+                <div class="penalty-cards">
+                    <div class="penalty-card">
+                        <div class="violation">無資格で電気工事</div>
+                        <div class="punishment">3か月以下・3万円以下</div>
+                        <small>電気工事士法第14条</small>
+                    </div>
+                    <div class="penalty-card">
+                        <div class="violation">電気工事業の無登録</div>
+                        <div class="punishment">1年以下・10万円以下</div>
+                        <small>電気工事業法の罰則</small>
+                    </div>
+                    <div class="penalty-card">
+                        <div class="violation"><span class="tooltip">PSEマーク<span class="tooltip-text">電気用品安全法に基づく安全性を示すマーク。特定電気用品は◇PSE、それ以外は(PS)E</span></span>なし販売</div>
+                        <div class="punishment">1年以下・100万円以下</div>
+                        <small>電気用品安全法</small>
+                    </div>
+                    <div class="penalty-card">
+                        <div class="violation"><span class="tooltip">主任電気工事士<span class="tooltip-text">電気工事業者が営業所ごとに置く、電気工事の保安監督を行う者</span></span>不選任</div>
+                        <div class="punishment">30万円以下のみ</div>
+                        <small>懲役なし「30万のみ」</small>
+                    </div>
+                    <div class="penalty-card">
+                        <div class="violation">器具備付け義務違反</div>
+                        <div class="punishment">10万円以下の<span class="tooltip">過料<span class="tooltip-text">行政罰の一種。刑事罰の「罰金」より軽い制裁金</span></span></div>
+                        <small>「過料」は罰金より軽い</small>
+                    </div>
+                    <div class="penalty-card">
+                        <div class="violation">免状携帯義務違反</div>
+                        <div class="punishment">行政処分のみ</div>
+                        <small>罰則なし（注意のみ）</small>
+                    </div>
+                </div>
+                
+                <div class="success-tips">
+                    <h3>🎯 試験での出題パターン</h3>
+                    <ul>
+                        <li>「無資格工事の罰則は？」→ 3か月・3万円</li>
+                        <li>「罰金のみ（懲役なし）は？」→ 主任電気工事士不選任（30万のみ）</li>
+                        <li>「過料となるのは？」→ 器具備付け義務違反（10万過料）</li>
+                        <li>「最も重い罰則は？」→ 電気工事業法や電気用品安全法の罰則</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 最終確認 -->
+        <div class="content-area" id="final-check">
+            <div class="card">
+                <h2>✅ 試験直前チェックリスト</h2>
+                
+                <div class="score-display">
+                    <div>チェック進捗</div>
+                    <div class="score"><span id="check-score">0</span>%</div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="check-progress" style="width: 0%;">
+                            0%
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>🏭 電気工作物</h3>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>電気工作物は3種類（一般用・自家用・事業用）に分類される</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>一般用は600V以下で受電＋同一構内使用が基本条件</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>非常用発電機は出力に関わらず自家用電気工作物</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>太陽光50kW未満・風力20kW未満なら一般用</span>
+                </div>
+                
+                <h3>🔢 重要数値</h3>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>一般用電気工作物：600V以下で受電 <span class="source-badge">電気事業法</span></span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>太陽光発電：50kW未満 <span class="source-badge">電気事業法</span></span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>住宅の対地電圧：150V以下 <span class="source-badge">電気設備技術基準</span></span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>定期調査：4年に1回以上 <span class="source-badge">電気事業法</span></span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>絶縁抵抗値：対地電圧で判断（150V以下→0.1MΩ、150V超→0.2MΩ）</span>
+                </div>
+                
+                <h3>🔧 作業範囲</h3>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>第二種は一般用電気工作物のみ <span class="source-badge">電気工事士法</span></span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>自家用電気工作物は第一種が必要</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>電球交換、ヒューズ交換は資格不要</span>
+                </div>
+                
+                <h3>⚖️ 罰則</h3>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>無資格工事：3か月・3万円 <span class="source-badge">電気工事士法第14条</span></span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>電気工事業無登録：1年・10万</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>PSEマークなし：1年・100万</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                    <span>主任電気工事士不選任：30万のみ（懲役なし）</span>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn" onclick="resetChecklist()">リセット</button>
+                    <button class="btn" onclick="printChecklist()">印刷用表示</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>💯 合格のための最終アドバイス</h3>
+                <div class="success-tips">
+                    <ul>
+                        <li><strong>数値問題は確実に：</strong>600V、50kW、150V、4年は必ず覚える</li>
+                        <li><strong>作業範囲を明確に：</strong>第二種＝一般用のみと理解</li>
+                        <li><strong>罰則は正確に：</strong>「3か月・3万円」を確実に覚える</li>
+                        <li><strong>過去問パターン：</strong>同じ問題が形を変えて出題される</li>
+                        <li><strong>ひっかけ注意：</strong>「電球交換に資格必要」は✕</li>
+                        <li><strong>対地電圧に注意：</strong>絶縁抵抗値は対地電圧で判断</li>
+                    </ul>
+                </div>
+                
+                <div class="common-mistakes">
+                    <h4>⚠️ 最後の注意点</h4>
+                    <ul>
+                        <li>インターネット上には誤った情報も多いので、公式資料を確認する</li>
+                        <li>特に罰則については誤記載が多いので注意</li>
+                        <li>単相3線式200Vの対地電圧は100V（200Vではない）</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- スクロールトップボタン -->
+    <div class="scroll-top-btn" onclick="scrollToTop()"></div>
+    
+    <script>
+        // タブ切り替え
+        const tabs = document.querySelectorAll('.nav-tab');
+        const contentAreas = document.querySelectorAll('.content-area');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                
+                tabs.forEach(t => t.classList.remove('active'));
+                contentAreas.forEach(area => area.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+            });
+        });
+        
+        // 重要数値の詳細表示
+        function showDetail(type) {
+            const explanations = {
+                'voltage': '<strong>600V以下で受電 <span class="source-badge">電気事業法</span></strong><br><br>一般用電気工作物の最も重要な条件です。<br><br>【覚え方】<br>• 家庭のコンセント（100V/200V）は当然OK<br>• 600Vを超えると「<span class="tooltip" style="border-bottom: 1px dotted;">高圧<span class="tooltip-text">交流で600V超7000V以下、直流で750V超7000V以下の電圧</span></span>」となり自家用電気工作物<br>• 第二種電気工事士は600V以下の世界で仕事をする<br><br>【試験での出題例】<br>「高圧受電の工場は？」→ 自家用（第一種が必要）<br>「低圧受電の店舗は？」→ 一般用（第二種でOK）',
+                
+                'power': '<strong>太陽光発電は50kW未満 <span class="source-badge">電気事業法施行規則</span></strong><br><br>再生可能エネルギーの普及により重要度が増している項目です。<br><br>【重要ポイント】<br>• 太陽光発電「のみ」50kW未満なら一般用<br>• 風力発電は20kW未満<br>• その他の発電設備（非常用など）は出力に関わらず自家用<br><br>【よくある間違い】<br>「30kWの非常用発電機は？」→ 自家用（出力関係なし）<br>「49kWの太陽光発電は？」→ 一般用（50kW未満だから）',
+                
+                'ground-voltage': '<strong>住宅の対地電圧は150V以下 <span class="source-badge">電気設備技術基準</span></strong><br><br>安全のための重要な制限値です。<br><br>【なぜ150Vなのか】<br>• 人体の抵抗値と電流の関係から決定<br>• 150V以下なら感電時の電流が比較的小さい<br>• <span class="tooltip" style="border-bottom: 1px dotted;">単相3線式200V<span class="tooltip-text">中性線を含む3本の線で電気を供給。200V機器と100V機器を同時に使える。対地電圧は100V</span></span>でも対地電圧は100V<br><br>【例外規定】<br>適切な感電防止措置があれば300V以下まで可能<br>（防護措置、漏電遮断器の設置など）<br><br>【試験対策】<br>「原則は？」と聞かれたら必ず150V以下！',
+                
+                'inspection': '<strong>定期調査は4年に1回以上 <span class="source-badge">電気事業法</span></strong><br><br>電気の安全を守るための重要な制度です。<br><br>【調査の内容】<br>• <span class="tooltip" style="border-bottom: 1px dotted;">絶縁抵抗測定<span class="tooltip-text">電路と大地間の抵抗を測定。絶縁不良による漏電を発見できる</span></span><br>• 漏電の有無確認<br>• 配線・器具の外観点検<br><br>【実施主体】<br>• <span class="tooltip" style="border-bottom: 1px dotted;">登録調査機関<span class="tooltip-text">経済産業大臣の登録を受けた調査機関。電力会社から委託を受けて実施</span></span><br>• 調査員は電気主任技術者等の有資格者<br><br>【覚え方】<br>「オリンピックと同じ4年周期」と覚える！'
+            };
+            
+            const detailBox = document.getElementById('detail-explanation');
+            detailBox.innerHTML = explanations[type];
+            detailBox.classList.add('show');
+        }
+        
+        // 過去問の答え合わせ
+        function checkPastAnswer(element, isCorrect, questionNumber) {
+            const options = element.parentElement.querySelectorAll('.quiz-option');
+            options.forEach(opt => {
+                opt.style.pointerEvents = 'none';
+            });
+            
+            if (isCorrect) {
+                element.classList.add('correct');
+            } else {
+                element.classList.add('incorrect');
+                // 正解を探して表示
+                const correctAnswers = {
+                    1: 'ハ.',
+                    2: 'ロ.',
+                    3: 'ロ.',
+                    4: 'ロ.',
+                    5: 'ロ.',
+                    6: 'ロ.'
+                };
+                options.forEach(opt => {
+                    if (opt.textContent.includes(correctAnswers[questionNumber])) {
+                        opt.classList.add('correct');
+                    }
+                });
+            }
+            
+            document.getElementById(`explanation-${questionNumber}`).classList.add('show');
+        }
+        
+        // チェックリスト機能
+        function toggleCheck(checkbox) {
+            checkbox.classList.toggle('checked');
+            updateCheckProgress();
+        }
+        
+        function updateCheckProgress() {
+            const total = document.querySelectorAll('.checklist-checkbox').length;
+            const checked = document.querySelectorAll('.checklist-checkbox.checked').length;
+            const percentage = Math.round((checked / total) * 100);
+            
+            document.getElementById('check-score').textContent = percentage;
+            const progressBar = document.getElementById('check-progress');
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = percentage + '%';
+        }
+        
+        function resetChecklist() {
+            document.querySelectorAll('.checklist-checkbox').forEach(checkbox => {
+                checkbox.classList.remove('checked');
+            });
+            updateCheckProgress();
+        }
+        
+        function printChecklist() {
+            window.print();
+        }
+        
+        // スクロールトップボタン
+        window.addEventListener('scroll', () => {
+            const scrollBtn = document.querySelector('.scroll-top-btn');
+            if (window.pageYOffset > 300) {
+                scrollBtn.classList.add('show');
+            } else {
+                scrollBtn.classList.remove('show');
+            }
+        });
+        
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+</html>

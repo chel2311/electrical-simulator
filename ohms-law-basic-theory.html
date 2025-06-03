@@ -368,6 +368,160 @@
             color: white;
         }
 
+        /* Tooltip Styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .tooltip-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        }
+
+        .tooltip-content {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            z-index: 1000;
+            left: 50%;
+            bottom: calc(100% + 10px);
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: nowrap;
+            max-width: 300px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .tooltip-content.wide {
+            white-space: normal;
+        }
+
+        .tooltip-content::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.95);
+        }
+
+        .tooltip:hover .tooltip-content,
+        .tooltip-icon:hover + .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Interactive tooltips for circuit components */
+        .component-tooltip {
+            position: absolute;
+            background: var(--primary-color);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 100;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        .component-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: var(--primary-color);
+        }
+
+        .component-tooltip.show {
+            opacity: 1;
+        }
+
+        /* Glossary tooltips */
+        .term {
+            position: relative;
+            display: inline-block;
+            color: var(--primary-color);
+            font-weight: 600;
+            border-bottom: 2px dotted var(--primary-color);
+            cursor: help;
+            transition: all 0.3s ease;
+        }
+
+        .term:hover {
+            color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+        }
+
+        .term-definition {
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 8px);
+            transform: translateX(-50%) scale(0.9);
+            background: linear-gradient(135deg, var(--primary-color), var(--medium-blue));
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: normal;
+            line-height: 1.4;
+            width: max-content;
+            max-width: 250px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .term:hover .term-definition {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) scale(1);
+        }
+
+        .term-definition::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--medium-blue);
+        }
+
         .tab-content {
             display: none;
         }
@@ -979,10 +1133,10 @@
                     <h3>🔍 回路を観察してみよう</h3>
                     <p>左の回路には以下の要素があります：</p>
                     <ul>
-                        <li>📦 <strong>電池（電源）</strong>：12V の電圧を供給</li>
-                        <li>💡 <strong>電球1（抵抗）</strong>：2Ω の抵抗値</li>
-                        <li>💡 <strong>電球2（抵抗）</strong>：3Ω の抵抗値</li>
-                        <li>📊 <strong>電流計</strong>：流れる電流を測定（値は？）</li>
+                        <li>📦 <strong>電池（電源）</strong>：12V の<span class="term">電圧<span class="term-definition">電気を流す力の強さ。単位はV（ボルト）</span></span>を供給</li>
+                        <li>💡 <strong>電球1（抵抗）</strong>：2Ω の<span class="term">抵抗値<span class="term-definition">電流の流れにくさ。単位はΩ（オーム）</span></span></li>
+                        <li>💡 <strong>電球2（抵抗）</strong>：3Ω の<span class="term">抵抗値<span class="term-definition">電流の流れにくさ。単位はΩ（オーム）</span></span></li>
+                        <li>📊 <strong>電流計</strong>：流れる<span class="term">電流<span class="term-definition">電気の流れる量。単位はA（アンペア）</span></span>を測定（値は？）</li>
                     </ul>
                 </div>
 
@@ -1045,11 +1199,26 @@
                 <div class="theory-box" id="final-theory" style="display: none;">
                     <h3>🎉 オームの法則マスター！</h3>
                     <div class="formula-display">
-                        <div class="main-formula">V = I × R</div>
-                        <div class="sub-formula">I = V ÷ R</div>
-                        <div class="sub-formula">R = V ÷ I</div>
+                        <div class="main-formula">V = I × R
+                            <span class="tooltip">
+                                <span class="tooltip-icon">?</span>
+                                <span class="tooltip-content wide">オームの法則：電圧・電流・抵抗の関係を表す基本法則</span>
+                            </span>
+                        </div>
+                        <div class="sub-formula">I = V ÷ R
+                            <span class="tooltip">
+                                <span class="tooltip-icon">i</span>
+                                <span class="tooltip-content">電流 = 電圧 ÷ 抵抗</span>
+                            </span>
+                        </div>
+                        <div class="sub-formula">R = V ÷ I
+                            <span class="tooltip">
+                                <span class="tooltip-icon">i</span>
+                                <span class="tooltip-content">抵抗 = 電圧 ÷ 電流</span>
+                            </span>
+                        </div>
                     </div>
-                    <p>これがオームの法則です！3つの値のうち2つがわかれば、残りの1つを計算できます。</p>
+                    <p>これが<span class="term">オームの法則<span class="term-definition">電圧(V)、電流(I)、抵抗(R)の関係を表す基本法則。V=I×Rで表される</span></span>です！3つの値のうち2つがわかれば、残りの1つを計算できます。</p>
                     <ul>
                         <li>電圧が大きくなると → 電流も大きくなる（抵抗が一定の場合）</li>
                         <li>抵抗が大きくなると → 電流は小さくなる（電圧が一定の場合）</li>
@@ -1394,12 +1563,32 @@
                     <h2>📝 直列回路を理解しよう</h2>
 
                     <div class="theory-box">
-                        <h3>🔍 直列回路の特徴</h3>
+                        <h3>🔍 直列回路の特徴
+                            <span class="tooltip">
+                                <span class="tooltip-icon">?</span>
+                                <span class="tooltip-content wide">部品が一列に接続された回路。電流の流れる道が1つだけ</span>
+                            </span>
+                        </h3>
                         <ul>
                             <li>🔗 抵抗が一直線につながっている</li>
-                            <li>⚡ 電流はどこでも同じ値</li>
-                            <li>📊 抵抗は足し算で合成</li>
-                            <li>🔋 電圧は各抵抗で分配される</li>
+                            <li>⚡ 電流はどこでも同じ値
+                                <span class="tooltip">
+                                    <span class="tooltip-icon">i</span>
+                                    <span class="tooltip-content wide">直列回路では電流の逃げ道がないため、どこでも同じ電流が流れます</span>
+                                </span>
+                            </li>
+                            <li>📊 抵抗は足し算で合成
+                                <span class="tooltip">
+                                    <span class="tooltip-icon">i</span>
+                                    <span class="tooltip-content">R合計 = R1 + R2 + R3 + ...</span>
+                                </span>
+                            </li>
+                            <li>🔋 電圧は各抵抗で分配される
+                                <span class="tooltip">
+                                    <span class="tooltip-icon">i</span>
+                                    <span class="tooltip-content wide">各抵抗の両端の電圧の合計が電源電圧と等しくなります</span>
+                                </span>
+                            </li>
                         </ul>
                     </div>
 
@@ -2412,7 +2601,85 @@
             setTimeout(() => {
                 updateCompositeCircuit();
             }, 100);
+            
+            // ツールチップ機能を初期化
+            addComponentTooltips();
         });
+
+        // ツールチップ機能の追加
+        function addComponentTooltips() {
+            // バッテリーのツールチップ
+            const batteries = document.querySelectorAll('#battery_component');
+            batteries.forEach(battery => {
+                battery.addEventListener('mouseenter', function(e) {
+                    showComponentTooltip(e, '電源（12V）', '電圧を供給する部品');
+                });
+                battery.addEventListener('mouseleave', hideComponentTooltip);
+            });
+
+            // 電球のツールチップ
+            const lightbulbs = document.querySelectorAll('[id^="lightbulb_component"]');
+            lightbulbs.forEach((bulb, index) => {
+                bulb.addEventListener('mouseenter', function(e) {
+                    const resistanceText = bulb.querySelector('text');
+                    if (resistanceText) {
+                        const resistance = resistanceText.textContent;
+                        showComponentTooltip(e, `電球（抵抗）`, `抵抗値: ${resistance}`);
+                    }
+                });
+                bulb.addEventListener('mouseleave', hideComponentTooltip);
+            });
+
+            // マルチメーターのツールチップ
+            const multimeters = document.querySelectorAll('#multimeter_component');
+            multimeters.forEach(meter => {
+                meter.addEventListener('mouseenter', function(e) {
+                    showComponentTooltip(e, 'マルチメーター', '電流・電圧・抵抗を測定できる計測器');
+                });
+                meter.addEventListener('mouseleave', hideComponentTooltip);
+            });
+
+            // 抵抗のツールチップ
+            const resistors = document.querySelectorAll('[id^="resistor_"]');
+            resistors.forEach((resistor, index) => {
+                resistor.addEventListener('mouseenter', function(e) {
+                    const valueText = resistor.closest('g').querySelector('text');
+                    if (valueText) {
+                        const value = valueText.textContent;
+                        showComponentTooltip(e, `抵抗器`, `抵抗値: ${value}`);
+                    }
+                });
+                resistor.addEventListener('mouseleave', hideComponentTooltip);
+            });
+        }
+
+        // ツールチップを表示する関数
+        function showComponentTooltip(event, title, description) {
+            let tooltip = document.getElementById('component-tooltip');
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.id = 'component-tooltip';
+                tooltip.className = 'component-tooltip';
+                document.body.appendChild(tooltip);
+            }
+
+            tooltip.innerHTML = `<strong>${title}</strong><br>${description}`;
+            
+            const rect = event.currentTarget.getBoundingClientRect();
+            tooltip.style.left = rect.left + rect.width / 2 + 'px';
+            tooltip.style.top = rect.top - 10 + 'px';
+            tooltip.style.transform = 'translateX(-50%) translateY(-100%)';
+            
+            setTimeout(() => tooltip.classList.add('show'), 10);
+        }
+
+        // ツールチップを非表示にする関数
+        function hideComponentTooltip() {
+            const tooltip = document.getElementById('component-tooltip');
+            if (tooltip) {
+                tooltip.classList.remove('show');
+            }
+        }
     </script>
 </body>
 </html>
