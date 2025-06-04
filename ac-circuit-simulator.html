@@ -1,0 +1,2189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交流回路シミュレーター</title>
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --secondary-color: #FF961C;
+            --light-blue: #E0EEF9;
+            --medium-blue: #4D8BC9;
+            --neutral-grey: #F5F5F5;
+            --dark-grey: #616161;
+            --text-dark: #333333;
+            --text-light: #FFFFFF;
+            --success-color: #4CAF50;
+            --warning-color: #FFC107;
+            --danger-color: #F44336;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Meiryo, "Hiragino Kaku Gothic Pro", system-ui, sans-serif;
+            background-color: #f8f9fa;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--medium-blue) 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        
+        .portal-back-btn {
+            position: absolute;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .portal-back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-50%) translateX(-3px);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* ナビゲーションタブ */
+        .main-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .nav-button {
+            padding: 1rem 2rem;
+            background: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            color: var(--primary-color);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
+        }
+        
+        .nav-button:hover {
+            background: var(--light-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,91,171,0.3);
+        }
+        
+        .nav-button.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .nav-button .badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--secondary-color);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+        
+        /* セクション */
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .icon {
+            width: 40px;
+            height: 40px;
+            background: var(--light-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        /* ツールチップ */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            color: var(--primary-color);
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            cursor: help;
+            font-weight: 600;
+        }
+        
+        .tooltip:hover {
+            color: var(--secondary-color);
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 320px;
+            background: linear-gradient(135deg, #333 0%, #555 100%);
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 12px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -160px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            font-weight: normal;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(-5px);
+        }
+        
+        /* 解説セクション */
+        .explanation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .explanation-card {
+            background: var(--light-blue);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+        
+        .explanation-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,91,171,0.2);
+        }
+        
+        .explanation-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .explanation-card h4 {
+            color: var(--secondary-color);
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .explanation-card ol {
+            margin-left: 1.5rem;
+        }
+        
+        .explanation-card ul ul {
+            margin-left: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* 波形表示エリア */
+        .waveform-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .waveform-box {
+            background: var(--neutral-grey);
+            border-radius: 8px;
+            padding: 1.5rem;
+            position: relative;
+            min-height: 300px;
+        }
+        
+        .waveform-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 250px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        #vectorCanvas {
+            width: 400px;
+            height: 400px;
+            margin: 1rem auto;
+            display: block;
+        }
+        
+        /* コントロールパネル */
+        .control-panel {
+            background: var(--light-blue);
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            min-width: 150px;
+        }
+        
+        .control-group select,
+        .control-group input {
+            padding: 0.5rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .control-group input[type="checkbox"] {
+            margin-right: 0.5rem;
+            width: auto;
+            cursor: pointer;
+        }
+        
+        .control-group input[type="checkbox"]:focus {
+            outline: 2px solid var(--secondary-color);
+            outline-offset: 2px;
+        }
+        
+        #compareModeControls .control-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #compareModeControls .control-group label:hover {
+            color: var(--primary-color);
+        }
+        
+        /* ボタン */
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+        
+        .btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,150,28,0.3);
+        }
+        
+        .btn.secondary {
+            background: var(--medium-blue);
+        }
+        
+        .btn.success {
+            background: var(--success-color);
+        }
+        
+        /* 結果表示 */
+        .result-box {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border: 2px solid var(--success-color);
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+        
+        .result-box.show {
+            display: block;
+        }
+        
+        .result-box.error {
+            border-color: var(--danger-color);
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 理解度チェック */
+        .quiz-question {
+            background: var(--neutral-grey);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .quiz-question h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .quiz-option {
+            padding: 0.8rem;
+            background: white;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-option:hover {
+            border-color: var(--primary-color);
+            background: var(--light-blue);
+        }
+        
+        .quiz-option.selected {
+            border-color: var(--secondary-color);
+            background: #FFF3E0;
+        }
+        
+        .quiz-option.correct {
+            border-color: var(--success-color);
+            background: #E8F5E9;
+        }
+        
+        .quiz-option.incorrect {
+            border-color: var(--danger-color);
+            background: #FFEBEE;
+        }
+        
+        /* FAQタブ */
+        .faq-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--light-blue);
+            flex-wrap: wrap;
+        }
+        
+        .faq-tab {
+            padding: 0.8rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--text-dark);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .faq-tab:hover {
+            color: var(--primary-color);
+        }
+        
+        .faq-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            background: var(--light-blue);
+        }
+        
+        .faq-content {
+            display: none;
+        }
+        
+        .faq-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .faq-item {
+            background: var(--neutral-grey);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .faq-item:hover {
+            background: var(--light-blue);
+            transform: translateX(5px);
+        }
+        
+        .faq-question {
+            font-weight: 600;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .faq-answer {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+            display: none;
+            line-height: 1.8;
+        }
+        
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+        
+        /* 計算問題 */
+        .problem-box {
+            background: #FFFBF0;
+            border: 2px solid var(--secondary-color);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .problem-box h4 {
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+        
+        /* プログレスバー */
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: var(--neutral-grey);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--medium-blue), var(--primary-color));
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .waveform-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-nav {
+                flex-direction: column;
+            }
+            
+            .nav-button {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html" class="portal-back-btn">← ポータルへ戻る</a>
+        <h1>⚡ 交流回路シミュレーター</h1>
+        <p> 視覚的に理解する交流回路</p>
+    </div>
+    
+    <div class="container">
+        <!-- メインナビゲーション -->
+        <nav class="main-nav">
+            <button class="nav-button active" onclick="showSection('explanation')">
+                📚 解説
+            </button>
+            <button class="nav-button" onclick="showSection('simulation')">
+                🔬 シミュレーション
+                <span class="badge">3</span>
+            </button>
+            <button class="nav-button" onclick="showSection('understanding')">
+                ✅ 理解度Check
+                <span class="badge">5</span>
+            </button>
+            <button class="nav-button" onclick="showSection('calculation')">
+                📝 計算問題
+                <span class="badge">4</span>
+            </button>
+            <button class="nav-button" onclick="showSection('faq')">
+                ❓ FAQ
+            </button>
+        </nav>
+        
+        <!-- 解説セクション -->
+        <div id="explanation" class="section active">
+            <h2><span class="icon">📚</span>交流回路の基礎知識</h2>
+            
+            <div class="explanation-grid">
+                <div class="explanation-card">
+                    <h3>1. 直流回路と交流回路の違い</h3>
+                    <p>直流回路では電圧・電流が一定ですが、交流回路では<span class="tooltip">正弦波<span class="tooltiptext">時間とともに周期的に変化する波形。y = sin(x)の形で表される滑らかな波。交流電源の最も一般的な波形です。</span></span>状に変化します。</p>
+                    <ul>
+                        <li><strong>直流（DC）</strong>: 電圧・電流が時間経過で一定</li>
+                        <li><strong>交流（AC）</strong>: 電圧・電流が周期的に変化</li>
+                    </ul>
+                    <div style="background: #FFF3E0; padding: 0.8rem; border-radius: 4px; margin-top: 0.5rem;">
+                        <strong>🚗 日常の例え：</strong><br>
+                        直流 = 高速道路（一定速度で直進）<br>
+                        交流 = ブランコ（行ったり来たり）
+                    </div>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>2. 交流回路の主要素子</h3>
+                    <p>交流回路では、抵抗の他に以下の素子が重要です：</p>
+                    <ul>
+                        <li><strong>抵抗（R）</strong>: 電流の流れを妨げる</li>
+                        <li><strong>コイル（L）</strong>: <span class="tooltip">誘導性リアクタンス<span class="tooltiptext">コイルが交流電流の流れを妨げる性質。記号XLで表され、周波数が高いほど、またインダクタンスが大きいほど大きくなります。</span></span>を持つ</li>
+                        <li><strong>コンデンサ（C）</strong>: <span class="tooltip">容量性リアクタンス<span class="tooltiptext">コンデンサが交流電流の流れを妨げる性質。記号XCで表され、周波数が高いほど、また静電容量が大きいほど小さくなります。</span></span>を持つ</li>
+                    </ul>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>3. 位相のずれ【重要】</h3>
+                    <p>交流回路の最重要概念。電圧を基準とした電流の時間的なずれ：</p>
+                    <ul>
+                        <li><strong>抵抗のみ</strong>: 位相のずれなし（0°）</li>
+                        <li><strong>コイル</strong>: 電流が90°遅れる</li>
+                        <li><strong>コンデンサ</strong>: 電流が90°進む</li>
+                    </ul>
+                    <div style="background: #E8F5E9; padding: 0.8rem; border-radius: 4px; margin-top: 0.5rem;">
+                        <strong>💡 覚え方：「コイルは後から（おくれ）」</strong><br>
+                        コ（コイル）イル（いる）は後（おく）れる<br>
+                        コンデンサは先（サキ）に進む
+                    </div>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>4. 実効値と最大値</h3>
+                    <p><span class="tooltip">実効値<span class="tooltiptext">交流電圧・電流の大きさを表す値。同じ電力を発生させる直流の値に相当。家庭用コンセントの100Vは実効値です。</span></span>は日常使用する値：</p>
+                    <ul>
+                        <li><strong>実効値</strong>: 家庭用コンセント100V</li>
+                        <li><strong>最大値</strong>: 実効値 × √2 = 141V</li>
+                        <li><strong>√2 ≈ 1.414</strong></li>
+                    </ul>
+                    <div style="background: #E0EEF9; padding: 0.8rem; border-radius: 4px; margin-top: 0.5rem;">
+                        <strong>🎯 覚え方：「いよいよ（1.414）最大！」</strong><br>
+                        実効値 × 1.414 = 最大値
+                    </div>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>5. インピーダンス</h3>
+                    <p><span class="tooltip">インピーダンス（Z）<span class="tooltiptext">交流回路における電流の流れにくさ。抵抗とリアクタンスを合わせた総合的な概念。単位はΩ（オーム）。</span></span>の計算：</p>
+                    <ul>
+                        <li>直列回路: Z = √(R² + (XL - XC)²)</li>
+                        <li><span class="tooltip">三平方の定理<span class="tooltiptext">直角三角形において、斜辺の2乗は他の2辺の2乗の和に等しい。a² + b² = c²</span></span>を使用</li>
+                        <li>ベクトル的に合成</li>
+                    </ul>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>6. 周波数</h3>
+                    <p>1秒間の波形繰り返し回数：</p>
+                    <ul>
+                        <li><strong>東日本</strong>: 50Hz</li>
+                        <li><strong>西日本</strong>: 60Hz</li>
+                        <li><strong>周期T = 1/f</strong></li>
+                    </ul>
+                    <div style="background: #FFEBEE; padding: 0.8rem; border-radius: 4px; margin-top: 0.5rem;">
+                        <strong>🗾 覚え方：「東京50（とうきょうごじゅう）」</strong><br>
+                        東日本 = 50Hz、西日本 = 60Hz
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 計算方法の詳細解説 -->
+            <h2 style="margin-top: 3rem;"><span class="icon">🧮</span>計算方法の詳しい解説</h2>
+            
+            <div class="explanation-grid">
+                <div class="explanation-card" style="grid-column: span 2;">
+                    <h3>📐 インピーダンスの計算方法（最重要）</h3>
+                    <h4>1. なぜ単純に足せないのか？</h4>
+                    <p>交流回路では、各素子の「抵抗」が異なる方向を向いているため、単純な足し算ができません。</p>
+                    
+                    <div style="background: #FFF3E0; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+                        <strong>🚶 日常の例え：「北に3km、東に4km歩いたら？」</strong><br>
+                        直線距離は3+4=7kmではなく、<br>
+                        √(3²+4²) = √(9+16) = √25 = 5km になります。<br>
+                        これがインピーダンスの計算と同じ原理です！
+                    </div>
+                    
+                    <h4>2. 計算の手順</h4>
+                    <ol style="margin-left: 1.5rem;">
+                        <li><strong>抵抗（R）を横軸に</strong>：基準となる方向</li>
+                        <li><strong>リアクタンスを縦軸に</strong>：
+                            <ul>
+                                <li>XL（コイル）は下向き（マイナス方向）</li>
+                                <li>XC（コンデンサ）は上向き（プラス方向）</li>
+                            </ul>
+                        </li>
+                        <li><strong>差を計算</strong>：XL - XC（または XC - XL）</li>
+                        <li><strong>三平方の定理を適用</strong>：Z = √(R² + (XL-XC)²)</li>
+                    </ol>
+                    
+                    <h4>3. 具体例で練習</h4>
+                    <div style="background: #E0EEF9; padding: 1rem; border-radius: 4px;">
+                        <strong>例題：</strong>R=3Ω、XL=7Ω、XC=3Ω の直列回路<br>
+                        <strong>解法：</strong><br>
+                        ① XL - XC = 7 - 3 = 4Ω（下向き）<br>
+                        ② Z = √(3² + 4²) = √(9 + 16) = √25 = 5Ω<br>
+                        <strong>覚え方：</strong>「3・4・5の直角三角形」として暗記！
+                    </div>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>🌊 位相計算の覚え方</h3>
+                    <h4>語呂合わせで完璧マスター</h4>
+                    <ul style="list-style: none; padding-left: 0;">
+                        <li>📍 <strong>抵抗</strong>：「抵抗ゼロ遅れ」（0°）</li>
+                        <li>🌀 <strong>コイル</strong>：「コイルは苦労（90）遅れ」</li>
+                        <li>⚡ <strong>コンデンサ</strong>：「コンデンサ先（サキ）に進む」</li>
+                    </ul>
+                    
+                    <div style="background: #FFF3E0; padding: 0.8rem; border-radius: 4px; margin-top: 1rem;">
+                        <strong>🏃 競走の例え：</strong><br>
+                        ゴールを電圧とすると...<br>
+                        • 抵抗くん：同時にゴール<br>
+                        • コイルくん：90m手前（遅れ）<br>
+                        • コンデンサくん：90m先（進み）
+                    </div>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>📊 実効値と最大値の関係</h3>
+                    <h4>なぜ√2（1.414）なのか？</h4>
+                    <p>正弦波の二乗平均平方根（RMS）を計算すると√2の関係が出てきます。</p>
+                    
+                    <div style="background: #E8F5E9; padding: 0.8rem; border-radius: 4px; margin: 1rem 0;">
+                        <strong>💰 日常の例え：</strong><br>
+                        実効値 = 手取り給料（実際に使える）<br>
+                        最大値 = 額面給料（見た目の最大）<br>
+                        最大値は実効値の約1.4倍！
+                    </div>
+                    
+                    <h4>計算のコツ</h4>
+                    <ul>
+                        <li>100V → 141V（100×1.41）</li>
+                        <li>200V → 283V（200×1.41）</li>
+                        <li>逆算：141V ÷ 1.41 = 100V</li>
+                    </ul>
+                </div>
+                
+                <div class="explanation-card">
+                    <h3>⚡ オームの法則（交流版）</h3>
+                    <h4>基本は同じ、でも要注意！</h4>
+                    <p><strong>V = I × Z</strong>（ZはRの代わり）</p>
+                    
+                    <div style="background: #FFEBEE; padding: 0.8rem; border-radius: 4px; margin: 1rem 0;">
+                        <strong>⚠️ 注意点：</strong><br>
+                        各素子の電圧を単純に足しても<br>
+                        電源電圧にはなりません！<br>
+                        （位相のずれがあるため）
+                    </div>
+                    
+                    <h4>並列回路の裏技</h4>
+                    <p>合成インピーダンスを直接求めず、<br>
+                    各枝路の電流を求めてから合成！</p>
+                </div>
+                
+                <div class="explanation-card" style="grid-column: span 2;">
+                    <h3>🎯 試験でよく出る計算パターン</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <h4>パターン1：3-4-5の三角形</h4>
+                            <ul>
+                                <li>R=3, XL=4 → Z=5</li>
+                                <li>R=6, XL=8 → Z=10</li>
+                                <li>R=9, XL=12 → Z=15</li>
+                            </ul>
+                            <p style="color: var(--success-color);">これらは暗記推奨！</p>
+                        </div>
+                        <div>
+                            <h4>パターン2：5-12-13の三角形</h4>
+                            <ul>
+                                <li>R=5, XL=12 → Z=13</li>
+                                <li>R=10, XL=24 → Z=26</li>
+                            </ul>
+                            <p style="color: var(--warning-color);">たまに出題される</p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #E0EEF9; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+                        <strong>💡 最速解法テクニック：</strong><br>
+                        1. まず「3-4-5」か「5-12-13」のパターンか確認<br>
+                        2. 該当しなければ素直に計算<br>
+                        3. √の中が「25, 100, 169, 225」なら整数になる！
+                    </div>
+                </div>
+            </div>
+            
+            <div class="waveform-container" style="margin-top: 2rem;">
+                <div class="waveform-box">
+                    <div class="waveform-title">直流回路（DC）の波形</div>
+                    <canvas id="dcWaveform"></canvas>
+                </div>
+                <div class="waveform-box">
+                    <div class="waveform-title">交流回路（AC）の波形</div>
+                    <canvas id="acWaveform"></canvas>
+                </div>
+            </div>
+            
+            <!-- 交流・直流のメリット・デメリット -->
+            <h2 style="margin-top: 3rem;"><span class="icon">⚖️</span>交流と直流のメリット・デメリット</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0;">
+                <div class="explanation-card" style="border-left-color: #2196F3;">
+                    <h3 style="color: #2196F3;">🔄 交流（AC）</h3>
+                    
+                    <h4 style="color: var(--success-color);">✅ メリット</h4>
+                    <ul>
+                        <li><strong>変圧が容易</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                トランス（変圧器）で簡単に電圧を上げ下げできる<br>
+                                例：発電所（数万V）→ 送電（50万V）→ 家庭（100V）
+                            </div>
+                        </li>
+                        <li><strong>長距離送電に有利</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                高電圧にして送電損失を減らせる（電力損失 = I²×R）<br>
+                                電圧を上げて電流を下げることで損失を大幅削減
+                            </div>
+                        </li>
+                        <li><strong>発電機の構造が簡単</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                回転運動をそのまま交流電力に変換<br>
+                                水力・火力・原子力すべて回転で発電
+                            </div>
+                        </li>
+                        <li><strong>モーターが安価で丈夫</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                誘導モーター（洗濯機、エアコン等）はブラシ不要<br>
+                                メンテナンスが少なく長寿命
+                            </div>
+                        </li>
+                    </ul>
+                    
+                    <h4 style="color: var(--danger-color);">❌ デメリット</h4>
+                    <ul>
+                        <li><strong>電子機器には不向き</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                スマホ、PC等は直流で動作するため変換が必要<br>
+                                ACアダプターで交流→直流に変換
+                            </div>
+                        </li>
+                        <li><strong>感電時の危険性が高い</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                筋肉の痙攣を起こしやすい（離れられない）<br>
+                                心室細動のリスクが直流より高い
+                            </div>
+                        </li>
+                        <li><strong>電力損失の要因が多い</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                表皮効果、リアクタンスによる損失<br>
+                                力率による無効電力の発生
+                            </div>
+                        </li>
+                        <li><strong>電磁波の発生</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                周囲に電磁界を発生させる<br>
+                                精密機器への影響の可能性
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="explanation-card" style="border-left-color: #FF5722;">
+                    <h3 style="color: #FF5722;">➡️ 直流（DC）</h3>
+                    
+                    <h4 style="color: var(--success-color);">✅ メリット</h4>
+                    <ul>
+                        <li><strong>電子機器に最適</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                半導体は直流でしか動作しない<br>
+                                スマホ、PC、LED照明等すべて直流動作
+                            </div>
+                        </li>
+                        <li><strong>蓄電が可能</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                バッテリーに電気を貯められる<br>
+                                太陽光発電、EV、モバイルバッテリー等
+                            </div>
+                        </li>
+                        <li><strong>送電効率が良い（超長距離）</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                海底ケーブルなど超長距離ではDCが有利<br>
+                                リアクタンスによる損失がない
+                            </div>
+                        </li>
+                        <li><strong>精密な制御が容易</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                電圧・電流を正確にコントロール<br>
+                                半導体素子で高速・精密制御可能
+                            </div>
+                        </li>
+                    </ul>
+                    
+                    <h4 style="color: var(--danger-color);">❌ デメリット</h4>
+                    <ul>
+                        <li><strong>変圧が困難</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                DC-DCコンバーターが必要（複雑・高価）<br>
+                                大電力の変圧は特に困難
+                            </div>
+                        </li>
+                        <li><strong>遮断が困難</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                アーク（火花）が消えにくい<br>
+                                高圧直流の遮断器は大型・高価
+                            </div>
+                        </li>
+                        <li><strong>発電設備が複雑</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                交流発電→整流が必要<br>
+                                太陽光以外は変換ロスが発生
+                            </div>
+                        </li>
+                        <li><strong>電食の発生</strong>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.3rem;">
+                                地中の金属を腐食させる<br>
+                                鉄道レール、水道管等への影響
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="explanation-card" style="grid-column: span 2; background: #FFF3E0; border-left-color: var(--secondary-color);">
+                <h3>🏠 身近な使い分けの例</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <h4>交流が使われているもの</h4>
+                        <ul>
+                            <li><strong>家庭用コンセント（100V/200V）</strong><br>
+                                <span style="font-size: 0.9rem; color: #666;">送電網から直接供給</span></li>
+                            <li><strong>エアコン、冷蔵庫、洗濯機</strong><br>
+                                <span style="font-size: 0.9rem; color: #666;">大型モーターを使用</span></li>
+                            <li><strong>電子レンジ、IHクッキングヒーター</strong><br>
+                                <span style="font-size: 0.9rem; color: #666;">高周波の交流を利用</span></li>
+                            <li><strong>蛍光灯（従来型）</strong><br>
+                                <span style="font-size: 0.9rem; color: #666;">安定器で動作</span></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>直流が使われているもの</h4>
+                        <ul>
+                            <li><strong>スマートフォン、ノートPC</strong><br>
+                                <span style="font-size: 0.9rem; color: #666;">バッテリー駆動（3.7V〜20V）</span></li>
+                            <li><strong>LED照明</strong><br>
+                                <span style="font-size: 0.9rem; color: #666;">内部で交流→直流変換</span></li>
+                            <li><strong>電気自動車（EV）</strong><br>
+                                <span style="font-size: 0.9rem; color: #666;">大容量バッテリー（400V等）</span></li>
+                            <li><strong>USB機器全般</strong><br>
+                                <span style="font-size: 0.9rem; color: #666;">5V直流で統一</span></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="background: #FFE0B2; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+                    <strong>💡 豆知識：</strong>エジソン（直流推進派）とテスラ（交流推進派）の「電流戦争」は有名な歴史的出来事。
+                    結果的に送電の利便性から交流が勝利したが、現代では適材適所で両方が使われています。
+                    データセンターでは効率化のため直流給電が見直されているんです！
+                </div>
+            </div>
+        </div>
+        
+        <!-- シミュレーションセクション -->
+        <div id="simulation" class="section">
+            <h2><span class="icon">🔬</span>シミュレーション</h2>
+            
+            <!-- 位相のずれシミュレーター -->
+            <h3>1. 位相のずれシミュレーター</h3>
+            <div class="control-panel">
+                <div style="background: #FFF3E0; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+                    <strong>🎮 使い方：</strong>素子を選んで、電圧（青）と電流（オレンジ）の波形の関係を観察しよう！<br>
+                    <strong>覚え方：</strong>「コイルは苦労（90）して遅れる」「コンデンサは先（サキ）に進む」
+                </div>
+                
+                <div class="control-group">
+                    <label>表示モード：</label>
+                    <select id="displayMode" onchange="updatePhaseShift()">
+                        <option value="single">単一表示</option>
+                        <option value="compare">比較表示</option>
+                    </select>
+                </div>
+                
+                <div id="singleModeControls" class="control-group">
+                    <label>回路素子：</label>
+                    <select id="elementType" onchange="updatePhaseShift()">
+                        <option value="R">抵抗のみ（R）</option>
+                        <option value="L">コイル（L）</option>
+                        <option value="C">コンデンサ（C）</option>
+                    </select>
+                </div>
+                
+                <div id="compareModeControls" style="display: none;">
+                    <div class="control-group">
+                        <label style="font-weight: bold;">比較する素子を選択：</label>
+                    </div>
+                    <div class="control-group" style="flex-direction: row; gap: 2rem;">
+                        <label style="min-width: auto;">
+                            <input type="checkbox" id="compareR" checked onchange="updatePhaseShift()">
+                            抵抗（基準）
+                        </label>
+                        <label style="min-width: auto;">
+                            <input type="checkbox" id="compareL" checked onchange="updatePhaseShift()">
+                            コイル（遅れ）
+                        </label>
+                        <label style="min-width: auto;">
+                            <input type="checkbox" id="compareC" checked onchange="updatePhaseShift()">
+                            コンデンサ（進み）
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label>周波数：</label>
+                    <select id="frequency" onchange="updatePhaseShift()">
+                        <option value="50">50Hz（東日本）</option>
+                        <option value="60">60Hz（西日本）</option>
+                    </select>
+                </div>
+                
+                <canvas id="phaseCanvas"></canvas>
+                
+                <div id="phaseInfo" class="result-box show">
+                    <p><strong>位相のずれ：</strong> <span id="phaseShift">0°</span></p>
+                    <p><strong>説明：</strong> <span id="phaseExplanation">抵抗のみの回路では、電圧と電流の位相のずれはありません。</span></p>
+                </div>
+                
+                <div id="compareLegend" style="display: none; margin-top: 1rem; padding: 1rem; background: #F5F5F5; border-radius: 4px;">
+                    <h4 style="margin-top: 0;">凡例</h4>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                        <div>
+                            <span style="color: #005BAB; font-weight: bold;">━━</span> 電圧（基準）
+                        </div>
+                        <div>
+                            <span style="color: #4CAF50; font-weight: bold;">━━</span> 抵抗の電流（0°）
+                        </div>
+                        <div>
+                            <span style="color: #FF961C; font-weight: bold;">━━</span> コイルの電流（-90°）
+                        </div>
+                        <div>
+                            <span style="color: #E91E63; font-weight: bold;">━━</span> コンデンサの電流（+90°）
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- インピーダンス計算機 -->
+            <h3>2. 合成インピーダンス計算機</h3>
+            <div class="control-panel">
+                <h4>直列回路の合成インピーダンス</h4>
+                
+                <div style="background: #E8F5E9; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+                    <strong>📐 ベクトル図で理解しよう！</strong><br>
+                    抵抗（R）を横、リアクタンス（X）を縦にとり、斜辺がインピーダンス（Z）になります。<br>
+                    <strong>覚え方：</strong>「北に3km、東に4km歩いたら、直線距離は5km」と同じ原理！
+                </div>
+                
+                <div class="control-group">
+                    <label>抵抗 R（Ω）：</label>
+                    <input type="number" id="resistance" value="3" min="0" step="0.1">
+                </div>
+                
+                <div class="control-group">
+                    <label>誘導性リアクタンス XL（Ω）：</label>
+                    <input type="number" id="inductance" value="4" min="0" step="0.1">
+                </div>
+                
+                <div class="control-group">
+                    <label>容量性リアクタンス XC（Ω）：</label>
+                    <input type="number" id="capacitance" value="0" min="0" step="0.1">
+                </div>
+                
+                <button class="btn" onclick="calculateImpedance()">計算する</button>
+                
+                <div id="impedanceResult" class="result-box">
+                    <!-- 計算結果 -->
+                </div>
+                
+                <canvas id="vectorCanvas" width="400" height="400"></canvas>
+            </div>
+            
+            <!-- 実効値・最大値計算 -->
+            <h3>3. 実効値と最大値の関係</h3>
+            <div class="control-panel">
+                <div style="background: #FFEBEE; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+                    <strong>💡 実効値と最大値の関係</strong><br>
+                    最大値 = 実効値 × √2（約1.414）<br>
+                    <strong>覚え方：</strong>「いよいよ（1414）最大値！」<br>
+                    <strong>例：</strong>家庭用100V → 最大値141V
+                </div>
+                
+                <div class="control-group">
+                    <label>実効値（V）：</label>
+                    <input type="number" id="rmsValue" value="100" min="0" step="1">
+                </div>
+                
+                <button class="btn" onclick="calculateMaxValue()">最大値を計算</button>
+                
+                <div id="maxValueResult" class="result-box">
+                    <!-- 計算結果 -->
+                </div>
+                
+                <canvas id="rmsMaxCanvas"></canvas>
+            </div>
+            
+            <!-- 追加の解説 -->
+            <div style="background: #F5F5F5; padding: 2rem; border-radius: 8px; margin-top: 2rem;">
+                <h3>🎓 シミュレーションから学べること</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <h4>位相のずれ</h4>
+                        <ul>
+                            <li>抵抗：ずれなし（0°）</li>
+                            <li>コイル：90°遅れ</li>
+                            <li>コンデンサ：90°進み</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>インピーダンス</h4>
+                        <ul>
+                            <li>単純な足し算NG</li>
+                            <li>三平方の定理を使用</li>
+                            <li>ベクトル的に合成</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>実効値と最大値</h4>
+                        <ul>
+                            <li>最大値 = 実効値×1.414</li>
+                            <li>実効値 = 最大値÷1.414</li>
+                            <li>家庭用100V = 実効値</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 理解度Checkセクション -->
+        <div id="understanding" class="section">
+            <h2><span class="icon">✅</span>理解度Check</h2>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="quizProgress" style="width: 0%">0/5</div>
+            </div>
+            
+            <div class="quiz-question">
+                <h4>問題1: 抵抗のみの交流回路では、電圧と電流の位相のずれは？</h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, 1, 'A')">A. 90°進む</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 1, 'B')">B. 90°遅れる</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 1, 'C')">C. ずれない（0°）</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 1, 'D')">D. 45°遅れる</div>
+                </div>
+                <div id="feedback1" class="result-box" style="margin-top: 1rem;"></div>
+            </div>
+            
+            <div class="quiz-question">
+                <h4>問題2: コイルを含む交流回路では、電圧を基準とした電流の位相は？</h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, 2, 'A')">A. 90°進む</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 2, 'B')">B. 90°遅れる</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 2, 'C')">C. ずれない</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 2, 'D')">D. 180°遅れる</div>
+                </div>
+                <div id="feedback2" class="result-box" style="margin-top: 1rem;"></div>
+            </div>
+            
+            <div class="quiz-question">
+                <h4>問題3: 実効値100Vの交流電圧の最大値は？</h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, 3, 'A')">A. 100V</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 3, 'B')">B. 141V</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 3, 'C')">C. 200V</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 3, 'D')">D. 70.7V</div>
+                </div>
+                <div id="feedback3" class="result-box" style="margin-top: 1rem;"></div>
+            </div>
+            
+            <div class="quiz-question">
+                <h4>問題4: 東日本の商用電源の周波数は？</h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, 4, 'A')">A. 50Hz</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 4, 'B')">B. 60Hz</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 4, 'C')">C. 100Hz</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 4, 'D')">D. 120Hz</div>
+                </div>
+                <div id="feedback4" class="result-box" style="margin-top: 1rem;"></div>
+            </div>
+            
+            <div class="quiz-question">
+                <h4>問題5: 抵抗3Ω、誘導性リアクタンス4Ωの直列回路の合成インピーダンスは？</h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, 5, 'A')">A. 7Ω</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 5, 'B')">B. 5Ω</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 5, 'C')">C. 1Ω</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, 5, 'D')">D. 12Ω</div>
+                </div>
+                <div id="feedback5" class="result-box" style="margin-top: 1rem;"></div>
+            </div>
+            
+            <button class="btn success" onclick="showResults()">結果を見る</button>
+            <div id="totalResult" class="result-box"></div>
+        </div>
+        
+        <!-- 計算問題セクション -->
+        <div id="calculation" class="section">
+            <h2><span class="icon">📝</span>計算問題</h2>
+            
+            <div style="background: #E0EEF9; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <h3 style="margin-top: 0;">🎯 計算問題を解くコツ</h3>
+                <ol>
+                    <li><strong>まず図を描く</strong>：ベクトル図で視覚的に理解</li>
+                    <li><strong>パターンを確認</strong>：3-4-5や5-12-13の定番パターンかチェック</li>
+                    <li><strong>単位を確認</strong>：Ω（オーム）、V（ボルト）、A（アンペア）</li>
+                    <li><strong>公式を思い出す</strong>：Z = √(R² + (XL-XC)²)、V = I × Z</li>
+                </ol>
+            </div>
+            
+            <div class="problem-box">
+                <h4>問題1: 直列回路のインピーダンス【基本】</h4>
+                <p>抵抗6Ω、誘導性リアクタンス8Ωを直列に接続した回路の合成インピーダンスを求めなさい。</p>
+                
+                <div style="background: #FFF3E0; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+                    <strong>💡 ヒント：</strong>6と8という数字を見たら...3-4-5の倍数かも？<br>
+                    6 = 3×2、8 = 4×2 → 答えは5×2 = ?
+                </div>
+                
+                <div class="control-group">
+                    <label>解答：</label>
+                    <input type="number" id="calc1" step="0.1">
+                    <span>Ω</span>
+                    <button class="btn secondary" onclick="checkCalculation(1)">確認</button>
+                </div>
+                <div id="calcFeedback1" class="result-box"></div>
+            </div>
+            
+            <div class="problem-box">
+                <h4>問題2: 実効値から最大値【頻出】</h4>
+                <p>実効値200Vの交流電圧の最大値を求めなさい。（√2 = 1.414として計算）</p>
+                
+                <div style="background: #E8F5E9; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+                    <strong>🧮 速算テクニック：</strong><br>
+                    200 × 1.4 = 280、200 × 0.014 = 2.8<br>
+                    280 + 2.8 = 282.8 V
+                </div>
+                
+                <div class="control-group">
+                    <label>解答：</label>
+                    <input type="number" id="calc2" step="0.1">
+                    <span>V</span>
+                    <button class="btn secondary" onclick="checkCalculation(2)">確認</button>
+                </div>
+                <div id="calcFeedback2" class="result-box"></div>
+            </div>
+            
+            <div class="problem-box">
+                <h4>問題3: RLC直列回路【応用】</h4>
+                <p>抵抗9Ω、誘導性リアクタンス15Ω、容量性リアクタンス3Ωを直列に接続した回路の合成インピーダンスを求めなさい。</p>
+                
+                <div style="background: #FFEBEE; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+                    <strong>📐 解き方の手順：</strong><br>
+                    ① まずXL - XC = 15 - 3 = 12を計算<br>
+                    ② 9と12...これも3-4-5の3倍！<br>
+                    ③ 3×3=9、4×3=12 → 5×3=?
+                </div>
+                
+                <div class="control-group">
+                    <label>解答：</label>
+                    <input type="number" id="calc3" step="0.1">
+                    <span>Ω</span>
+                    <button class="btn secondary" onclick="checkCalculation(3)">確認</button>
+                </div>
+                <div id="calcFeedback3" class="result-box"></div>
+            </div>
+            
+            <div class="problem-box">
+                <h4>問題4: 電流計算【オームの法則】</h4>
+                <p>100Vの交流電源に、合成インピーダンス20Ωの回路を接続したとき、流れる電流を求めなさい。</p>
+                
+                <div style="background: #E0EEF9; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+                    <strong>🔌 覚え方：</strong>「100V ÷ 20Ω = ？A」<br>
+                    100円を20人で分けたら1人5円...だから5A！<br>
+                    オームの法則：I = V ÷ Z（交流版）
+                </div>
+                
+                <div class="control-group">
+                    <label>解答：</label>
+                    <input type="number" id="calc4" step="0.1">
+                    <span>A</span>
+                    <button class="btn secondary" onclick="checkCalculation(4)">確認</button>
+                </div>
+                <div id="calcFeedback4" class="result-box"></div>
+            </div>
+            
+            <!-- 追加の練習問題 -->
+            <div style="background: #F5F5F5; padding: 2rem; border-radius: 8px; margin-top: 2rem;">
+                <h3>🏋️ さらに練習したい方へ</h3>
+                <h4>よく出る計算パターン集</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                    <div>
+                        <h5>3-4-5パターン</h5>
+                        <ul>
+                            <li>R=3Ω, X=4Ω → Z=5Ω</li>
+                            <li>R=6Ω, X=8Ω → Z=10Ω</li>
+                            <li>R=9Ω, X=12Ω → Z=15Ω</li>
+                            <li>R=12Ω, X=16Ω → Z=20Ω</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5>5-12-13パターン</h5>
+                        <ul>
+                            <li>R=5Ω, X=12Ω → Z=13Ω</li>
+                            <li>R=10Ω, X=24Ω → Z=26Ω</li>
+                        </ul>
+                        <h5>その他の定番</h5>
+                        <ul>
+                            <li>R=8Ω, X=6Ω → Z=10Ω</li>
+                            <li>R=1Ω, X=1Ω → Z=√2≈1.41Ω</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FAQセクション -->
+        <div id="faq" class="section">
+            <h2><span class="icon">❓</span>よくある質問</h2>
+            
+            <div class="faq-tabs">
+                <button class="faq-tab active" onclick="showFAQTab('basic')">基本概念</button>
+                <button class="faq-tab" onclick="showFAQTab('phase')">位相のずれ</button>
+                <button class="faq-tab" onclick="showFAQTab('impedance')">インピーダンス</button>
+                <button class="faq-tab" onclick="showFAQTab('values')">実効値・最大値</button>
+            </div>
+            
+            <div id="faq-basic" class="faq-content active">
+                <div class="faq-item" onclick="toggleFAQ(this)">
+                    <div class="faq-question">
+                        <span>Q.</span> 直流回路と交流回路の最も大きな違いは何ですか？
+                    </div>
+                    <div class="faq-answer">
+                        直流回路では電圧・電流が時間経過で一定ですが、交流回路では周期的に大きさと向きが変化します。また、交流回路では抵抗の他にコイルやコンデンサが重要な役割を果たし、これらにより位相のずれが発生します。
+                    </div>
+                </div>
+                
+                <div class="faq-item" onclick="toggleFAQ(this)">
+                    <div class="faq-question">
+                        <span>Q.</span> なぜ日本では50Hzと60Hzの2つの周波数があるのですか？
+                    </div>
+                    <div class="faq-answer">
+                        明治時代に東日本ではドイツ製の50Hz発電機を、西日本ではアメリカ製の60Hz発電機を導入したことが始まりです。現在でもこの違いが残っており、東日本は50Hz、西日本は60Hzとなっています。
+                    </div>
+                </div>
+            </div>
+            
+            <div id="faq-phase" class="faq-content">
+                <div class="faq-item" onclick="toggleFAQ(this)">
+                    <div class="faq-question">
+                        <span>Q.</span> 位相のずれとは何ですか？
+                    </div>
+                    <div class="faq-answer">
+                        交流回路における位相のずれとは、電圧と電流のタイミングがずれることを指します。電圧を基準として、電流の波形が時間的に進んだり遅れたりする現象です。コイルでは電流が90°遅れ、コンデンサでは90°進みます。
+                    </div>
+                </div>
+                
+                <div class="faq-item" onclick="toggleFAQ(this)">
+                    <div class="faq-question">
+                        <span>Q.</span> なぜコイルで電流が遅れ、コンデンサで進むのですか？
+                    </div>
+                    <div class="faq-answer">
+                        コイルは電流の変化を妨げる性質（自己誘導）があるため、電圧が変化してもすぐには電流が追従せず遅れます。一方、コンデンサは電圧が変化する前に充放電により電流が流れるため、電流が電圧より先行（進む）します。
+                    </div>
+                </div>
+            </div>
+            
+            <div id="faq-impedance" class="faq-content">
+                <div class="faq-item" onclick="toggleFAQ(this)">
+                    <div class="faq-question">
+                        <span>Q.</span> なぜインピーダンスは単純な足し算で求められないのですか？
+                    </div>
+                    <div class="faq-answer">
+                        交流回路では、抵抗、コイル、コンデンサによる「抵抗のようなもの」の方向が異なるためです。抵抗は基準方向、コイルは90°遅れ方向、コンデンサは90°進み方向に作用するため、ベクトル的に合成する必要があり、三平方の定理を使って計算します。
+                    </div>
+                </div>
+                
+                <div class="faq-item" onclick="toggleFAQ(this)">
+                    <div class="faq-question">
+                        <span>Q.</span> 三平方の定理はどのように使うのですか？
+                    </div>
+                    <div class="faq-answer">
+                        抵抗Rを横軸、リアクタンス(XL-XC)を縦軸とする直角三角形を考えます。合成インピーダンスZは斜辺となるため、Z² = R² + (XL-XC)²という関係が成り立ち、Z = √(R² + (XL-XC)²)で計算できます。
+                    </div>
+                </div>
+            </div>
+            
+            <div id="faq-values" class="faq-content">
+                <div class="faq-item" onclick="toggleFAQ(this)">
+                    <div class="faq-question">
+                        <span>Q.</span> 実効値と最大値の関係を教えてください
+                    </div>
+                    <div class="faq-answer">
+                        正弦波交流において、最大値は実効値の√2倍（約1.414倍）になります。例えば、家庭用コンセントの100V（実効値）の最大値は141Vです。実効値は同じ電力を発生させる直流の値に相当するため、日常的に使用されます。
+                    </div>
+                </div>
+                
+                <div class="faq-item" onclick="toggleFAQ(this)">
+                    <div class="faq-question">
+                        <span>Q.</span> 周波数（Hz）とは何ですか？
+                    </div>
+                    <div class="faq-answer">
+                        周波数は1秒間に交流波形が繰り返される回数を表します。50Hzなら1秒間に50回、60Hzなら60回波形が繰り返されます。周波数はモーターの回転数やコイル・コンデンサのリアクタンスに影響を与えます。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // グローバル変数
+        let phaseAnimation;
+        let quizAnswers = {};
+        let correctAnswers = {
+            1: 'C',
+            2: 'B',
+            3: 'B',
+            4: 'A',
+            5: 'B'
+        };
+        
+        // セクション切り替え
+        function showSection(sectionId) {
+            // すべてのセクションを非表示
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // すべてのナビゲーションボタンから active を削除
+            document.querySelectorAll('.nav-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // 選択されたセクションを表示
+            document.getElementById(sectionId).classList.add('active');
+            
+            // 対応するボタンに active を追加
+            event.target.classList.add('active');
+            
+            // シミュレーションセクションの場合、アニメーションを開始
+            if (sectionId === 'simulation') {
+                if (phaseAnimation) cancelAnimationFrame(phaseAnimation);
+                updatePhaseShift();
+                calculateImpedance(); // ベクトル図も再描画
+            }
+        }
+        
+        // 直流波形の描画
+        function drawDCWaveform() {
+            const canvas = document.getElementById('dcWaveform');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            // グリッド線
+            drawGrid(ctx, canvas);
+            
+            // 中心線
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+            
+            // DC波形（水平線）
+            ctx.strokeStyle = '#005BAB';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 3);
+            ctx.lineTo(canvas.width, canvas.height / 3);
+            ctx.stroke();
+            
+            // ラベル
+            ctx.fillStyle = '#005BAB';
+            ctx.font = '14px Meiryo';
+            ctx.fillText('100V（一定）', 10, canvas.height / 3 - 10);
+        }
+        
+        // 交流波形の描画
+        function drawACWaveform() {
+            const canvas = document.getElementById('acWaveform');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            // グリッド線
+            drawGrid(ctx, canvas);
+            
+            // 中心線
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+            
+            // AC波形（正弦波）
+            ctx.strokeStyle = '#FF961C';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let x = 0; x < canvas.width; x++) {
+                const y = canvas.height / 2 - Math.sin(x * 0.02) * canvas.height / 3;
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // ラベル
+            ctx.fillStyle = '#FF961C';
+            ctx.font = '14px Meiryo';
+            ctx.fillText('141V (最大値)', 10, 20);
+            ctx.fillText('100V (実効値)', 10, canvas.height / 2 - 10);
+        }
+        
+        // グリッド線を描画
+        function drawGrid(ctx, canvas) {
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+        }
+        
+        // 位相のずれ表示
+        function drawPhaseShift() {
+            const canvas = document.getElementById('phaseCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth || 600;
+            canvas.height = 300;
+            
+            const elementType = document.getElementById('elementType').value;
+            const frequency = parseInt(document.getElementById('frequency').value);
+            
+            // クリア
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // グリッド線
+            drawGrid(ctx, canvas);
+            
+            // 中心線
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+            
+            // 位相のずれを設定
+            let phaseShift = 0;
+            let phaseText = '';
+            let explanation = '';
+            let mnemonic = '';
+            
+            switch(elementType) {
+                case 'R':
+                    phaseShift = 0;
+                    phaseText = '0°';
+                    explanation = '抵抗のみの回路では、電圧と電流の位相のずれはありません。';
+                    mnemonic = '「抵抗ゼロ遅れ」（位相差0°）';
+                    break;
+                case 'L':
+                    phaseShift = -Math.PI / 2;
+                    phaseText = '-90°（遅れ）';
+                    explanation = 'コイルを含む回路では、電流が電圧に対して90°遅れます。';
+                    mnemonic = '「コイルは苦労（90）して遅れる」';
+                    break;
+                case 'C':
+                    phaseShift = Math.PI / 2;
+                    phaseText = '+90°（進み）';
+                    explanation = 'コンデンサを含む回路では、電流が電圧に対して90°進みます。';
+                    mnemonic = '「コンデンサ先（サキ）に進む」';
+                    break;
+            }
+            
+            // アニメーション用の時間
+            const time = Date.now() * 0.001 * frequency / 50;
+            
+            // 電圧波形（基準）
+            ctx.strokeStyle = '#005BAB';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let x = 0; x < canvas.width; x++) {
+                const y = canvas.height / 2 - Math.sin(x * 0.02 + time) * canvas.height / 3;
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 電流波形（位相ずれあり）
+            ctx.strokeStyle = '#FF961C';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let x = 0; x < canvas.width; x++) {
+                const y = canvas.height / 2 - Math.sin(x * 0.02 + time + phaseShift) * canvas.height / 3;
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 凡例
+            ctx.font = '14px Meiryo';
+            ctx.fillStyle = '#005BAB';
+            ctx.fillText('電圧（基準）', 10, 20);
+            ctx.fillStyle = '#FF961C';
+            ctx.fillText('電流', 100, 20);
+            
+            // 情報更新
+            document.getElementById('phaseShift').innerHTML = `${phaseText} <span style="color: var(--secondary-color);">${mnemonic}</span>`;
+            document.getElementById('phaseExplanation').textContent = explanation;
+            
+            // アニメーション継続
+            phaseAnimation = requestAnimationFrame(drawPhaseShift);
+        }
+        
+        function updatePhaseShift() {
+            if (phaseAnimation) cancelAnimationFrame(phaseAnimation);
+            drawPhaseShift();
+        }
+        
+        // ベクトル図の描画
+        function drawVectorDiagram(R, XL, XC) {
+            const canvas = document.getElementById('vectorCanvas');
+            if (!canvas) return;
+            
+            // 高解像度対応
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+            
+            // キャンバスサイズを取得
+            const width = rect.width;
+            const height = rect.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // スケールを動的に調整
+            const maxValue = Math.max(Math.abs(R), Math.abs(XL - XC)) || 1;
+            const scale = Math.min(width, height) * 0.3 / maxValue;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // 座標軸
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(30, centerY);
+            ctx.lineTo(width - 30, centerY);
+            ctx.moveTo(centerX, 30);
+            ctx.lineTo(centerX, height - 30);
+            ctx.stroke();
+            
+            // 軸ラベル
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Meiryo';
+            ctx.fillText('R（抵抗）', width - 80, centerY - 10);
+            ctx.fillText('X（リアクタンス）', centerX + 10, 40);
+            
+            // グリッド線を追加（見やすさのため）
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            
+            // 垂直グリッド
+            for (let i = 1; i <= 5; i++) {
+                const x = centerX + i * scale;
+                if (x < width - 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 30);
+                    ctx.lineTo(x, height - 30);
+                    ctx.stroke();
+                }
+                const x2 = centerX - i * scale;
+                if (x2 > 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(x2, 30);
+                    ctx.lineTo(x2, height - 30);
+                    ctx.stroke();
+                }
+            }
+            
+            // 水平グリッド
+            for (let i = 1; i <= 5; i++) {
+                const y = centerY - i * scale;
+                if (y > 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(30, y);
+                    ctx.lineTo(width - 30, y);
+                    ctx.stroke();
+                }
+                const y2 = centerY + i * scale;
+                if (y2 < height - 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(30, y2);
+                    ctx.lineTo(width - 30, y2);
+                    ctx.stroke();
+                }
+            }
+            
+            ctx.setLineDash([]);
+            
+            // ベクトル描画
+            const X = XL - XC;
+            
+            // R成分（横）
+            if (R > 0) {
+                drawArrow(ctx, centerX, centerY, centerX + R * scale, centerY, '#005BAB', 3);
+                ctx.fillStyle = '#005BAB';
+                ctx.font = 'bold 14px Meiryo';
+                ctx.fillText(`R = ${R}Ω`, centerX + R * scale / 2 - 20, centerY + 20);
+            }
+            
+            // X成分（縦）
+            if (X !== 0) {
+                drawArrow(ctx, centerX + R * scale, centerY, centerX + R * scale, centerY - X * scale, '#FF961C', 3);
+                ctx.fillStyle = '#FF961C';
+                ctx.font = 'bold 14px Meiryo';
+                const xLabel = X > 0 ? `XL - XC = ${X}Ω` : `XC - XL = ${-X}Ω`;
+                ctx.fillText(xLabel, centerX + R * scale + 10, centerY - X * scale / 2);
+            }
+            
+            // 合成インピーダンス（斜め）
+            const Z = Math.sqrt(R * R + X * X);
+            if (Z > 0) {
+                drawArrow(ctx, centerX, centerY, centerX + R * scale, centerY - X * scale, '#4CAF50', 4);
+                ctx.fillStyle = '#4CAF50';
+                ctx.font = 'bold 16px Meiryo';
+                ctx.fillText(`Z = ${Z.toFixed(2)}Ω`, centerX + R * scale / 2 + 10, centerY - X * scale / 2 - 10);
+                
+                // 角度表示
+                const angle = Math.atan2(-X, R) * 180 / Math.PI;
+                ctx.fillStyle = '#666';
+                ctx.font = '12px Meiryo';
+                ctx.fillText(`θ = ${angle.toFixed(1)}°`, centerX + 20, centerY - 20);
+            }
+        }
+        
+        // 矢印を描画
+        function drawArrow(ctx, fromX, fromY, toX, toY, color, width) {
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            const headLength = 10;
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.fillStyle = color;
+            
+            // 線を描画
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+            
+            // 矢印の頭を描画
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // インピーダンス計算
+        function calculateImpedance() {
+            const R = parseFloat(document.getElementById('resistance').value) || 0;
+            const XL = parseFloat(document.getElementById('inductance').value) || 0;
+            const XC = parseFloat(document.getElementById('capacitance').value) || 0;
+            
+            const X = XL - XC;
+            const Z = Math.sqrt(R * R + X * X);
+            const angle = Math.atan2(X, R) * 180 / Math.PI;
+            
+            // パターンチェック
+            let patternHint = '';
+            if (R === 3 && Math.abs(X) === 4) {
+                patternHint = '<p style="color: var(--success-color);"><strong>💡 3-4-5のパターンです！</strong></p>';
+            } else if (R === 6 && Math.abs(X) === 8) {
+                patternHint = '<p style="color: var(--success-color);"><strong>💡 6-8-10のパターン（3-4-5の2倍）です！</strong></p>';
+            } else if (R === 9 && Math.abs(X) === 12) {
+                patternHint = '<p style="color: var(--success-color);"><strong>💡 9-12-15のパターン（3-4-5の3倍）です！</strong></p>';
+            } else if (R === 5 && Math.abs(X) === 12) {
+                patternHint = '<p style="color: var(--success-color);"><strong>💡 5-12-13のパターンです！</strong></p>';
+            }
+            
+            const resultDiv = document.getElementById('impedanceResult');
+            resultDiv.innerHTML = `
+                <h4>計算結果</h4>
+                ${patternHint}
+                <p><strong>抵抗成分 R：</strong> ${R} Ω</p>
+                <p><strong>リアクタンス成分 X：</strong> ${X.toFixed(2)} Ω （XL - XC = ${XL} - ${XC}）</p>
+                <p><strong>合成インピーダンス Z：</strong> <span style="color: var(--success-color); font-size: 1.5rem;">${Z.toFixed(2)} Ω</span></p>
+                <p><strong>位相角：</strong> ${angle.toFixed(1)}°</p>
+                <hr style="margin: 1rem 0;">
+                <p><strong>計算式：</strong></p>
+                <p>Z = √(R² + (XL - XC)²)</p>
+                <p>Z = √(${R}² + (${XL} - ${XC})²)</p>
+                <p>Z = √(${R*R} + ${X*X})</p>
+                <p>Z = ${Z.toFixed(2)} Ω</p>
+                <div style="background: #FFF3E0; padding: 0.8rem; border-radius: 4px; margin-top: 1rem;">
+                    <strong>🚶 日常の例え：</strong><br>
+                    東に${R}km、${X >= 0 ? '北' : '南'}に${Math.abs(X)}km進んだときの直線距離が${Z.toFixed(2)}kmになるのと同じ！
+                </div>
+            `;
+            resultDiv.classList.add('show');
+            
+            drawVectorDiagram(R, XL, XC);
+        }
+        
+        // 最大値計算
+        function calculateMaxValue() {
+            const rms = parseFloat(document.getElementById('rmsValue').value) || 0;
+            const max = rms * Math.sqrt(2);
+            
+            const resultDiv = document.getElementById('maxValueResult');
+            resultDiv.innerHTML = `
+                <h4>計算結果</h4>
+                <p><strong>実効値：</strong> ${rms} V</p>
+                <p><strong>最大値：</strong> <span style="color: var(--secondary-color); font-size: 1.5rem;">${max.toFixed(1)} V</span></p>
+                <hr style="margin: 1rem 0;">
+                <p><strong>計算式：</strong></p>
+                <p>最大値 = 実効値 × √2</p>
+                <p>最大値 = ${rms} × 1.414</p>
+                <p>最大値 = ${max.toFixed(1)} V</p>
+                <div style="background: #E8F5E9; padding: 0.8rem; border-radius: 4px; margin-top: 1rem;">
+                    <strong>🧮 速算テクニック：</strong><br>
+                    ${rms} × 1.4 = ${(rms * 1.4).toFixed(0)}<br>
+                    ${rms} × 0.014 = ${(rms * 0.014).toFixed(1)}<br>
+                    合計 = ${max.toFixed(1)} V<br>
+                    <strong>覚え方：</strong>「いよいよ（1414）最大値！」
+                </div>
+            `;
+            resultDiv.classList.add('show');
+            
+            drawRmsMaxWaveform(rms, max);
+        }
+        
+        // 実効値・最大値の波形描画
+        function drawRmsMaxWaveform(rms, max) {
+            const canvas = document.getElementById('rmsMaxCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth || 600;
+            canvas.height = 300;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawGrid(ctx, canvas);
+            
+            // 中心線
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+            
+            // 正弦波
+            ctx.strokeStyle = '#005BAB';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            const scale = (canvas.height / 2 - 20) / max;
+            for (let x = 0; x < canvas.width; x++) {
+                const y = canvas.height / 2 - Math.sin(x * 0.02) * max * scale;
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // 最大値ライン
+            ctx.strokeStyle = '#FF961C';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2 - max * scale);
+            ctx.lineTo(canvas.width, canvas.height / 2 - max * scale);
+            ctx.moveTo(0, canvas.height / 2 + max * scale);
+            ctx.lineTo(canvas.width, canvas.height / 2 + max * scale);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 実効値ライン
+            ctx.strokeStyle = '#4CAF50';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 5]);
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2 - rms * scale);
+            ctx.lineTo(canvas.width, canvas.height / 2 - rms * scale);
+            ctx.moveTo(0, canvas.height / 2 + rms * scale);
+            ctx.lineTo(canvas.width, canvas.height / 2 + rms * scale);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // ラベル
+            ctx.font = '14px Meiryo';
+            ctx.fillStyle = '#FF961C';
+            ctx.fillText(`最大値: ${max.toFixed(1)}V`, 10, canvas.height / 2 - max * scale - 5);
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillText(`実効値: ${rms}V`, 10, canvas.height / 2 - rms * scale - 5);
+        }
+        
+        // 理解度チェック
+        function checkAnswer(element, questionId, answer) {
+            // 同じ問題の他の選択肢から selected を削除
+            element.parentElement.querySelectorAll('.quiz-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            element.classList.add('selected');
+            quizAnswers[questionId] = answer;
+            
+            const feedbackDiv = document.getElementById(`feedback${questionId}`);
+            const isCorrect = answer === correctAnswers[questionId];
+            
+            feedbackDiv.innerHTML = isCorrect 
+                ? '<p style="color: var(--success-color);">✓ 正解です！</p>'
+                : '<p style="color: var(--danger-color);">✗ 不正解です。もう一度考えてみましょう。</p>';
+            feedbackDiv.classList.add('show');
+            
+            // 正解・不正解のスタイルを適用
+            element.classList.add(isCorrect ? 'correct' : 'incorrect');
+            
+            updateProgress();
+        }
+        
+        function updateProgress() {
+            const answered = Object.keys(quizAnswers).length;
+            const total = 5;
+            const percentage = (answered / total) * 100;
+            
+            const progressFill = document.getElementById('quizProgress');
+            progressFill.style.width = percentage + '%';
+            progressFill.textContent = `${answered}/${total}`;
+        }
+        
+        function showResults() {
+            let correct = 0;
+            for (let i = 1; i <= 5; i++) {
+                if (quizAnswers[i] === correctAnswers[i]) {
+                    correct++;
+                }
+            }
+            
+            const resultDiv = document.getElementById('totalResult');
+            const percentage = (correct / 5) * 100;
+            
+            let message = '';
+            if (percentage >= 80) {
+                message = '素晴らしい！よく理解できています。';
+            } else if (percentage >= 60) {
+                message = '良い調子です。もう少し復習しましょう。';
+            } else {
+                message = '基礎から復習することをお勧めします。';
+            }
+            
+            resultDiv.innerHTML = `
+                <h4>結果</h4>
+                <p><strong>正解数：</strong> ${correct}/5問（${percentage}%）</p>
+                <p>${message}</p>
+                <hr style="margin: 1rem 0;">
+                <p><strong>正解：</strong></p>
+                <ul>
+                    <li>問題1: C（位相のずれなし）</li>
+                    <li>問題2: B（90°遅れる）</li>
+                    <li>問題3: B（141V）</li>
+                    <li>問題4: A（50Hz）</li>
+                    <li>問題5: B（5Ω）</li>
+                </ul>
+            `;
+            resultDiv.classList.add('show');
+        }
+        
+        // 計算問題チェック
+        function checkCalculation(problemId) {
+            const answers = {
+                1: 10,  // √(6² + 8²) = √(36 + 64) = √100 = 10
+                2: 282.8,  // 200 × 1.414 = 282.8
+                3: 15,  // √(9² + (15-3)²) = √(81 + 144) = √225 = 15
+                4: 5    // 100V ÷ 20Ω = 5A
+            };
+            
+            const tolerance = 0.1;
+            const userAnswer = parseFloat(document.getElementById(`calc${problemId}`).value);
+            const correctAnswer = answers[problemId];
+            const isCorrect = Math.abs(userAnswer - correctAnswer) <= tolerance;
+            
+            const feedbackDiv = document.getElementById(`calcFeedback${problemId}`);
+            
+            if (isCorrect) {
+                feedbackDiv.className = 'result-box show';
+                feedbackDiv.innerHTML = '<p style="color: var(--success-color);">✓ 正解です！素晴らしい！</p>';
+            } else {
+                feedbackDiv.className = 'result-box show error';
+                let explanation = '';
+                switch(problemId) {
+                    case 1:
+                        explanation = `
+                            <strong>解説：</strong><br>
+                            Z = √(R² + XL²) = √(6² + 8²)<br>
+                            = √(36 + 64) = √100 = 10Ω<br><br>
+                            <strong>💡 覚え方：</strong><br>
+                            6-8-10は3-4-5の2倍！<br>
+                            3×2=6、4×2=8、5×2=10<br>
+                            このパターンは頻出なので暗記推奨！
+                        `;
+                        break;
+                    case 2:
+                        explanation = `
+                            <strong>解説：</strong><br>
+                            最大値 = 実効値 × √2<br>
+                            = 200 × 1.414 = 282.8V<br><br>
+                            <strong>🧮 計算のコツ：</strong><br>
+                            200 × 1.4 = 280<br>
+                            200 × 0.014 = 2.8<br>
+                            280 + 2.8 = 282.8V<br>
+                            「いよいよ（1.414）最大！」と覚える
+                        `;
+                        break;
+                    case 3:
+                        explanation = `
+                            <strong>解説：</strong><br>
+                            ① XL - XC = 15 - 3 = 12Ω<br>
+                            ② Z = √(R² + (XL-XC)²)<br>
+                            = √(9² + 12²) = √(81 + 144)<br>
+                            = √225 = 15Ω<br><br>
+                            <strong>💡 覚え方：</strong><br>
+                            9-12-15は3-4-5の3倍！<br>
+                            3×3=9、4×3=12、5×3=15<br>
+                            リアクタンスの差を先に計算！
+                        `;
+                        break;
+                    case 4:
+                        explanation = `
+                            <strong>解説：</strong><br>
+                            オームの法則（交流版）<br>
+                            I = V / Z = 100V ÷ 20Ω = 5A<br><br>
+                            <strong>💰 覚え方：</strong><br>
+                            100円を20人で分けたら5円<br>
+                            100V÷20Ω=5A<br>
+                            交流でも基本は同じ！
+                        `;
+                        break;
+                }
+                feedbackDiv.innerHTML = `
+                    <p style="color: var(--danger-color);">✗ 不正解です。</p>
+                    ${explanation}
+                `;
+            }
+        }
+        
+        // FAQタブ切り替え
+        function showFAQTab(tabId) {
+            // すべてのタブコンテンツを非表示
+            document.querySelectorAll('.faq-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // すべてのタブから active を削除
+            document.querySelectorAll('.faq-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 選択されたタブコンテンツを表示
+            document.getElementById(`faq-${tabId}`).classList.add('active');
+            
+            // 対応するタブに active を追加
+            event.target.classList.add('active');
+        }
+        
+        // FAQ トグル
+        function toggleFAQ(element) {
+            element.classList.toggle('active');
+        }
+        
+        // 初期化
+        window.onload = function() {
+            drawDCWaveform();
+            drawACWaveform();
+            // 初期状態で位相シミュレーターを起動
+            updatePhaseShift();
+        };
+        
+        // リサイズ対応
+        window.addEventListener('resize', function() {
+            drawDCWaveform();
+            drawACWaveform();
+            if (document.getElementById('simulation').classList.contains('active')) {
+                if (phaseAnimation) cancelAnimationFrame(phaseAnimation);
+                updatePhaseShift();
+                // ベクトル図も再描画
+                const R = parseFloat(document.getElementById('resistance').value) || 0;
+                const XL = parseFloat(document.getElementById('inductance').value) || 0;
+                const XC = parseFloat(document.getElementById('capacitance').value) || 0;
+                if (R || XL || XC) {
+                    drawVectorDiagram(R, XL, XC);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
