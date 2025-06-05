@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24時間換気システム 種類と換気計算シミュレーター</title>
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --secondary-color: #FF961C;
+            --light-blue: #E0EEF9;
+            --medium-blue: #4D8BC9;
+            --fresh-air: #4D8BC9;
+            --stale-air: #F5A623;
+            --neutral-grey: #F5F5F5;
+            --dark-grey: #616161;
+            --text-dark: #333333;
+            --text-light: #FFFFFF;
+            --success-color: #4CAF50;
+            --warning-color: #FFC107;
+            --danger-color: #F44336;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Meiryo', 'Hiragino Kaku Gothic Pro', sans-serif;
+            color: var(--text-dark);
+            background-color: #f8f9fa;
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--medium-blue) 100%);
+            color: var(--text-light);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        
+        .back-to-portal {
+            position: absolute;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .back-to-portal:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) translateX(-3px);
+        }
+        
+        .back-to-portal::before {
+            content: '←';
+            font-size: 1.2rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* ナビゲーションタブ */
+        .nav-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--light-blue);
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            padding: 0.8rem 1.5rem;
+            background: transparent;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-tab:hover {
+            background: var(--light-blue);
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .nav-tab.active {
+            color: var(--secondary-color);
+            background: var(--light-blue);
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--secondary-color);
+        }
+        
+        /* タブコンテンツ */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 換気方式カード */
+        .ventilation-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .vent-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .vent-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+        
+        .vent-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        
+        .vent-card:hover::before {
+            width: 8px;
+        }
+        
+        .vent-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .vent-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--light-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        /* SVG図解コンテナ */
+        .svg-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .svg-diagram {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        /* 特徴リスト */
+        .feature-list {
+            list-style: none;
+            margin: 1rem 0;
+        }
+        
+        .feature-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .feature-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        
+        .feature-list li.con::before {
+            content: '✗';
+            color: var(--danger-color);
+        }
+        
+        /* 計算シミュレーター */
+        .calculator-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .calc-form {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .form-group input {
+            padding: 0.8rem;
+            border: 2px solid var(--light-blue);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(255,150,28,0.2);
+        }
+        
+        .input-hint {
+            font-size: 0.85rem;
+            color: var(--dark-grey);
+        }
+        
+        .calc-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .calc-button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,150,28,0.3);
+        }
+        
+        /* 計算結果 */
+        .result-section {
+            display: none;
+            background: var(--light-blue);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .result-section.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .result-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .result-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin: 0.5rem 0;
+        }
+        
+        .result-label {
+            font-size: 0.9rem;
+            color: var(--dark-grey);
+        }
+        
+        /* 比較表 */
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 2rem 0;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .comparison-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--light-blue);
+            background: white;
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:hover td {
+            background: var(--light-blue);
+        }
+        
+        /* ツールチップ */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            color: var(--primary-color);
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            cursor: help;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(-5px);
+        }
+        
+        .tooltiptext {
+            visibility: hidden;
+            width: 250px;
+            background: linear-gradient(135deg, #333 0%, #555 100%);
+            color: white;
+            text-align: left;
+            border-radius: 8px;
+            padding: 12px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        
+        .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+        
+        /* アニメーションクラス */
+        .rotate {
+            animation: rotate 2s linear infinite;
+        }
+        
+        .rotate.paused {
+            animation-play-state: paused;
+        }
+        
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.5;
+            }
+        }
+        
+        /* SVG内のアニメーション一時停止 */
+        .air-flow.paused animateMotion {
+            animation-play-state: paused;
+        }
+        
+        svg.paused animateMotion {
+            animation-play-state: paused;
+        }
+        
+        /* 間取りシミュレーション用スタイル */
+        .simulation-controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .simulation-controls label {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .simulation-controls select {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--light-blue);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .simulation-controls select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(255,150,28,0.2);
+        }
+        
+        /* 空気の流れアニメーション制御 */
+        .air-flow.paused circle {
+            animation-play-state: paused;
+        }
+        
+        .rotate.paused {
+            animation-play-state: paused;
+        }
+        
+        /* SVG内のアニメーション一時停止 */
+        svg.paused animateMotion {
+            animation-play-state: paused;
+        }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .ventilation-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-tabs {
+                justify-content: center;
+            }
+            
+            .comparison-table {
+                font-size: 0.9rem;
+            }
+            
+            .comparison-table th,
+            .comparison-table td {
+                padding: 0.5rem;
+            }
+            
+            .back-to-portal {
+                position: static;
+                transform: none;
+                margin-bottom: 1rem;
+                display: inline-flex;
+            }
+            
+            header {
+                padding-top: 1rem;
+            }
+        }
+        
+        /* 警告ボックス */
+        .alert-box {
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            position: relative;
+            padding-left: 3.5rem;
+        }
+        
+        .alert-box::before {
+            position: absolute;
+            left: 1rem;
+            top: 1.5rem;
+            font-size: 1.5rem;
+        }
+        
+        .alert-info {
+            background: #E3F2FD;
+            border: 2px solid #2196F3;
+        }
+        
+        .alert-info::before {
+            content: 'ℹ️';
+        }
+        
+        .alert-warning {
+            background: #FFF3E0;
+            border: 2px solid var(--secondary-color);
+        }
+        
+        .alert-warning::before {
+            content: '⚠️';
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="back-to-portal">ポータルへ戻る</a>
+        <h1>🏠 24時間換沗システム 完全ガイド</h1>
+        <p class="subtitle">換気方式の種類と必要換気量を簡単に理解・計算できるシミュレーター</p>
+    </header>
+    
+    <div class="container">
+        <!-- ナビゲーションタブ -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('overview')">換気システムの概要</button>
+            <button class="nav-tab" onclick="showTab('types')">3つの換気方式</button>
+            <button class="nav-tab" onclick="showTab('floor-simulation')">間取りシミュレーション</button>
+            <button class="nav-tab" onclick="showTab('calculator')">換気量計算</button>
+            <button class="nav-tab" onclick="showTab('comparison')">比較表</button>
+        </div>
+        
+        <!-- 概要タブ -->
+        <div id="overview" class="tab-content active">
+            <div class="alert-box alert-info">
+                <h3>24時間換気システムとは？</h3>
+                <p>2003年7月より建築基準法で義務化された換気システムです。<span class="tooltip">シックハウス症候群<span class="tooltiptext">建材から発生する化学物質（ホルムアルデヒドなど）により、目がチカチカする、頭痛、吐き気などの症状が出ること。換気不足が主な原因。</span></span>対策として、1時間で部屋の空気の半分、2時間で全ての空気を入れ替えることが定められています。</p>
+            </div>
+            
+            <div class="svg-container">
+                <h3>🔄 24時間換気の基本的な仕組み</h3>
+                <svg class="svg-diagram" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 部屋の外枠 -->
+                    <rect x="100" y="50" width="600" height="300" fill="none" stroke="#333" stroke-width="3"/>
+                    
+                    <!-- 床 -->
+                    <line x1="100" y1="350" x2="700" y2="350" stroke="#333" stroke-width="3"/>
+                    
+                    <!-- 天井 -->
+                    <line x1="100" y1="50" x2="700" y2="50" stroke="#333" stroke-width="3"/>
+                    
+                    <!-- 給気口（左側） -->
+                    <g transform="translate(50, 150)">
+                        <rect x="0" y="0" width="50" height="50" fill="#E0EEF9" stroke="#005BAB" stroke-width="2" rx="5"/>
+                        <text x="25" y="-10" text-anchor="middle" font-size="14" fill="#005BAB">給気口</text>
+                        <!-- フィルター -->
+                        <line x1="10" y1="10" x2="10" y2="40" stroke="#666" stroke-width="1"/>
+                        <line x1="20" y1="10" x2="20" y2="40" stroke="#666" stroke-width="1"/>
+                        <line x1="30" y1="10" x2="30" y2="40" stroke="#666" stroke-width="1"/>
+                        <line x1="40" y1="10" x2="40" y2="40" stroke="#666" stroke-width="1"/>
+                        <!-- 矢印 -->
+                        <path d="M 55 25 L 85 25" stroke="#4D8BC9" stroke-width="3" marker-end="url(#arrowBlue)"/>
+                    </g>
+                    
+                    <!-- 排気口（右側） -->
+                    <g transform="translate(700, 150)">
+                        <rect x="0" y="0" width="50" height="50" fill="#FFE0E0" stroke="#F44336" stroke-width="2" rx="5"/>
+                        <text x="25" y="-10" text-anchor="middle" font-size="14" fill="#F44336">排気口</text>
+                        <!-- 換気扇の羽根 -->
+                        <g transform="translate(25, 25)" class="rotate">
+                            <path d="M 0,-15 L 10,10 L -10,10 Z" fill="#666"/>
+                            <path d="M 15,0 L -10,10 L -10,-10 Z" fill="#666"/>
+                            <path d="M 0,15 L -10,-10 L 10,-10 Z" fill="#666"/>
+                            <path d="M -15,0 L 10,-10 L 10,10 Z" fill="#666"/>
+                            <circle cx="0" cy="0" r="3" fill="#333"/>
+                        </g>
+                        <!-- 矢印 -->
+                        <path d="M 55 25 L 85 25" stroke="#F5A623" stroke-width="3" marker-end="url(#arrowOrange)"/>
+                    </g>
+                    
+                    <!-- 空気の流れ（パーティクル） -->
+                    <g class="air-flow">
+                        <circle r="3" fill="#4D8BC9" opacity="0.6">
+                            <animateMotion dur="8s" repeatCount="indefinite">
+                                <mpath href="#airPath1"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="3" fill="#4D8BC9" opacity="0.6">
+                            <animateMotion dur="8s" repeatCount="indefinite" begin="2s">
+                                <mpath href="#airPath1"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="3" fill="#4D8BC9" opacity="0.6">
+                            <animateMotion dur="8s" repeatCount="indefinite" begin="4s">
+                                <mpath href="#airPath1"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="3" fill="#4D8BC9" opacity="0.6">
+                            <animateMotion dur="8s" repeatCount="indefinite" begin="6s">
+                                <mpath href="#airPath1"/>
+                            </animateMotion>
+                        </circle>
+                    </g>
+                    
+                    <!-- 空気の流れパス -->
+                    <path id="airPath1" d="M 100 175 Q 400 200 700 175" fill="none" stroke="none"/>
+                    
+                    <!-- 部屋のラベル -->
+                    <text x="400" y="200" text-anchor="middle" font-size="24" fill="#333">リビング</text>
+                    
+                    <!-- 説明文 -->
+                    <text x="400" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#005BAB">基本的な空気の流れ</text>
+                    <text x="150" y="380" font-size="14" fill="#666">新鮮な空気が給気口から入り</text>
+                    <text x="450" y="380" font-size="14" fill="#666">汚れた空気が排気口から出る</text>
+                    
+                    <!-- 矢印マーカー定義 -->
+                    <defs>
+                        <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#4D8BC9"/>
+                        </marker>
+                        <marker id="arrowOrange" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#F5A623"/>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+        
+        <!-- 換気方式タブ -->
+        <div id="types" class="tab-content">
+            <div class="ventilation-cards">
+                <!-- 第1種換気 -->
+                <div class="vent-card">
+                    <h3><span class="vent-icon">🔧</span>第1種換気方式</h3>
+                    <div class="svg-container" style="padding: 1rem;">
+                        <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+                            <!-- 部屋 -->
+                            <rect x="50" y="30" width="200" height="140" fill="none" stroke="#333" stroke-width="2"/>
+                            
+                            <!-- 給気ファン（左） -->
+                            <g transform="translate(20, 80)">
+                                <rect x="0" y="0" width="30" height="30" fill="#E0EEF9" stroke="#005BAB" stroke-width="2" rx="3"/>
+                                <text x="15" y="-5" text-anchor="middle" font-size="10" fill="#005BAB">機械給気</text>
+                                <g transform="translate(15, 15)" class="rotate">
+                                    <path d="M 0,-8 L 5,5 L -5,5 Z" fill="#005BAB"/>
+                                    <path d="M 8,0 L -5,5 L -5,-5 Z" fill="#005BAB"/>
+                                    <path d="M 0,8 L -5,-5 L 5,-5 Z" fill="#005BAB"/>
+                                    <path d="M -8,0 L 5,-5 L 5,5 Z" fill="#005BAB"/>
+                                </g>
+                                <path d="M 35 15 L 55 15" stroke="#4D8BC9" stroke-width="2" marker-end="url(#arrowBlue)"/>
+                            </g>
+                            
+                            <!-- 排気ファン（右） -->
+                            <g transform="translate(250, 80)">
+                                <rect x="0" y="0" width="30" height="30" fill="#FFE0E0" stroke="#F44336" stroke-width="2" rx="3"/>
+                                <text x="15" y="-5" text-anchor="middle" font-size="10" fill="#F44336">機械排気</text>
+                                <g transform="translate(15, 15)" class="rotate">
+                                    <path d="M 0,-8 L 5,5 L -5,5 Z" fill="#F44336"/>
+                                    <path d="M 8,0 L -5,5 L -5,-5 Z" fill="#F44336"/>
+                                    <path d="M 0,8 L -5,-5 L 5,-5 Z" fill="#F44336"/>
+                                    <path d="M -8,0 L 5,-5 L 5,5 Z" fill="#F44336"/>
+                                </g>
+                                <path d="M 30 15 L 50 15" stroke="#F5A623" stroke-width="2" marker-end="url(#arrowOrange)"/>
+                            </g>
+                            
+                            <!-- 熱交換器 -->
+                            <g transform="translate(125, 60)">
+                                <rect x="0" y="0" width="50" height="50" fill="#FFFACD" stroke="#FFD700" stroke-width="2" rx="3"/>
+                                <text x="25" y="-5" text-anchor="middle" font-size="10" fill="#FFD700">熱交換器</text>
+                                <line x1="5" y1="25" x2="45" y2="25" stroke="#FF6347" stroke-width="2"/>
+                                <line x1="25" y1="5" x2="25" y2="45" stroke="#4169E1" stroke-width="2"/>
+                                <text x="25" y="30" text-anchor="middle" font-size="8" fill="#333">熱回収</text>
+                            </g>
+                            
+                            <text x="150" y="190" text-anchor="middle" font-size="12" font-weight="bold" fill="#005BAB">給気・排気とも機械制御</text>
+                        </svg>
+                    </div>
+                    <h4>特徴</h4>
+                    <ul class="feature-list">
+                        <li>給気・排気とも機械で強制的に行う</li>
+                        <li>熱交換器で省エネ効果が高い</li>
+                        <li>室内の気圧バランスを保ちやすい</li>
+                        <li>フィルターで花粉やPM2.5を除去</li>
+                    </ul>
+                    <h4>メリット・デメリット</h4>
+                    <ul class="feature-list">
+                        <li>✓ 換気量を正確にコントロール</li>
+                        <li>✓ 冷暖房効率が良い</li>
+                        <li class="con">✗ 初期費用・ランニングコストが高い</li>
+                        <li class="con">✗ 定期的なメンテナンスが必要</li>
+                    </ul>
+                </div>
+                
+                <!-- 第2種換気 -->
+                <div class="vent-card">
+                    <h3><span class="vent-icon">🏥</span>第2種換気方式</h3>
+                    <div class="svg-container" style="padding: 1rem;">
+                        <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+                            <!-- 部屋 -->
+                            <rect x="50" y="30" width="200" height="140" fill="none" stroke="#333" stroke-width="2"/>
+                            
+                            <!-- 給気ファン（左） -->
+                            <g transform="translate(20, 80)">
+                                <rect x="0" y="0" width="30" height="30" fill="#E0EEF9" stroke="#005BAB" stroke-width="2" rx="3"/>
+                                <text x="15" y="-5" text-anchor="middle" font-size="10" fill="#005BAB">機械給気</text>
+                                <g transform="translate(15, 15)" class="rotate">
+                                    <path d="M 0,-8 L 5,5 L -5,5 Z" fill="#005BAB"/>
+                                    <path d="M 8,0 L -5,5 L -5,-5 Z" fill="#005BAB"/>
+                                    <path d="M 0,8 L -5,-5 L 5,-5 Z" fill="#005BAB"/>
+                                    <path d="M -8,0 L 5,-5 L 5,5 Z" fill="#005BAB"/>
+                                </g>
+                                <path d="M 35 15 L 55 15" stroke="#4D8BC9" stroke-width="2" marker-end="url(#arrowBlue)"/>
+                            </g>
+                            
+                            <!-- 自然排気（右） -->
+                            <g transform="translate(250, 80)">
+                                <rect x="0" y="0" width="30" height="30" fill="#FFF" stroke="#666" stroke-width="2" stroke-dasharray="5,5" rx="3"/>
+                                <text x="15" y="-5" text-anchor="middle" font-size="10" fill="#666">自然排気</text>
+                                <text x="15" y="20" text-anchor="middle" font-size="16" fill="#666">〰️</text>
+                                <path d="M 30 15 L 50 15" stroke="#999" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowGrey)"/>
+                            </g>
+                            
+                            <!-- 室内圧力表示 -->
+                            <text x="150" y="100" text-anchor="middle" font-size="14" fill="#FF6347">室内：正圧（+）</text>
+                            <text x="150" y="120" text-anchor="middle" font-size="10" fill="#666">外部からの汚染物質が</text>
+                            <text x="150" y="135" text-anchor="middle" font-size="10" fill="#666">入りにくい</text>
+                            
+                            <text x="150" y="190" text-anchor="middle" font-size="12" font-weight="bold" fill="#005BAB">給気のみ機械制御</text>
+                            
+                            <!-- グレー矢印マーカー -->
+                            <defs>
+                                <marker id="arrowGrey" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                                    <path d="M0,0 L0,6 L9,3 z" fill="#999"/>
+                                </marker>
+                            </defs>
+                        </svg>
+                    </div>
+                    <h4>特徴</h4>
+                    <ul class="feature-list">
+                        <li>給気のみ機械、排気は自然</li>
+                        <li>室内が正圧になる</li>
+                        <li>クリーンルームや病院で使用</li>
+                        <li>一般住宅ではほぼ使われない</li>
+                    </ul>
+                    <h4>メリット・デメリット</h4>
+                    <ul class="feature-list">
+                        <li>✓ 外部の汚染物質が入りにくい</li>
+                        <li>✓ 清潔な環境を保ちやすい</li>
+                        <li class="con">✗ 結露のリスクが高い</li>
+                        <li class="con">✗ 湿度管理が難しい</li>
+                    </ul>
+                </div>
+                
+                <!-- 第3種換気 -->
+                <div class="vent-card">
+                    <h3><span class="vent-icon">🏠</span>第3種換気方式</h3>
+                    <div class="svg-container" style="padding: 1rem;">
+                        <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+                            <!-- 部屋 -->
+                            <rect x="50" y="30" width="200" height="140" fill="none" stroke="#333" stroke-width="2"/>
+                            
+                            <!-- 自然給気（左） -->
+                            <g transform="translate(20, 80)">
+                                <rect x="0" y="0" width="30" height="30" fill="#FFF" stroke="#666" stroke-width="2" stroke-dasharray="5,5" rx="3"/>
+                                <text x="15" y="-5" text-anchor="middle" font-size="10" fill="#666">自然給気</text>
+                                <!-- フィルター -->
+                                <line x1="10" y1="10" x2="10" y2="20" stroke="#999" stroke-width="1"/>
+                                <line x1="15" y1="10" x2="15" y2="20" stroke="#999" stroke-width="1"/>
+                                <line x1="20" y1="10" x2="20" y2="20" stroke="#999" stroke-width="1"/>
+                                <path d="M 35 15 L 55 15" stroke="#999" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowGrey)"/>
+                            </g>
+                            
+                            <!-- 排気ファン（右） -->
+                            <g transform="translate(250, 80)">
+                                <rect x="0" y="0" width="30" height="30" fill="#FFE0E0" stroke="#F44336" stroke-width="2" rx="3"/>
+                                <text x="15" y="-5" text-anchor="middle" font-size="10" fill="#F44336">機械排気</text>
+                                <g transform="translate(15, 15)" class="rotate">
+                                    <path d="M 0,-8 L 5,5 L -5,5 Z" fill="#F44336"/>
+                                    <path d="M 8,0 L -5,5 L -5,-5 Z" fill="#F44336"/>
+                                    <path d="M 0,8 L -5,-5 L 5,-5 Z" fill="#F44336"/>
+                                    <path d="M -8,0 L 5,-5 L 5,5 Z" fill="#F44336"/>
+                                </g>
+                                <path d="M 30 15 L 50 15" stroke="#F5A623" stroke-width="2" marker-end="url(#arrowOrange)"/>
+                            </g>
+                            
+                            <!-- 室内圧力表示 -->
+                            <text x="150" y="100" text-anchor="middle" font-size="14" fill="#4169E1">室内：負圧（−）</text>
+                            <text x="150" y="120" text-anchor="middle" font-size="10" fill="#666">最もシンプルで</text>
+                            <text x="150" y="135" text-anchor="middle" font-size="10" fill="#666">低コスト</text>
+                            
+                            <text x="150" y="190" text-anchor="middle" font-size="12" font-weight="bold" fill="#005BAB">排気のみ機械制御</text>
+                        </svg>
+                    </div>
+                    <h4>特徴</h4>
+                    <ul class="feature-list">
+                        <li>給気は自然、排気のみ機械</li>
+                        <li>最も一般的な方式</li>
+                        <li>トイレ・浴室の換気扇を利用</li>
+                        <li>設備コストが安い</li>
+                    </ul>
+                    <h4>メリット・デメリット</h4>
+                    <ul class="feature-list">
+                        <li>✓ 初期費用・ランニングコストが安い</li>
+                        <li>✓ メンテナンスが簡単</li>
+                        <li>✓ 結露しにくい</li>
+                        <li class="con">✗ 冬は冷気が直接入る</li>
+                        <li class="con">✗ 夏は熱気が入る</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 換気量計算タブ -->
+        <div id="calculator" class="tab-content">
+            <div class="calculator-section">
+                <h2>🧮 必要換気量計算シミュレーター</h2>
+                <p>建築基準法では、1時間あたり0.5回の換気（2時間で全ての空気を入れ替える）が必要です。</p>
+                
+                <div class="alert-box alert-info">
+                    <p><strong>計算式：</strong>必要換気量（㎥/h） = 床面積（㎡） × 天井高さ（m） × 0.5（回/時）</p>
+                </div>
+                
+                <div class="calc-form">
+                    <div class="form-group">
+                        <label for="floor-area">床面積（㎡）</label>
+                        <input type="number" id="floor-area" min="1" max="1000" value="100" step="0.1">
+                        <span class="input-hint">例：100㎡（約30坪）</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ceiling-height">天井高さ（m）</label>
+                        <input type="number" id="ceiling-height" min="2" max="5" value="2.4" step="0.1">
+                        <span class="input-hint">一般的な住宅：2.4m</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="building-type">建物種別</label>
+                        <select id="building-type">
+                            <option value="residential">住宅の居室</option>
+                            <option value="other">その他の居室</option>
+                        </select>
+                        <span class="input-hint">建築基準法による分類</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ventilation-rate">換気回数（回/時）</label>
+                        <input type="number" id="ventilation-rate" min="0.3" max="2.0" value="0.5" step="0.1">
+                        <span class="input-hint">住宅居室：0.5以上、その他：0.3以上</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="heat-exchange-efficiency">熱交換効率（%）</label>
+                        <select id="heat-exchange-efficiency">
+                            <option value="0">なし（第3種換気）</option>
+                            <option value="70">70%（標準的な第1種）</option>
+                            <option value="80">80%（高性能な第1種）</option>
+                            <option value="90">90%（最新の第1種）</option>
+                            <option value="93">93%（最高効率の第1種）</option>
+                        </select>
+                        <span class="input-hint">第1種換気のみ適用</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="specific-power">比消費電力（W/(m³/h)）</label>
+                        <input type="number" id="specific-power" min="0.3" max="2.0" value="0.7" step="0.1">
+                        <span class="input-hint">第1種：0.7、第3種：0.4</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="room-count">部屋数</label>
+                        <input type="number" id="room-count" min="1" max="20" value="4">
+                        <span class="input-hint">LDK + 個室の数</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="airtightness">気密性能 C値（cm²/m²）</label>
+                        <input type="number" id="airtightness" min="0.1" max="5.0" value="1.0" step="0.1">
+                        <span class="input-hint">高気密住宅：1.0以下、一般住宅：2-5</span>
+                    </div>
+                    
+                    <button class="calc-button" onclick="calculateVentilation()">詳細計算を実行</button>
+                </div>
+                
+                <div id="calc-result" class="result-section">
+                    <h3>計算結果</h3>
+                    <div class="result-grid">
+                        <div class="result-card">
+                            <div class="result-label">必要換気量</div>
+                            <div class="result-value" id="required-volume">120</div>
+                            <div class="result-label">㎥/時間</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">推奨換気方式</div>
+                            <div class="result-value" id="recommended-type" style="font-size: 1.5rem;">第3種</div>
+                            <div class="result-label" id="recommended-reason">コスト重視</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">給気口の目安</div>
+                            <div class="result-value" id="inlet-count">4</div>
+                            <div class="result-label">箇所</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">消費電力</div>
+                            <div class="result-value" id="power-consumption">84</div>
+                            <div class="result-label">W</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">年間電気代</div>
+                            <div class="result-value" id="annual-cost">¥20,000</div>
+                            <div class="result-label">目安</div>
+                        </div>
+                        <div class="result-card">
+                            <div class="result-label">熱回収効果</div>
+                            <div class="result-value" id="heat-recovery">¥0</div>
+                            <div class="result-label">/年</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-box alert-warning" style="margin-top: 2rem;">
+                        <p><strong>注意：</strong>これは簡易計算です。実際の設計では、建物の気密性能、地域の気候、使用目的などを考慮する必要があります。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 間取りシミュレーションタブ -->
+        <div id="floor-simulation" class="tab-content">
+            <h2>🏠 間取りでの空気の流れシミュレーション</h2>
+            
+            <div class="simulation-controls">
+                <label>換気方式を選択：</label>
+                <select id="ventilation-type" onchange="changeVentilationType()">
+                    <option value="type3">第3種換気（一般的）</option>
+                    <option value="type1">第1種換気（熱交換）</option>
+                    <option value="type2">第2種換気（特殊用途）</option>
+                </select>
+                
+                <button class="calc-button" style="margin-left: 1rem;" onclick="toggleAnimation()">
+                    <span id="animation-toggle">アニメーション停止</span>
+                </button>
+            </div>
+            
+            <div class="svg-container" style="margin-top: 2rem;">
+                <svg id="floor-plan" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 外壁 -->
+                    <rect x="50" y="50" width="900" height="500" fill="none" stroke="#333" stroke-width="4"/>
+                    
+                    <!-- 部屋の配置 -->
+                    <!-- リビング -->
+                    <g id="living-room">
+                        <rect x="50" y="50" width="400" height="300" fill="#FFF8DC" stroke="#333" stroke-width="2"/>
+                        <text x="250" y="200" text-anchor="middle" font-size="20" fill="#333">リビング</text>
+                        
+                        <!-- 給気口（第3種） -->
+                        <g id="living-inlet" class="type3-element">
+                            <rect x="20" y="150" width="30" height="40" fill="#E0EEF9" stroke="#005BAB" stroke-width="2" rx="3"/>
+                            <text x="35" y="140" text-anchor="middle" font-size="12" fill="#005BAB">自然給気</text>
+                            <!-- フィルター -->
+                            <line x1="25" y1="160" x2="25" y2="180" stroke="#666" stroke-width="1"/>
+                            <line x1="30" y1="160" x2="30" y2="180" stroke="#666" stroke-width="1"/>
+                            <line x1="35" y1="160" x2="35" y2="180" stroke="#666" stroke-width="1"/>
+                            <line x1="40" y1="160" x2="40" y2="180" stroke="#666" stroke-width="1"/>
+                        </g>
+                        
+                        <!-- 第1種給気口（ダクト接続） -->
+                        <g id="living-type1-inlet" class="type1-element" style="display: none;">
+                            <rect x="235" y="150" width="30" height="30" fill="#E0EEF9" stroke="#005BAB" stroke-width="2" rx="3"/>
+                            <text x="250" y="140" text-anchor="middle" font-size="10" fill="#005BAB">給気口</text>
+                            <!-- ダクト接続線 -->
+                            <line x1="250" y1="150" x2="250" y2="255" stroke="#4D8BC9" stroke-width="4" opacity="0.7" stroke-dasharray="2,2"/>
+                            <!-- フィルター -->
+                            <rect x="240" y="155" width="20" height="2" fill="#666"/>
+                            <rect x="240" y="160" width="20" height="2" fill="#666"/>
+                            <rect x="240" y="165" width="20" height="2" fill="#666"/>
+                        </g>
+                        
+                        <!-- 第2種機械給気 -->
+                        <g id="living-type2-inlet" class="type2-element" style="display: none;">
+                            <rect x="20" y="150" width="30" height="30" fill="#E0EEF9" stroke="#005BAB" stroke-width="2" rx="3"/>
+                            <text x="35" y="140" text-anchor="middle" font-size="10" fill="#005BAB">機械給気</text>
+                            <g transform="translate(35, 165)" class="rotate">
+                                <path d="M 0,-8 L 5,5 L -5,5 Z" fill="#005BAB"/>
+                                <path d="M 8,0 L -5,5 L -5,-5 Z" fill="#005BAB"/>
+                                <path d="M 0,8 L -5,-5 L 5,-5 Z" fill="#005BAB"/>
+                                <path d="M -8,0 L 5,-5 L 5,5 Z" fill="#005BAB"/>
+                            </g>
+                            <path d="M 55 165 L 75 165" stroke="#4D8BC9" stroke-width="2" marker-end="url(#arrowBlue)"/>
+                        </g>
+                    </g>
+                    
+                    <!-- 洋室1 -->
+                    <g id="bedroom1">
+                        <rect x="450" y="50" width="250" height="200" fill="#E6E6FA" stroke="#333" stroke-width="2"/>
+                        <text x="575" y="150" text-anchor="middle" font-size="20" fill="#333">洋室1</text>
+                        
+                        <!-- 第3種給気口 -->
+                        <g id="bedroom1-type3-inlet" class="type3-element">
+                            <rect x="700" y="130" width="30" height="40" fill="#E0EEF9" stroke="#005BAB" stroke-width="2" rx="3"/>
+                            <text x="760" y="150" text-anchor="middle" font-size="12" fill="#005BAB">自然給気</text>
+                            <!-- フィルター -->
+                            <line x1="705" y1="140" x2="705" y2="160" stroke="#666" stroke-width="1"/>
+                            <line x1="710" y1="140" x2="710" y2="160" stroke="#666" stroke-width="1"/>
+                            <line x1="715" y1="140" x2="715" y2="160" stroke="#666" stroke-width="1"/>
+                            <line x1="720" y1="140" x2="720" y2="160" stroke="#666" stroke-width="1"/>
+                        </g>
+                        
+                        <!-- 第1種給気口 -->
+                        <g id="bedroom1-type1-inlet" class="type1-element" style="display: none;">
+                            <rect x="560" y="130" width="30" height="30" fill="#E0EEF9" stroke="#005BAB" stroke-width="2" rx="3"/>
+                            <text x="575" y="125" text-anchor="middle" font-size="10" fill="#005BAB">給気口</text>
+                            <!-- ダクト接続線 -->
+                            <line x1="575" y1="130" x2="575" y2="255" stroke="#4D8BC9" stroke-width="4" opacity="0.7" stroke-dasharray="2,2"/>
+                        </g>
+                    </g>
+                    
+                    <!-- 洋室2 -->
+                    <g id="bedroom2">
+                        <rect x="700" y="50" width="250" height="200" fill="#FFE4E1" stroke="#333" stroke-width="2"/>
+                        <text x="825" y="150" text-anchor="middle" font-size="20" fill="#333">洋室2</text>
+                        
+                        <!-- 第3種給気口 -->
+                        <g id="bedroom2-type3-inlet" class="type3-element">
+                            <rect x="950" y="130" width="30" height="40" fill="#E0EEF9" stroke="#005BAB" stroke-width="2" rx="3"/>
+                            <text x="1010" y="150" text-anchor="middle" font-size="12" fill="#005BAB">自然給気</text>
+                        </g>
+                        
+                        <!-- 第1種給気口 -->
+                        <g id="bedroom2-type1-inlet" class="type1-element" style="display: none;">
+                            <rect x="810" y="130" width="30" height="30" fill="#E0EEF9" stroke="#005BAB" stroke-width="2" rx="3"/>
+                            <text x="825" y="125" text-anchor="middle" font-size="10" fill="#005BAB">給気口</text>
+                            <!-- ダクト接続線 -->
+                            <line x1="825" y1="130" x2="825" y2="255" stroke="#4D8BC9" stroke-width="4" opacity="0.7" stroke-dasharray="2,2"/>
+                        </g>
+                    </g>
+                    
+                    <!-- ホール（廊下） -->
+                    <g id="hall">
+                        <rect x="450" y="250" width="500" height="100" fill="#F0F0F0" stroke="#333" stroke-width="2"/>
+                        <text x="700" y="300" text-anchor="middle" font-size="20" fill="#333">ホール</text>
+                    </g>
+                    
+                    <!-- トイレ -->
+                    <g id="toilet">
+                        <rect x="700" y="350" width="125" height="200" fill="#E0FFFF" stroke="#333" stroke-width="2"/>
+                        <text x="762" y="450" text-anchor="middle" font-size="20" fill="#333">トイレ</text>
+                        
+                        <!-- 第3種排気口 -->
+                        <g id="toilet-type3-exhaust" class="type3-element">
+                            <rect x="770" y="520" width="30" height="30" fill="#FFE0E0" stroke="#F44336" stroke-width="2" rx="3"/>
+                            <text x="785" y="515" text-anchor="middle" font-size="10" fill="#F44336">機械排気</text>
+                            <g transform="translate(785, 535)" class="rotate">
+                                <path d="M 0,-8 L 5,5 L -5,5 Z" fill="#F44336"/>
+                                <path d="M 8,0 L -5,5 L -5,-5 Z" fill="#F44336"/>
+                                <path d="M 0,8 L -5,-5 L 5,-5 Z" fill="#F44336"/>
+                                <path d="M -8,0 L 5,-5 L 5,5 Z" fill="#F44336"/>
+                            </g>
+                            <path d="M 800 535 L 820 535" stroke="#F5A623" stroke-width="2" marker-end="url(#arrowOrange)"/>
+                        </g>
+                        
+                        <!-- 第1種排気口（ダクト接続） -->
+                        <g id="toilet-type1-exhaust" class="type1-element" style="display: none;">
+                            <rect x="770" y="400" width="30" height="30" fill="#FFE0E0" stroke="#F44336" stroke-width="2" rx="3"/>
+                            <text x="785" y="395" text-anchor="middle" font-size="10" fill="#F44336">排気口</text>
+                            <!-- ダクト接続線 -->
+                            <line x1="785" y1="400" x2="790" y2="265" stroke="#F5A623" stroke-width="4" opacity="0.7" stroke-dasharray="2,2"/>
+                        </g>
+                        
+                        <!-- 自然排気（第2種） -->
+                        <g id="toilet-natural-exhaust" class="type2-element" style="display: none;">
+                            <rect x="770" y="520" width="30" height="30" fill="#FFF" stroke="#666" stroke-width="2" stroke-dasharray="5,5" rx="3"/>
+                            <text x="785" y="515" text-anchor="middle" font-size="10" fill="#666">自然排気</text>
+                        </g>
+                    </g>
+                    
+                    <!-- 浴室 -->
+                    <g id="bathroom">
+                        <rect x="825" y="350" width="125" height="200" fill="#E0E0FF" stroke="#333" stroke-width="2"/>
+                        <text x="887" y="450" text-anchor="middle" font-size="20" fill="#333">浴室</text>
+                        
+                        <!-- 第3種排気口 -->
+                        <g id="bathroom-type3-exhaust" class="type3-element">
+                            <rect x="900" y="520" width="30" height="30" fill="#FFE0E0" stroke="#F44336" stroke-width="2" rx="3"/>
+                            <text x="915" y="515" text-anchor="middle" font-size="10" fill="#F44336">機械排気</text>
+                            <g transform="translate(915, 535)" class="rotate">
+                                <path d="M 0,-8 L 5,5 L -5,5 Z" fill="#F44336"/>
+                                <path d="M 8,0 L -5,5 L -5,-5 Z" fill="#F44336"/>
+                                <path d="M 0,8 L -5,-5 L 5,-5 Z" fill="#F44336"/>
+                                <path d="M -8,0 L 5,-5 L 5,5 Z" fill="#F44336"/>
+                            </g>
+                            <path d="M 930 535 L 950 535" stroke="#F5A623" stroke-width="2" marker-end="url(#arrowOrange)"/>
+                        </g>
+                        
+                        <!-- 第1種排気口（ダクト接続） -->
+                        <g id="bathroom-type1-exhaust" class="type1-element" style="display: none;">
+                            <rect x="900" y="400" width="30" height="30" fill="#FFE0E0" stroke="#F44336" stroke-width="2" rx="3"/>
+                            <text x="915" y="395" text-anchor="middle" font-size="10" fill="#F44336">排気口</text>
+                            <!-- ダクト接続線 -->
+                            <line x1="915" y1="400" x2="915" y2="265" stroke="#F5A623" stroke-width="4" opacity="0.7" stroke-dasharray="2,2"/>
+                        </g>
+                    </g>
+                    
+                    <!-- キッチン -->
+                    <g id="kitchen">
+                        <rect x="50" y="350" width="400" height="200" fill="#FFFACD" stroke="#333" stroke-width="2"/>
+                        <text x="250" y="450" text-anchor="middle" font-size="20" fill="#333">キッチン</text>
+                        
+                        <!-- レンジフード -->
+                        <g id="kitchen-exhaust">
+                            <rect x="200" y="550" width="100" height="30" fill="#FFE0E0" stroke="#F44336" stroke-width="2" rx="3"/>
+                            <text x="250" y="595" text-anchor="middle" font-size="12" fill="#F44336">レンジフード</text>
+                        </g>
+                    </g>
+                    
+                    <!-- 洗面所 -->
+                    <g id="washroom">
+                        <rect x="450" y="350" width="250" height="200" fill="#F0FFF0" stroke="#333" stroke-width="2"/>
+                        <text x="575" y="450" text-anchor="middle" font-size="20" fill="#333">洗面所</text>
+                        
+                        <!-- 第3種排気口 -->
+                        <g id="washroom-type3-exhaust" class="type3-element">
+                            <rect x="555" y="520" width="30" height="30" fill="#FFE0E0" stroke="#F44336" stroke-width="2" rx="3"/>
+                            <text x="570" y="515" text-anchor="middle" font-size="10" fill="#F44336">機械排気</text>
+                            <g transform="translate(570, 535)" class="rotate">
+                                <path d="M 0,-8 L 5,5 L -5,5 Z" fill="#F44336"/>
+                                <path d="M 8,0 L -5,5 L -5,-5 Z" fill="#F44336"/>
+                                <path d="M 0,8 L -5,-5 L 5,-5 Z" fill="#F44336"/>
+                                <path d="M -8,0 L 5,-5 L 5,5 Z" fill="#F44336"/>
+                            </g>
+                            <path d="M 585 535 L 605 535" stroke="#F5A623" stroke-width="2" marker-end="url(#arrowOrange)"/>
+                        </g>
+                        
+                        <!-- 第1種排気口（ダクト接続） -->
+                        <g id="washroom-type1-exhaust" class="type1-element" style="display: none;">
+                            <rect x="550" y="400" width="30" height="30" fill="#FFE0E0" stroke="#F44336" stroke-width="2" rx="3"/>
+                            <text x="565" y="395" text-anchor="middle" font-size="10" fill="#F44336">排気口</text>
+                            <!-- ダクト接続緺 -->
+                            <line x1="565" y1="400" x2="565" y2="265" stroke="#F5A623" stroke-width="4" opacity="0.7" stroke-dasharray="2,2"/>
+                        </g>
+                    </g>
+                    
+                    <!-- ドア（アンダーカット表示） -->
+                    <!-- リビング→ホール -->
+                    <g id="door1">
+                        <rect x="440" y="280" width="10" height="60" fill="#8B4513" stroke="#333" stroke-width="1"/>
+                        <rect x="440" y="335" width="10" height="5" fill="#FFD700" stroke="none"/>
+                        <text x="445" y="330" text-anchor="middle" font-size="10" fill="#666">隙間</text>
+                    </g>
+                    
+                    <!-- 洋室1→ホール -->
+                    <g id="door2">
+                        <rect x="540" y="250" width="60" height="10" fill="#8B4513" stroke="#333" stroke-width="1"/>
+                        <rect x="540" y="250" width="5" height="10" fill="#FFD700" stroke="none"/>
+                    </g>
+                    
+                    <!-- 洋室2→ホール -->
+                    <g id="door3">
+                        <rect x="790" y="250" width="60" height="10" fill="#8B4513" stroke="#333" stroke-width="1"/>
+                        <rect x="790" y="250" width="5" height="10" fill="#FFD700" stroke="none"/>
+                    </g>
+                    
+                    <!-- ホール→トイレ -->
+                    <g id="door4">
+                        <rect x="740" y="350" width="60" height="10" fill="#8B4513" stroke="#333" stroke-width="1"/>
+                        <rect x="740" y="350" width="5" height="10" fill="#FFD700" stroke="none"/>
+                    </g>
+                    
+                    <!-- ホール→浴室 -->
+                    <g id="door5">
+                        <rect x="865" y="350" width="60" height="10" fill="#8B4513" stroke="#333" stroke-width="1"/>
+                        <rect x="865" y="350" width="5" height="10" fill="#FFD700" stroke="none"/>
+                    </g>
+                    
+                    <!-- ホール→洗面所 -->
+                    <g id="door6">
+                        <rect x="540" y="350" width="60" height="10" fill="#8B4513" stroke="#333" stroke-width="1"/>
+                        <rect x="540" y="350" width="5" height="10" fill="#FFD700" stroke="none"/>
+                    </g>
+                    
+                    <!-- 熱交換器（第1種用、ホール部天井裏に配置） -->
+                    <g id="heat-exchanger" class="type1-element" style="display: none;">
+                        <!-- ホール部天井裏を表現する点線 -->
+                        <rect x="450" y="235" width="500" height="15" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="3,3"/>
+                        <text x="700" y="230" text-anchor="middle" font-size="10" fill="#666">ホール天井裏スペース</text>
+                        
+                        <!-- 熱交換ユニット（ホール中央に配置） -->
+                        <rect x="660" y="237" width="80" height="35" fill="#FFFACD" stroke="#FFD700" stroke-width="2" rx="3"/>
+                        <text x="700" y="257" text-anchor="middle" font-size="10" fill="#FFD700">熱交換ユニット</text>
+                        
+                        <!-- 給気ダクト -->
+                        <g class="supply-duct">
+                            <!-- メインダクト（ホールから各部屋へ） -->
+                            <line x1="660" y1="255" x2="250" y2="255" stroke="#4D8BC9" stroke-width="6" opacity="0.7"/>
+                            <line x1="740" y1="255" x2="900" y2="255" stroke="#4D8BC9" stroke-width="6" opacity="0.7"/>
+                            
+                            <!-- 分岐ダクト -->
+                            <line x1="250" y1="255" x2="250" y2="150" stroke="#4D8BC9" stroke-width="4" opacity="0.7"/>
+                            <line x1="575" y1="255" x2="575" y2="130" stroke="#4D8BC9" stroke-width="4" opacity="0.7"/>
+                            <line x1="825" y1="255" x2="825" y2="130" stroke="#4D8BC9" stroke-width="4" opacity="0.7"/>
+                            
+                            <!-- ダクトラベル -->
+                            <text x="350" y="250" font-size="8" fill="#4D8BC9">給気ダクト</text>
+                        </g>
+                        
+                        <!-- 排気ダクト -->
+                        <g class="exhaust-duct">
+                            <!-- メインダクト（各部屋からホールへ） -->
+                            <line x1="660" y1="265" x2="565" y2="265" stroke="#F5A623" stroke-width="6" opacity="0.7"/>
+                            <line x1="740" y1="265" x2="915" y2="265" stroke="#F5A623" stroke-width="6" opacity="0.7"/>
+                            
+                            <!-- 分岐ダクト -->
+                            <line x1="565" y1="265" x2="565" y2="400" stroke="#F5A623" stroke-width="4" opacity="0.7"/>
+                            <line x1="790" y1="265" x2="790" y2="400" stroke="#F5A623" stroke-width="4" opacity="0.7"/>
+                            <line x1="915" y1="265" x2="915" y2="400" stroke="#F5A623" stroke-width="4" opacity="0.7"/>
+                            
+                            <!-- ダクトラベル -->
+                            <text x="850" y="290" font-size="8" fill="#F5A623">排気ダクト</text>
+                        </g>
+                        
+                        <!-- 外気取入口 -->
+                        <rect x="640" y="20" width="30" height="20" fill="#E0EEF9" stroke="#005BAB" stroke-width="2" rx="3"/>
+                        <text x="655" y="10" text-anchor="middle" font-size="10" fill="#005BAB">外気取入</text>
+                        <line x1="655" y1="40" x2="680" y2="237" stroke="#4D8BC9" stroke-width="4" opacity="0.7"/>
+                        
+                        <!-- 外気排出口 -->
+                        <rect x="730" y="20" width="30" height="20" fill="#FFE0E0" stroke="#F44336" stroke-width="2" rx="3"/>
+                        <text x="745" y="10" text-anchor="middle" font-size="10" fill="#F44336">外気排出</text>
+                        <line x1="745" y1="40" x2="720" y2="237" stroke="#F5A623" stroke-width="4" opacity="0.7"/>
+                    </g>
+                    
+                    <!-- 空気の流れパス（第3種） -->
+                    <g id="airflow-paths-type3" class="airflow-paths type3-element">
+                        <!-- リビング→ホール -->
+                        <path id="flow3-1" d="M 50 170 Q 250 170 440 300" fill="none" stroke="none"/>
+                        <!-- 洋室1→ホール -->
+                        <path id="flow3-2" d="M 700 150 Q 600 150 600 260" fill="none" stroke="none"/>
+                        <!-- 洋室2→ホール -->
+                        <path id="flow3-3" d="M 950 150 Q 850 150 850 260" fill="none" stroke="none"/>
+                        <!-- ホール→トイレ -->
+                        <path id="flow3-4" d="M 700 300 Q 760 300 760 360 Q 760 450 785 535" fill="none" stroke="none"/>
+                        <!-- ホール→浴室 -->
+                        <path id="flow3-5" d="M 800 300 Q 880 300 880 360 Q 880 450 915 535" fill="none" stroke="none"/>
+                        <!-- ホール→洗面所 -->
+                        <path id="flow3-6" d="M 600 300 Q 565 300 565 360 Q 565 450 570 535" fill="none" stroke="none"/>
+                    </g>
+                    
+                    <!-- 空気の流れパス（第1種） -->
+                    <g id="airflow-paths-type1" class="airflow-paths type1-element" style="display: none;">
+                        <!-- 外気→熱交換器→リビング -->
+                        <path id="flow1-1" d="M 80 40 Q 270 40 250 150" fill="none" stroke="none"/>
+                        <!-- 外気→熱交換器→洋室1 -->
+                        <path id="flow1-2" d="M 500 40 Q 575 40 575 130" fill="none" stroke="none"/>
+                        <!-- 外気→熱交換器→洋室2 -->
+                        <path id="flow1-3" d="M 700 40 Q 825 40 825 130" fill="none" stroke="none"/>
+                        <!-- トイレ→熱交換器→外気 -->
+                        <path id="flow1-4" d="M 785 400 Q 785 200 500 50" fill="none" stroke="none"/>
+                        <!-- 浴室→熱交換器→外気 -->
+                        <path id="flow1-5" d="M 915 400 Q 915 200 600 50" fill="none" stroke="none"/>
+                        <!-- 洗面所→熱交換器→外気 -->
+                        <path id="flow1-6" d="M 565 400 Q 565 200 480 50" fill="none" stroke="none"/>
+                    </g>
+                    
+                    <!-- 空気の流れアニメーション（第3種） -->
+                    <g id="air-particles-type3" class="air-flow type3-element">
+                        <!-- パーティクル群 -->
+                        <circle r="4" fill="#4D8BC9" opacity="0.7">
+                            <animateMotion dur="12s" repeatCount="indefinite">
+                                <mpath href="#flow3-1"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#4D8BC9" opacity="0.7">
+                            <animateMotion dur="12s" repeatCount="indefinite" begin="4s">
+                                <mpath href="#flow3-1"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#4D8BC9" opacity="0.7">
+                            <animateMotion dur="12s" repeatCount="indefinite" begin="8s">
+                                <mpath href="#flow3-1"/>
+                            </animateMotion>
+                        </circle>
+                        
+                        <!-- 洋室1からの流れ -->
+                        <circle r="4" fill="#4D8BC9" opacity="0.7">
+                            <animateMotion dur="10s" repeatCount="indefinite">
+                                <mpath href="#flow3-2"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#4D8BC9" opacity="0.7">
+                            <animateMotion dur="10s" repeatCount="indefinite" begin="3.3s">
+                                <mpath href="#flow3-2"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#4D8BC9" opacity="0.7">
+                            <animateMotion dur="10s" repeatCount="indefinite" begin="6.6s">
+                                <mpath href="#flow3-2"/>
+                            </animateMotion>
+                        </circle>
+                        
+                        <!-- 洋室2からの流れ -->
+                        <circle r="4" fill="#4D8BC9" opacity="0.7">
+                            <animateMotion dur="10s" repeatCount="indefinite" begin="2s">
+                                <mpath href="#flow3-3"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#4D8BC9" opacity="0.7">
+                            <animateMotion dur="10s" repeatCount="indefinite" begin="5.3s">
+                                <mpath href="#flow3-3"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#4D8BC9" opacity="0.7">
+                            <animateMotion dur="10s" repeatCount="indefinite" begin="8.6s">
+                                <mpath href="#flow3-3"/>
+                            </animateMotion>
+                        </circle>
+                        
+                        <!-- ホールからトイレへ -->
+                        <circle r="4" fill="#F5A623" opacity="0.7">
+                            <animateMotion dur="8s" repeatCount="indefinite">
+                                <mpath href="#flow3-4"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#F5A623" opacity="0.7">
+                            <animateMotion dur="8s" repeatCount="indefinite" begin="2.6s">
+                                <mpath href="#flow3-4"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#F5A623" opacity="0.7">
+                            <animateMotion dur="8s" repeatCount="indefinite" begin="5.3s">
+                                <mpath href="#flow3-4"/>
+                            </animateMotion>
+                        </circle>
+                        
+                        <!-- ホールから浴室へ -->
+                        <circle r="4" fill="#F5A623" opacity="0.7">
+                            <animateMotion dur="8s" repeatCount="indefinite" begin="1s">
+                                <mpath href="#flow3-5"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#F5A623" opacity="0.7">
+                            <animateMotion dur="8s" repeatCount="indefinite" begin="3.6s">
+                                <mpath href="#flow3-5"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#F5A623" opacity="0.7">
+                            <animateMotion dur="8s" repeatCount="indefinite" begin="6.3s">
+                                <mpath href="#flow3-5"/>
+                            </animateMotion>
+                        </circle>
+                        
+                        <!-- ホールから洗面所へ -->
+                        <circle r="4" fill="#F5A623" opacity="0.7">
+                            <animateMotion dur="8s" repeatCount="indefinite" begin="1.5s">
+                                <mpath href="#flow3-6"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#F5A623" opacity="0.7">
+                            <animateMotion dur="8s" repeatCount="indefinite" begin="4.1s">
+                                <mpath href="#flow3-6"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#F5A623" opacity="0.7">
+                            <animateMotion dur="8s" repeatCount="indefinite" begin="6.8s">
+                                <mpath href="#flow3-6"/>
+                            </animateMotion>
+                        </circle>
+                    </g>
+                    
+                    <!-- 空気の流れアニメーション（第1種） -->
+                    <g id="air-particles-type1" class="air-flow type1-element" style="display: none;">
+                        <!-- 新鮮空気（給気） -->
+                        <circle r="4" fill="#4D8BC9" opacity="0.8">
+                            <animateMotion dur="10s" repeatCount="indefinite">
+                                <mpath href="#flow1-1"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#4D8BC9" opacity="0.8">
+                            <animateMotion dur="10s" repeatCount="indefinite" begin="3s">
+                                <mpath href="#flow1-2"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#4D8BC9" opacity="0.8">
+                            <animateMotion dur="10s" repeatCount="indefinite" begin="6s">
+                                <mpath href="#flow1-3"/>
+                            </animateMotion>
+                        </circle>
+                        
+                        <!-- 汚れた空気（排気） -->
+                        <circle r="4" fill="#32CD32" opacity="0.8">
+                            <animateMotion dur="12s" repeatCount="indefinite">
+                                <mpath href="#flow1-4"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#32CD32" opacity="0.8">
+                            <animateMotion dur="12s" repeatCount="indefinite" begin="4s">
+                                <mpath href="#flow1-5"/>
+                            </animateMotion>
+                        </circle>
+                        <circle r="4" fill="#32CD32" opacity="0.8">
+                            <animateMotion dur="12s" repeatCount="indefinite" begin="8s">
+                                <mpath href="#flow1-6"/>
+                            </animateMotion>
+                        </circle>
+                    </g>
+                    
+                    <!-- 説明テキスト -->
+                    <text x="500" y="30" text-anchor="middle" font-size="24" font-weight="bold" fill="#005BAB">
+                        <tspan id="ventilation-title">第3種換気の空気の流れ</tspan>
+                    </text>
+                </svg>
+            </div>
+            
+            <div class="alert-box alert-info" style="margin-top: 2rem;">
+                <h4>空気の流れのポイント</h4>
+                <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                    <li id="point1">各部屋の給気口から新鮮な空気が自然に入ります</li>
+                    <li id="point2">ドア下の隙間（アンダーカット）を通って空気が移動します</li>
+                    <li id="point3">最終的にトイレ・浴室・洗面所の排気ファンから排出されます</li>
+                    <li id="point4">この流れにより、臭いや湿気を効率的に排出できます</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 比較表タブ -->
+        <div id="comparison" class="tab-content">
+            <h2>📊 換気方式の詳細比較</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>項目</th>
+                        <th>第1種換気</th>
+                        <th>第2種換気</th>
+                        <th>第3種換気</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>給気方法</strong></td>
+                        <td>機械給気（ファン）</td>
+                        <td>機械給気（ファン）</td>
+                        <td>自然給気（給気口）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>排気方法</strong></td>
+                        <td>機械排気（ファン）</td>
+                        <td>自然排気</td>
+                        <td>機械排気（ファン）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>室内気圧</strong></td>
+                        <td>±0（バランス）</td>
+                        <td>正圧（+）</td>
+                        <td>負圧（−）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>初期費用</strong></td>
+                        <td>高い（50〜100万円）</td>
+                        <td>中程度（30〜50万円）</td>
+                        <td>安い（10〜30万円）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ランニングコスト</strong></td>
+                        <td>高い（年間2〜3万円）</td>
+                        <td>中程度（年間1.5〜2万円）</td>
+                        <td>安い（年間0.5〜1.5万円）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>メンテナンス</strong></td>
+                        <td>複雑（フィルター＋ダクト）</td>
+                        <td>中程度（フィルター）</td>
+                        <td>簡単（フィルターのみ）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>熱交換</strong></td>
+                        <td>可能（省エネ効果大）</td>
+                        <td>不可</td>
+                        <td>不可</td>
+                    </tr>
+                    <tr>
+                        <td><strong>空気清浄</strong></td>
+                        <td>高性能フィルター可</td>
+                        <td>フィルター可</td>
+                        <td>簡易フィルターのみ</td>
+                    </tr>
+                    <tr>
+                        <td><strong>結露リスク</strong></td>
+                        <td>低い</td>
+                        <td>高い</td>
+                        <td>低い</td>
+                    </tr>
+                    <tr>
+                        <td><strong>適用場所</strong></td>
+                        <td>高気密高断熱住宅</td>
+                        <td>病院・クリーンルーム</td>
+                        <td>一般住宅</td>
+                    </tr>
+                    <tr>
+                        <td><strong>住宅での採用率</strong></td>
+                        <td>約20%</td>
+                        <td>約1%未満</td>
+                        <td>約80%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        // タブ切り替え機能
+        function showTab(tabName) {
+            // すべてのタブコンテンツを非表示
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // すべてのタブボタンから active クラスを削除
+            const tabButtons = document.querySelectorAll('.nav-tab');
+            tabButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // 選択されたタブコンテンツを表示
+            document.getElementById(tabName).classList.add('active');
+            
+            // 選択されたタブボタンに active クラスを追加
+            event.target.classList.add('active');
+        }
+        
+        // 換気量計算機能
+        function calculateVentilation() {
+            // 入力値を取得
+            const floorArea = parseFloat(document.getElementById('floor-area').value);
+            const ceilingHeight = parseFloat(document.getElementById('ceiling-height').value);
+            const buildingType = document.getElementById('building-type').value;
+            const ventilationRate = parseFloat(document.getElementById('ventilation-rate').value);
+            const heatExchangeEfficiency = parseInt(document.getElementById('heat-exchange-efficiency').value);
+            const specificPower = parseFloat(document.getElementById('specific-power').value);
+            const roomCount = parseInt(document.getElementById('room-count').value);
+            const airtightness = parseFloat(document.getElementById('airtightness').value);
+            
+            // 入力値の検証
+            if (isNaN(floorArea) || isNaN(ceilingHeight) || isNaN(ventilationRate) || isNaN(specificPower) || isNaN(roomCount) || isNaN(airtightness)) {
+                alert('正しい数値を入力してください。');
+                return;
+            }
+            
+            // 建築基準法チェック
+            const minVentilationRate = buildingType === 'residential' ? 0.5 : 0.3;
+            if (ventilationRate < minVentilationRate) {
+                alert(`${buildingType === 'residential' ? '住宅の居室' : 'その他の居室'}では換気回数${minVentilationRate}回/時以上が必要です。`);
+                return;
+            }
+            
+            // 必要換気量の計算（㎥/h）
+            const requiredVolume = floorArea * ceilingHeight * ventilationRate;
+            
+            // 気密性能による補正
+            const airtightnessCorrection = airtightness > 2.0 ? 1.2 : 1.0;
+            const actualRequiredVolume = requiredVolume * airtightnessCorrection;
+            
+            // 推奨換気方式の判定
+            let recommendedType = '第3種';
+            let recommendedReason = 'コスト重視';
+            
+            if (heatExchangeEfficiency > 0) {
+                recommendedType = '第1種';
+                recommendedReason = '熱交換あり';
+            } else if (floorArea > 150 || actualRequiredVolume > 300) {
+                recommendedType = '第1種';
+                recommendedReason = '大型住宅向け';
+            } else if (airtightness <= 1.0) {
+                recommendedType = '第1種';
+                recommendedReason = '高気密住宅';
+            }
+            
+            // 給気口の目安（30㎥/hで1箇所）
+            const inletCount = Math.ceil(actualRequiredVolume / 30);
+            
+            // 消費電力計算（W）
+            const powerConsumption = Math.round(actualRequiredVolume * specificPower);
+            
+            // 年間電気代計算（27円/kWh）
+            const annualCost = Math.round(powerConsumption * 24 * 365 * 27 / 1000);
+            
+            // 熱回収効果計算（年間節約額）
+            let heatRecovery = 0;
+            if (heatExchangeEfficiency > 0) {
+                // 熱回収による冷暖房費の節約効果を算出
+                const heatingCoolingLoad = actualRequiredVolume * 0.33 * 24 * 365 / 1000; // kWh/年
+                const recoveryEffect = heatingCoolingLoad * (heatExchangeEfficiency / 100);
+                heatRecovery = Math.round(recoveryEffect * 27); // 円/年
+            }
+            
+            // 結果を表示
+            document.getElementById('required-volume').textContent = actualRequiredVolume.toFixed(1);
+            document.getElementById('recommended-type').textContent = recommendedType;
+            document.getElementById('recommended-reason').textContent = recommendedReason;
+            document.getElementById('inlet-count').textContent = inletCount;
+            document.getElementById('power-consumption').textContent = powerConsumption;
+            document.getElementById('annual-cost').textContent = '¥' + annualCost.toLocaleString();
+            document.getElementById('heat-recovery').textContent = '¥' + heatRecovery.toLocaleString();
+            
+            // 結果セクションを表示
+            document.getElementById('calc-result').classList.add('show');
+            
+            // スムーズスクロール
+            document.getElementById('calc-result').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // 換気方式切り替え機能
+        function changeVentilationType() {
+            const type = document.getElementById('ventilation-type').value;
+            const title = document.getElementById('ventilation-title');
+            const points = [
+                document.getElementById('point1'),
+                document.getElementById('point2'),
+                document.getElementById('point3'),
+                document.getElementById('point4')
+            ];
+            
+            // すべての要素を非表示
+            document.querySelectorAll('.type1-element, .type2-element, .type3-element').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // 選択された換気方式の要素を表示
+            document.querySelectorAll(`.${type}-element`).forEach(el => {
+                el.style.display = 'block';
+            });
+            
+            // アニメーションを再始動
+            const svg = document.getElementById('floor-plan');
+            if (svg.unpauseAnimations) {
+                svg.pauseAnimations();
+                setTimeout(() => {
+                    if (svg.unpauseAnimations) {
+                        svg.unpauseAnimations();
+                    }
+                }, 100);
+            }
+            
+            // タイトルとポイントを更新
+            switch(type) {
+                case 'type1':
+                    title.textContent = '第1種換気の空気の流れ（ダクト経由）';
+                    points[0].textContent = '外気がフィルターで清浄化され、熱交換器で温度調節されます';
+                    points[1].textContent = '給気ダクトを経由して各部屋の給気口から供給されます';
+                    points[2].textContent = '汚れた空気は排気ダクトで集約され、熱交換器で熱回収後外部へ';
+                    points[3].textContent = '熱交換効率により90%以上の熱を回収し、大幅な省エネ効果';
+                    break;
+                case 'type2':
+                    title.textContent = '第2種換気の空気の流れ';
+                    points[0].textContent = '機械給気により室内が正圧（プラス圧）になります';
+                    points[1].textContent = '外部からの汚染物質が入りにくくなります';
+                    points[2].textContent = '排気は自然に隙間から出ていきます';
+                    points[3].textContent = '病院やクリーンルームで採用される特殊な方式です';
+                    break;
+                case 'type3':
+                default:
+                    title.textContent = '第3種換気の空気の流れ';
+                    points[0].textContent = '各部屋の給気口から新鮮な空気が自然に入ります';
+                    points[1].textContent = 'ドア下の隙間（アンダーカット）を通って空気が移動します';
+                    points[2].textContent = '最終的にトイレ・浴室・洗面所の排気ファンから排出されます';
+                    points[3].textContent = 'この流れにより、臭いや湿気を効率的に排出できます';
+                    break;
+            }
+        }
+        
+        // アニメーション制御
+        let animationPaused = false;
+        function toggleAnimation() {
+            animationPaused = !animationPaused;
+            const button = document.getElementById('animation-toggle');
+            const rotateElements = document.querySelectorAll('.rotate');
+            const svg = document.getElementById('floor-plan');
+            
+            if (animationPaused) {
+                button.textContent = 'アニメーション再生';
+                rotateElements.forEach(el => el.classList.add('paused'));
+                // SVGアニメーションの一時停止
+                if (svg.pauseAnimations) {
+                    svg.pauseAnimations();
+                }
+            } else {
+                button.textContent = 'アニメーション停止';
+                rotateElements.forEach(el => el.classList.remove('paused'));
+                // SVGアニメーションの再開
+                if (svg.unpauseAnimations) {
+                    svg.unpauseAnimations();
+                }
+            }
+        }
+        
+        // ページ読み込み時のアニメーション
+        window.addEventListener('load', () => {
+            // フェードインアニメーション
+            const cards = document.querySelectorAll('.vent-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
+        });
+        
+        // エンターキーで計算実行
+        // 建物種別変更時の換気回数自動調整
+        document.getElementById('building-type').addEventListener('change', function() {
+            const buildingType = this.value;
+            const ventilationRateInput = document.getElementById('ventilation-rate');
+            if (buildingType === 'residential') {
+                ventilationRateInput.value = '0.5';
+                ventilationRateInput.min = '0.5';
+            } else {
+                ventilationRateInput.value = '0.3';
+                ventilationRateInput.min = '0.3';
+            }
+        });
+        
+        // 熱交換効率変更時の比消費電力自動調整
+        document.getElementById('heat-exchange-efficiency').addEventListener('change', function() {
+            const efficiency = parseInt(this.value);
+            const specificPowerInput = document.getElementById('specific-power');
+            if (efficiency > 0) {
+                specificPowerInput.value = '0.7'; // 第1種換気
+            } else {
+                specificPowerInput.value = '0.4'; // 第3種換気
+            }
+        });
+        
+        document.querySelectorAll('input, select').forEach(element => {
+            element.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    calculateVentilation();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
