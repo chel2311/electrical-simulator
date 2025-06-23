@@ -1,0 +1,3902 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>住宅分電盤回路シミュレーター v8.3</title>
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --primary-dark: #004590;
+            --accent-color: #FF961C;
+            --bg-color: #f5f5f5;
+            --text-color: #333;
+            --gray-light: #e0e0e0;
+            --gray-medium: #9e9e9e;
+            --red-color: #d32f2f;
+            --green-color: #388e3c;
+            --blue-light: #e3f2fd;
+            --wire-red: #ff0000;
+            --wire-white: #ffffff;
+            --wire-black: #000000;
+            --breaker-green: #5cb85c;
+            --mlb-color: #ffa366;
+            --seismic-color: #e91e63;
+            --elcb-color: #9c27b0;
+            --grid-tie-color: #2196f3;
+            --solar-color: #4caf50;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Meiryo', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: min(1800px, 100vw);
+            margin: 0 auto;
+            padding: clamp(10px, 2vw, 20px);
+            transition: all 0.3s ease;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            text-align: center;
+            font-size: clamp(18px, 3vw, 24px);
+            margin: 0;
+        }
+
+        .header-wrapper {
+            position: relative;
+            max-width: min(1800px, 100vw);
+            margin: 0 auto;
+            padding: 0 clamp(10px, 2vw, 20px);
+        }
+
+        .back-to-home {
+            position: absolute;
+            left: clamp(10px, 2vw, 20px);
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .back-to-home:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: minmax(min(550px, 45vw), 1fr) minmax(min(600px, 50vw), 680px);
+            gap: clamp(15px, 2vw, 20px);
+            transition: all 0.3s ease;
+        }
+
+        /* UI制御 */
+        .ui-controls {
+            background-color: #fff;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .layout-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* シミュレーションエリア */
+        .simulation-area {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .simulation-area h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* SVGコンテナ */
+        .svg-container {
+            width: 100%;
+            overflow: auto;
+            position: relative;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: #f8f8f8;
+            transition: height 0.3s ease;
+        }
+
+        /* 分電盤のSVG */
+        .panel-svg {
+            width: 100%;
+            height: auto;
+            min-height: min(500px, 60vh);
+            display: block;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+            max-width: 100%;
+        }
+
+        /* ブレーカースタイル */
+        .breaker {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .breaker:hover {
+            opacity: 0.8;
+            filter: brightness(1.1);
+        }
+
+        .breaker rect {
+            stroke: #333;
+            stroke-width: 2;
+        }
+
+        .breaker.off rect {
+            fill: var(--red-color) !important;
+        }
+
+        .breaker.on rect {
+            fill: var(--breaker-green);
+        }
+
+        .breaker.mlb.on rect {
+            fill: var(--mlb-color);
+        }
+
+        .breaker.mlb.off rect {
+            fill: var(--red-color) !important;
+        }
+
+        .breaker.seismic.on rect {
+            fill: var(--seismic-color);
+        }
+
+        .breaker.elcb.on rect {
+            fill: var(--elcb-color);
+        }
+
+        .breaker.grid-tie.on rect {
+            fill: var(--grid-tie-color);
+        }
+
+        .breaker.space rect {
+            fill: #f0f0f0;
+            stroke-dasharray: 3 3;
+        }
+
+        .breaker.double-space rect {
+            width: 100px;
+        }
+
+        /* 配線スタイル */
+        .wire {
+            fill: none;
+            stroke-width: 6;
+        }
+
+        .wire-l1 {
+            stroke: var(--wire-red);
+        }
+
+        .wire-n {
+            stroke: #888888;
+        }
+
+        .wire-l2 {
+            stroke: var(--wire-black);
+        }
+
+        /* 太陽光アイコン */
+        .solar-icon {
+            fill: var(--solar-color);
+        }
+
+        /* ステータス表示 */
+        .status-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .status-card {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .status-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-color);
+            text-align: center;
+        }
+
+        .dual-status {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .phase-status {
+            text-align: center;
+            padding: 8px;
+            border-radius: 4px;
+            flex: 1;
+        }
+
+        .phase-status.phase-r {
+            background-color: rgba(255, 0, 0, 0.1);
+        }
+
+        .phase-status.phase-t {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .phase-status h5 {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: var(--primary-color);
+        }
+
+        .phase-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* 計算ロジック表示 */
+        .calculation-logic {
+            background-color: #fffbf0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #ffe0b2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .calculation-logic h4 {
+            color: var(--accent-color);
+            margin-bottom: 10px;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calculation-detail {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .calculation-detail.formula {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .calculation-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        .calculation-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .math {
+            font-family: monospace;
+            background-color: rgba(0,0,0,0.03);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        /* 進捗バー */
+        .capacity-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .capacity-bar-fill {
+            height: 100%;
+            background-color: #4caf50;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .capacity-bar-fill::after {
+            content: attr(data-value);
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+
+        .capacity-bar-fill.warning {
+            background-color: #ff9800;
+        }
+
+        .capacity-bar-fill.danger {
+            background-color: var(--red-color);
+        }
+
+        .dual-bars {
+            display: flex;
+            gap: 10px;
+        }
+
+        .phase-bar {
+            flex: 1;
+        }
+
+        .phase-bar .capacity-bar {
+            height: 12px;
+        }
+
+        .phase-r .capacity-bar-fill {
+            background-color: var(--wire-red);
+        }
+
+        .phase-t .capacity-bar-fill {
+            background-color: var(--text-color);
+        }
+
+        /* 回路設定エリア */
+        .circuit-config-area {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-height: calc(100vh - 90px);
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 600px;
+        }
+
+        /* タブ */
+        .tab-nav {
+            display: flex;
+            border-bottom: 2px solid var(--gray-light);
+            margin-bottom: 20px;
+            gap: 5px;
+        }
+
+        .tab-nav button {
+            background: none;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 15px;
+            color: var(--gray-medium);
+            transition: all 0.3s ease;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+        }
+
+        .tab-nav button.active {
+            color: var(--primary-color);
+            background-color: rgba(0, 91, 171, 0.05);
+        }
+
+        .tab-nav button.active::after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 回路設定テーブル */
+        .circuit-table-container {
+            max-height: 800px;
+            overflow-y: auto;
+            border: 1px solid var(--gray-light);
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .circuit-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .circuit-table th,
+        .circuit-table td {
+            border: 1px solid var(--gray-light);
+            padding: 8px 6px;
+            text-align: center;
+        }
+
+        .circuit-table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .circuit-table tr:nth-child(even) {
+            background-color: rgba(0,0,0,0.02);
+        }
+
+        .circuit-table tr:hover {
+            background-color: rgba(0,91,171,0.05);
+        }
+
+        .circuit-table input[type="text"],
+        .circuit-table input[type="number"],
+        .circuit-table select {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid var(--gray-light);
+            border-radius: 3px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .circuit-table input:focus,
+        .circuit-table select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,91,171,0.2);
+        }
+
+        /* カラムの幅調整（統一） */
+        .circuit-table th:nth-child(1),
+        .circuit-table td:nth-child(1) {
+            width: 40px;
+        }
+
+        .circuit-table th:nth-child(2),
+        .circuit-table td:nth-child(2) {
+            width: 40px;
+        }
+
+        .circuit-table th:nth-child(3),
+        .circuit-table td:nth-child(3) {
+            width: 110px;
+        }
+        
+        .circuit-table th:nth-child(4),
+        .circuit-table td:nth-child(4) {
+            width: 120px;
+        }
+
+        .circuit-table th:nth-child(5),
+        .circuit-table td:nth-child(5),
+        .circuit-table th:nth-child(6),
+        .circuit-table td:nth-child(6),
+        .circuit-table th:nth-child(7),
+        .circuit-table td:nth-child(7) {
+            width: 70px;
+        }
+        
+        .circuit-table th:nth-child(8),
+        .circuit-table td:nth-child(8),
+        .circuit-table th:nth-child(9),
+        .circuit-table td:nth-child(9),
+        .circuit-table th:nth-child(10),
+        .circuit-table td:nth-child(10) {
+            width: 70px;
+        }
+
+        .circuit-table .phase-r {
+            background-color: rgba(255, 107, 107, 0.1);
+        }
+
+        .circuit-table .phase-t {
+            background-color: rgba(77, 171, 247, 0.1);
+        }
+
+        .circuit-table .double-space {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+
+        /* R相T相負荷表示スタイル */
+        .circuit-table td.r-phase-load {
+            background-color: rgba(255, 107, 107, 0.1);
+        }
+
+        .circuit-table td.t-phase-load {
+            background-color: rgba(77, 171, 247, 0.1);
+        }
+
+        /* ブレーカー種類バッジ */
+        .breaker-type {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            color: white;
+            margin-left: 4px;
+            font-weight: bold;
+        }
+
+        .breaker-type.elcb {
+            background-color: var(--elcb-color);
+        }
+
+        .breaker-type.double {
+            background-color: var(--accent-color);
+        }
+
+        .breaker-type.grid-tie {
+            background-color: var(--grid-tie-color);
+        }
+
+        /* ボタン */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            margin: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary {
+            background-color: var(--gray-medium);
+        }
+
+        .btn-secondary:hover {
+            background-color: #757575;
+        }
+
+        .btn-danger {
+            background-color: var(--red-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #b71c1c;
+        }
+
+        .btn-success {
+            background-color: var(--green-color);
+        }
+
+        .btn-success:hover {
+            background-color: #2e7d32;
+        }
+
+        .btn-icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .button-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* 設定入力 */
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--gray-light);
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,91,171,0.2);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .input-row .input-group {
+            flex: 1;
+        }
+
+        /* 発電容量入力スタイル */
+        .generation-input {
+            position: relative;
+        }
+
+        .generation-input-highlight {
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 8px var(--solar-color) !important;
+            border-color: var(--solar-color) !important;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+
+        .grid-tie-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--grid-tie-color);
+            font-size: 20px;
+            pointer-events: none;
+        }
+
+        /* 警告スタイル */
+        .warning-text {
+            color: var(--red-color);
+            font-weight: bold;
+            margin-left: 10px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .warning-icon {
+            width: 16px;
+            height: 16px;
+            fill: var(--red-color);
+        }
+
+        .status-card.warning {
+            background-color: #fff3e0;
+            border: 2px solid #ff9800;
+        }
+
+        .status-card.danger {
+            background-color: #ffebee;
+            border: 2px solid var(--red-color);
+        }
+
+        .status-card.generation {
+            background-color: #e8f5e9;
+            border: 2px solid var(--solar-color);
+        }
+
+        /* ツールチップ */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* コントロールエリア */
+        .control-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .control-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        /* 解説タブ用スタイル */
+        .explanation-section {
+            margin-bottom: 30px;
+        }
+        
+        .explanation-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .explanation-section h3:hover {
+            color: var(--primary-dark);
+        }
+        
+        .explanation-section h3::before {
+            content: "▼";
+            margin-right: 10px;
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+        
+        .explanation-section.collapsed h3::before {
+            transform: rotate(-90deg);
+        }
+        
+        .explanation-content {
+            padding-left: 20px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            max-height: 2000px;
+        }
+        
+        .explanation-section.collapsed .explanation-content {
+            max-height: 0;
+            padding: 0 20px;
+        }
+        
+        .explanation-diagram {
+            background-color: #f8f8f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .explanation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .explanation-table th,
+        .explanation-table td {
+            border: 1px solid var(--gray-light);
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .explanation-table th {
+            background-color: var(--blue-light);
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .explanation-table tr:nth-child(even) {
+            background-color: rgba(0,0,0,0.02);
+        }
+        
+        .highlight-box {
+            background-color: #fff8e1;
+            border-left: 4px solid var(--accent-color);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .highlight-box h4 {
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+        
+        .formula-box {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .term-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .term-item {
+            background-color: #f0f8ff;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .term-item strong {
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .interactive-demo {
+            background-color: #e8f5e9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .interactive-demo h4 {
+            color: var(--green-color);
+            margin-bottom: 15px;
+        }
+        
+        .demo-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        
+        .demo-control {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .demo-result {
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        /* FAQ用スタイル */
+        .faq-item {
+            margin-bottom: 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .faq-question {
+            background-color: var(--blue-light);
+            padding: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .faq-question:hover {
+            background-color: #d1e7ff;
+        }
+        
+        .faq-question::after {
+            content: "+";
+            font-size: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-item.open .faq-question::after {
+            transform: rotate(45deg);
+        }
+        
+        .faq-answer {
+            padding: 0 15px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background-color: white;
+        }
+        
+        .faq-item.open .faq-answer {
+            padding: 15px;
+            max-height: 500px;
+        }
+
+        /* レスポンシブ */
+        /* レスポンシブブレークポイント */
+        @media (max-width: 1400px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .circuit-config-area {
+                max-height: none;
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .container {
+                max-width: 100%;
+            }
+            
+            .panel-svg {
+                min-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .simulation-area,
+            .circuit-config-area {
+                padding: 15px;
+            }
+            
+            .status-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .control-container {
+                flex-direction: column;
+            }
+            
+            .input-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-wrapper">
+            <a href="index.html" class="back-to-home">
+                ← ポータルに戻る
+            </a>
+            <h1>住宅分電盤回路シミュレーター  v8.3</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- UI操作コントロール -->
+        <div class="ui-controls">
+            <div class="zoom-controls">
+                <button id="zoom-out" class="btn btn-secondary btn-sm">
+                    <svg class="btn-icon" viewBox="0 0 24 24">
+                        <path d="M19 13H5v-2h14v2z"/>
+                    </svg>
+                </button>
+                <span id="zoom-level">100%</span>
+                <button id="zoom-in" class="btn btn-secondary btn-sm">
+                    <svg class="btn-icon" viewBox="0 0 24 24">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                </button>
+                <button id="zoom-reset" class="btn btn-secondary btn-sm">リセット</button>
+            </div>
+
+            <div class="layout-toggle">
+                <button id="panel-expand" class="btn btn-secondary btn-sm">
+                    <svg class="btn-icon" viewBox="0 0 24 24">
+                        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                    </svg>
+                    分電盤を拡大
+                </button>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- シミュレーションエリア -->
+            <div class="simulation-area">
+                <h2>
+                    分電盤シミュレーション
+                    <span>
+                        <button id="collapse-details" class="btn btn-secondary btn-sm">
+                            詳細表示切替
+                        </button>
+                    </span>
+                </h2>
+                
+                <div class="svg-container" style="height: 550px;">
+                    <svg class="panel-svg" viewBox="0 0 800 500" id="distribution-panel">
+                        <!-- 主幹ブレーカー（MLB） -->
+                        <g id="main-breaker" class="breaker mlb on" transform="translate(50, 150)">
+                            <rect x="0" y="0" width="120" height="200" fill="#ffa366" rx="8"/>
+                            <text x="60" y="60" text-anchor="middle" fill="white" font-size="20" font-weight="bold">MLB</text>
+                            <text x="60" y="90" text-anchor="middle" fill="white" font-size="24" font-weight="bold" id="mlb-capacity">60A</text>
+                            <circle cx="30" cy="140" r="8" fill="white"/>
+                            <circle cx="60" cy="140" r="8" fill="white"/>
+                            <circle cx="90" cy="140" r="8" fill="white"/>
+                            <circle cx="105" cy="140" r="8" fill="white"/>
+                        </g>
+                        
+                        <!-- 太陽光発電アイコン (初期状態では非表示) -->
+                        <g id="solar-icon" transform="translate(50, 50)" style="display: none;">
+                            <circle cx="30" cy="30" r="25" fill="#4caf50" opacity="0.8"/>
+                            <path d="M30 10 L30 50 M10 30 L50 30 M15 15 L45 45 M15 45 L45 15" stroke="white" stroke-width="3"/>
+                            <path d="M20 5 L26 15 L14 15 Z" fill="white"/>
+                            <path d="M20 55 L26 45 L14 45 Z" fill="white"/>
+                            <path d="M5 20 L15 26 L15 14 Z" fill="white"/>
+                            <path d="M55 20 L45 26 L45 14 Z" fill="white"/>
+                        </g>
+                        
+                        <!-- 配線バー（3本） -->
+                        <line x1="170" y1="210" x2="750" y2="210" class="wire wire-l1"/>
+                        <line x1="170" y1="230" x2="750" y2="230" class="wire wire-n"/>
+                        <line x1="170" y1="250" x2="750" y2="250" class="wire wire-l2"/>
+                        
+                        <!-- 上段分岐ブレーカー（R相） -->
+                        <g id="upper-breakers">
+                            <!-- ブレーカー -->
+                        </g>
+                        
+                        <!-- 下段分岐ブレーカー（T相） -->
+                        <g id="lower-breakers">
+                            <!-- ブレーカー -->
+                        </g>
+                        
+                        <!-- 配線接続線 -->
+                        <g id="circuit-connections">
+                            <!-- 接続線 -->
+                        </g>
+                    </svg>
+                </div>
+                
+                <!-- ステータス表示 -->
+                <div class="status-cards">
+                    <div class="status-card" id="current-card">
+                        <h4>
+                            総使用電流
+                            <span class="tooltip">ℹ️
+                                <span class="tooltiptext">需要率適用後の電流値です</span>
+                            </span>
+                        </h4>
+                        <div class="status-value" id="total-current">0.0A</div>
+                        <div class="capacity-bar">
+                            <div class="capacity-bar-fill" id="current-bar" style="width: 0%" data-value="0%"></div>
+                        </div>
+                        
+                        <div class="dual-bars">
+                            <div class="phase-bar phase-r">
+                                <div class="capacity-bar">
+                                    <div class="capacity-bar-fill" id="r-phase-bar" style="width: 0%" data-value="0%"></div>
+                                </div>
+                            </div>
+                            <div class="phase-bar phase-t">
+                                <div class="capacity-bar">
+                                    <div class="capacity-bar-fill" id="t-phase-bar" style="width: 0%" data-value="0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="dual-status">
+                            <div class="phase-status phase-r">
+                                <h5>R相負荷</h5>
+                                <div class="phase-value" id="r-phase-current">0.0A</div>
+                            </div>
+                            <div class="phase-status phase-t">
+                                <h5>T相負荷</h5>
+                                <div class="phase-value" id="t-phase-current">0.0A</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-card" id="imbalance-card">
+                        <h4>
+                            不平衡率
+                            <span class="tooltip">ℹ️
+                                <span class="tooltiptext">R相とT相の負荷差の割合です</span>
+                            </span>
+                        </h4>
+                        <div class="status-value" id="imbalance-rate">0.0%</div>
+                        <div id="imbalance-warning" class="warning-text" style="display: none;">
+                            <svg class="warning-icon" viewBox="0 0 24 24">
+                                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                            </svg>
+                            基準値超過
+                        </div>
+                        <div class="capacity-bar">
+                            <div class="capacity-bar-fill" id="imbalance-bar" style="width: 0%" data-value="0%"></div>
+                        </div>
+                        <div class="dual-status">
+                            <div class="phase-status phase-r">
+                                <h5>R相VA</h5>
+                                <div class="phase-value" id="r-phase-va">0VA</div>
+                            </div>
+                            <div class="phase-status phase-t">
+                                <h5>T相VA</h5>
+                                <div class="phase-value" id="t-phase-va">0VA</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 発電カードは動的に追加/削除されます -->
+                </div>
+                
+                <!-- 計算ロジック表示 -->
+                <div class="calculation-logic" id="calculation-details">
+                    <h4>
+                        計算ロジック詳細表示
+                        <button id="expand-logic" class="btn btn-secondary btn-sm">
+                            詳細表示
+                        </button>
+                    </h4>
+                    
+                    <div id="calculation-display">
+                        <div class="calculation-section">
+                            <div class="calculation-detail"><strong>相別負荷計算：</strong></div>
+                            <div class="calculation-detail">R相負荷: <span id="r-phase-load-display">0VA</span></div>
+                            <div class="calculation-detail">T相負荷: <span id="t-phase-load-display">0VA</span></div>
+                            <div class="calculation-detail"><em>※200V負荷は両相に均等に分配されます</em></div>
+                        </div>
+                        
+                        <div class="calculation-section">
+                            <div class="calculation-detail"><strong>不平衡率計算：</strong></div>
+                            <div class="calculation-detail formula">
+                                不平衡率 = |R相負荷 - T相負荷| ÷ ((R相負荷 + T相負荷) ÷ 2) × 100%
+                            </div>
+                            <div class="calculation-detail" id="imbalance-calc">-</div>
+                        </div>
+                        
+                        <div class="calculation-section">
+                            <div class="calculation-detail"><strong>主幹容量計算：</strong></div>
+                            <div class="calculation-detail formula">
+                                必要電流 = 総VA × 需要率 ÷ 200V
+                            </div>
+                            <div class="calculation-detail" id="main-calc">-</div>
+                            <div class="calculation-detail" id="generation-effect-calc" style="display: none;">
+                                <strong>発電設備影響：</strong> <span id="generation-effect-value">-</span>
+                            </div>
+                        </div>
+                        
+                        <div class="calculation-section">
+                            <div class="calculation-detail"><strong>幹線径選定計算：</strong></div>
+                            <div class="calculation-detail formula">
+                                必要許容電流 = 必要電流 ÷ 安全率
+                            </div>
+                            <div class="calculation-detail" id="cable-calc-formula">-</div>
+                            <div class="calculation-detail" id="cable-calc-result">推奨: -</div>
+                        </div>
+                        
+                        <div id="expanded-logic" style="display: none;">
+                            <div class="calculation-section">
+                                <div class="calculation-detail"><strong>詳細計算手順：</strong></div>
+                                <div class="calculation-detail">
+                                    1. 各回路の負荷(VA)を計算<br>
+                                    VA = W ÷ 力率
+                                </div>
+                                <div class="calculation-detail">
+                                    2. 相別の負荷を集計<br>
+                                    - 100V回路はR/T相それぞれに加算<br>
+                                    - 200V回路は両相に均等に分配
+                                </div>
+                                <div class="calculation-detail">
+                                    3. 不平衡率を計算<br>
+                                    - 両相の平均値を算出<br>
+                                    - 偏差率を計算して%表示
+                                </div>
+                                <div class="calculation-detail">
+                                    4. 需要率を適用して実負荷を算出</div>
+                                <div class="calculation-detail">
+                                    5. 発電容量がある場合はその影響を反映<br>
+                                    - 連系ブレーカーがある場合のみ発電力を考慮<br>
+                                    - 発電容量は消費電力を相殺（最小0まで）
+                                </div>
+                                <div class="calculation-detail">
+                                    6. 主幹ブレーカー容量を選定<br>
+                                    - 標準サイズ（30/40/50/60/75/100A）から選択
+                                </div>
+                                <div class="calculation-detail">
+                                    7. 同時使用率を加味して幹線径を計算<br>
+                                    - 安全率で除した値から適切なケーブルサイズを選定
+                                </div>
+                            </div>
+                            
+                            <div class="calculation-section">
+                                <div class="calculation-detail"><strong>計算で使用している係数：</strong></div>
+                                <div class="calculation-detail">
+                                    需要率: <span id="display-demand-factor">0.4</span>
+                                </div>
+                                <div class="calculation-detail">
+                                    力率: <span id="display-power-factor">1.0</span>
+                                </div>
+                                <div class="calculation-detail">
+                                    不平衡率基準: <span id="display-imbalance-limit">40%</span>
+                                </div>
+                                <div class="calculation-detail">
+                                    安全率: <span id="display-safety-factor">0.8</span>
+                                </div>
+                                <div class="calculation-detail">
+                                    同時使用率: <span id="display-simultaneity-factor">0.7</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 回路設定エリア -->
+            <div class="circuit-config-area">
+                <div class="tab-nav">
+                    <button class="active" onclick="switchTab('circuits')">回路設定</button>
+                    <button onclick="switchTab('system')">システム設定</button>
+                    <button onclick="switchTab('calculation')">容量計算</button>
+                    <button onclick="switchTab('explanation')">解説</button>
+                    <button onclick="switchTab('info')">使い方</button>
+                </div>
+
+                <!-- 回路設定タブ -->
+                <div id="circuits-tab" class="tab-content active">
+                    <h3>分岐回路設定</h3>
+                    
+                    <div class="button-group">
+                        <div class="input-group" style="width: 200px; margin: 0;">
+                            <label>分岐回路数</label>
+                            <select id="circuit-count" onchange="setCircuitCount(this.value)">
+                                <option value="4">4回路</option>
+                                <option value="6">6回路</option>
+                                <option value="8">8回路</option>
+                                <option value="10">10回路</option>
+                                <option value="12">12回路</option>
+                                <option value="14">14回路</option>
+                                <option value="16">16回路</option>
+                                <option value="18">18回路</option>
+                                <option value="20" selected>20回路</option>
+                                <option value="22">22回路</option>
+                                <option value="24">24回路</option>
+                                <option value="26">26回路</option>
+                                <option value="28">28回路</option>
+                                <option value="30">30回路</option>
+                                <option value="32">32回路</option>
+                                <option value="34">34回路</option>
+                                <option value="36">36回路</option>
+                                <option value="38">38回路</option>
+                                <option value="40">40回路</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <button class="btn btn-secondary" onclick="calculateAll()">
+                                <svg class="btn-icon" viewBox="0 0 24 24">
+                                    <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/>
+                                </svg>
+                                再計算
+                            </button>
+                            <button class="btn btn-danger" onclick="clearAll()">
+                                <svg class="btn-icon" viewBox="0 0 24 24">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </svg>
+                                全クリア
+                            </button>
+                            <button class="btn btn-success" onclick="exportToCSV()">
+                                <svg class="btn-icon" viewBox="0 0 24 24">
+                                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                                </svg>
+                                CSV出力
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <label style="margin-right: 10px; font-weight: bold;">プリセット：</label>
+                        <button class="btn btn-secondary" onclick="loadPreset('apartment')">集合住宅</button>
+                        <button class="btn btn-secondary" onclick="loadPreset('house')">戸建住宅</button>
+                        <button class="btn btn-secondary" onclick="loadPreset('allElectric')">オール電化</button>
+                        <button class="btn btn-secondary" onclick="loadPreset('ecoHouse')">エコ住宅</button>
+                    </div>
+                    
+                    <div class="circuit-table-container">
+                        <table class="circuit-table">
+                            <thead>
+                                <tr>
+                                    <th>番号</th>
+                                    <th>相</th>
+                                    <th>種類</th>
+                                    <th>名称</th>
+                                    <th>サイズ</th>
+                                    <th>電圧</th>
+                                    <th>負荷(W)</th>
+                                    <th>R相負荷(VA)</th>
+                                    <th>T相負荷(VA)</th>
+                                    <th>スペース</th>
+                                </tr>
+                            </thead>
+                            <tbody id="circuit-table-body">
+                                <!-- 動的に生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- システム設定タブ -->
+                <div id="system-tab" class="tab-content">
+                    <h3>システム設定</h3>
+                    
+                    <div class="control-container">
+                        <div class="control-item">
+                            <div class="input-group">
+                                <label>需要率</label>
+                                <select id="demand-factor">
+                                    <option value="0.3">0.3</option>
+                                    <option value="0.4" selected>0.4</option>
+                                    <option value="0.5">0.5</option>
+                                    <option value="0.6">0.6</option>
+                                    <option value="0.7">0.7</option>
+                                    <option value="0.8">0.8</option>
+                                    <option value="0.9">0.9</option>
+                                    <option value="1.0">1.0</option>
+                                </select>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>力率</label>
+                                <select id="power-factor">
+                                    <option value="0.8">0.8</option>
+                                    <option value="0.85">0.85</option>
+                                    <option value="0.9">0.9</option>
+                                    <option value="0.95">0.95</option>
+                                    <option value="1.0" selected>1.0</option>
+                                </select>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>不平衡率基準 (%)</label>
+                                <select id="imbalance-limit">
+                                    <option value="20">20%</option>
+                                    <option value="30">30%</option>
+                                    <option value="40" selected>40%</option>
+                                    <option value="50">50%</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="control-item">
+                            <div class="input-group generation-input">
+                                <label>
+                                    発電容量 (W)
+                                    <span class="tooltip">ℹ️
+                                        <span class="tooltiptext">太陽光発電などの発電設備容量。連系ブレーカーと連動します</span>
+                                    </span>
+                                </label>
+                                <input type="number" id="generation-capacity" value="0" min="0" max="100000">
+                                <span id="grid-tie-indicator" class="grid-tie-icon" style="display: none;">⚡</span>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>
+                                    同時使用率
+                                    <span class="tooltip">ℹ️
+                                        <span class="tooltiptext">全機器が同時に動作する確率</span>
+                                    </span>
+                                </label>
+                                <select id="simultaneity-factor">
+                                    <option value="0.5">0.5</option>
+                                    <option value="0.6">0.6</option>
+                                    <option value="0.7" selected>0.7</option>
+                                    <option value="0.8">0.8</option>
+                                    <option value="0.9">0.9</option>
+                                    <option value="1.0">1.0</option>
+                                </select>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>幹線径安全率</label>
+                                <select id="cable-safety-factor">
+                                    <option value="0.7">0.7</option>
+                                    <option value="0.8" selected>0.8</option>
+                                    <option value="0.9">0.9</option>
+                                    <option value="1.0">1.0</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>主幹ブレーカー容量</label>
+                            <select id="fixed-main-capacity">
+                                <option value="30">30A</option>
+                                <option value="40">40A</option>
+                                <option value="50">50A</option>
+                                <option value="60" selected>60A</option>
+                                <option value="75">75A</option>
+                                <option value="100">100A</option>
+                                <option value="0">自動計算</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>分電盤内の最低余裕回路数</label>
+                            <select id="min-spare-circuits">
+                                <option value="0">0</option>
+                                <option value="2" selected>2</option>
+                                <option value="4">4</option>
+                                <option value="6">6</option>
+                                <option value="8">8</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button class="btn" onclick="saveConfig()">
+                        <svg class="btn-icon" viewBox="0 0 24 24">
+                            <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+                        </svg>
+                        設定を保存
+                    </button>
+                </div>
+
+                <!-- 容量計算タブ -->
+                <div id="calculation-tab" class="tab-content">
+                    <h3>容量計算結果</h3>
+                    
+                    <div class="control-container">
+                        <div class="control-item">
+                            <div class="input-group">
+                                <label>R相負荷 (VA)</label>
+                                <input type="text" id="r-phase-load" readonly>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>T相負荷 (VA)</label>
+                                <input type="text" id="t-phase-load" readonly>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>R相電流 (A)</label>
+                                <input type="text" id="r-phase-ampere" readonly>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>T相電流 (A)</label>
+                                <input type="text" id="t-phase-ampere" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="control-item">
+                            <div class="input-group">
+                                <label>総負荷容量(需要率適用前)</label>
+                                <input type="text" id="total-load-before" readonly>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>総負荷容量(需要率適用後)</label>
+                                <input type="text" id="total-load-after" readonly>
+                            </div>
+                            
+                            <div class="input-group" id="generation-effect-group" style="display: none;">
+                                <label>発電による負荷軽減</label>
+                                <input type="text" id="generation-reduction" readonly style="background-color: #e8f5e9;">
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>推奨主幹容量</label>
+                                <input type="text" id="recommended-main" readonly>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>推奨幹線径</label>
+                                <input type="text" id="recommended-cable" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>不平衡率</label>
+                        <input type="text" id="imbalance-result" readonly>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>幹線径計算詳細</label>
+                        <textarea id="cable-calculation-detail" readonly style="height: 120px; width: 100%; padding: 10px; font-family: monospace; font-size: 13px;"></textarea>
+                    </div>
+                    
+                    <h4 style="margin-top: 30px; color: var(--primary-color);">推奨Panasonic製品</h4>
+                    <div class="input-group">
+                        <label>推奨分電盤品番</label>
+                        <input type="text" id="panasonic-model" readonly style="background-color: #e8f5e9;">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>製品タイプ</label>
+                        <input type="text" id="panasonic-type" readonly>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
+                        <p style="margin: 0 0 10px 0; font-weight: bold;">Panasonic商品リンク：</p>
+                        <a id="panasonic-link" href="#" target="_blank" style="color: var(--primary-color); text-decoration: underline;">
+                            商品詳細ページはこちら
+                        </a>
+                        <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">
+                            ※実際の選定は電気工事士にご相談ください
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 解説タブ -->
+                <div id="explanation-tab" class="tab-content">
+                    <h3>分電盤設計の技術解説</h3>
+                    
+                    <!-- 電気の基礎知識 -->
+                    <div class="explanation-section" id="basic-knowledge">
+                        <h3 onclick="toggleSection('basic-knowledge')">電気の基礎知識</h3>
+                        <div class="explanation-content">
+                            <h4>単相3線式配電方式</h4>
+                            <div class="explanation-diagram">
+                                <svg viewBox="0 0 600 300" style="max-width: 600px;">
+                                    <!-- 電源側 -->
+                                    <text x="50" y="30" font-size="16" font-weight="bold">電源側（電力会社）</text>
+                                    
+                                    <!-- トランス -->
+                                    <rect x="50" y="50" width="100" height="200" fill="#e0e0e0" stroke="#333" stroke-width="2" rx="5"/>
+                                    <text x="100" y="150" text-anchor="middle" font-size="14">変圧器</text>
+                                    
+                                    <!-- 配線 -->
+                                    <line x1="150" y1="80" x2="450" y2="80" stroke="#ff0000" stroke-width="3"/>
+                                    <text x="480" y="85" font-size="14" fill="#ff0000">R相（赤）</text>
+                                    
+                                    <line x1="150" y1="150" x2="450" y2="150" stroke="#888888" stroke-width="3"/>
+                                    <text x="480" y="155" font-size="14" fill="#888888">N相（白）</text>
+                                    
+                                    <line x1="150" y1="220" x2="450" y2="220" stroke="#000000" stroke-width="3"/>
+                                    <text x="480" y="225" font-size="14" fill="#000000">T相（黒）</text>
+                                    
+                                    <!-- 電圧表示 -->
+                                    <path d="M 250 80 L 250 150" stroke="#005BAB" stroke-width="2" fill="none" marker-end="url(#arrowhead)" marker-start="url(#arrowhead)"/>
+                                    <text x="260" y="120" font-size="14" fill="#005BAB">100V</text>
+                                    
+                                    <path d="M 350 150 L 350 220" stroke="#005BAB" stroke-width="2" fill="none" marker-end="url(#arrowhead)" marker-start="url(#arrowhead)"/>
+                                    <text x="360" y="190" font-size="14" fill="#005BAB">100V</text>
+                                    
+                                    <path d="M 300 80 L 300 220" stroke="#FF961C" stroke-width="2" fill="none" marker-end="url(#arrowhead)" marker-start="url(#arrowhead)"/>
+                                    <text x="310" y="150" font-size="14" fill="#FF961C">200V</text>
+                                    
+                                    <!-- 矢印マーカー定義 -->
+                                    <defs>
+                                        <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                                         refX="0" refY="3.5" orient="auto">
+                                            <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+                                        </marker>
+                                    </defs>
+                                </svg>
+                            </div>
+                            
+                            <p>単相3線式は、日本の一般家庭で最も広く使われている配電方式です。2本の電圧線（R相・T相）と1本の中性線（N相）の合計3本の電線で構成されています。</p>
+                            
+                            <div class="highlight-box">
+                                <h4>単相3線式のメリット</h4>
+                                <ul>
+                                    <li>100Vと200Vの両方が使える</li>
+                                    <li>電力損失が少ない（単相2線式の1/4）</li>
+                                    <li>電線を太くする必要がない</li>
+                                    <li>40A以上の契約で標準採用</li>
+                                </ul>
+                            </div>
+                            
+                            <h4>電流・電圧・電力の関係</h4>
+                            <div class="formula-box">
+                                電力（W） = 電圧（V） × 電流（A） × 力率<br>
+                                皮相電力（VA） = 電圧（V） × 電流（A）<br>
+                                力率 = 有効電力（W） ÷ 皮相電力（VA）
+                            </div>
+                            
+                            <div class="term-list">
+                                <div class="term-item">
+                                    <strong>W（ワット）</strong>
+                                    実際に消費される電力。電気料金の計算基準。
+                                </div>
+                                <div class="term-item">
+                                    <strong>VA（ボルトアンペア）</strong>
+                                    皮相電力。ブレーカーや配線の容量計算に使用。
+                                </div>
+                                <div class="term-item">
+                                    <strong>力率</strong>
+                                    電力の利用効率。一般家庭では0.95〜1.0程度。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ブレーカーの種類と選定 -->
+                    <div class="explanation-section collapsed" id="breaker-types">
+                        <h3 onclick="toggleSection('breaker-types')">ブレーカーの種類と選定方法</h3>
+                        <div class="explanation-content">
+                            <h4>ブレーカーの記号の意味</h4>
+                            <table class="explanation-table">
+                                <thead>
+                                    <tr>
+                                        <th>記号</th>
+                                        <th>名称</th>
+                                        <th>用途</th>
+                                        <th>特徴</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>2P1E</strong></td>
+                                        <td>2極1素子</td>
+                                        <td>100V回路用</td>
+                                        <td>片側（L側）のみに過電流検出素子<br>中性線側には素子なし</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>2P2E</strong></td>
+                                        <td>2極2素子</td>
+                                        <td>200V回路用</td>
+                                        <td>両側に過電流検出素子<br>200V機器の保護に必須</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>3P2E</strong></td>
+                                        <td>3極2素子</td>
+                                        <td>単相3線式主幹用</td>
+                                        <td>中性線欠相保護機能付き<br>R相・T相の両方を監視</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <div class="highlight-box">
+                                <h4>2P1Eブレーカーの極性について</h4>
+                                <p>2P1Eブレーカーでは、必ず電圧側（Live）に素子のある側を接続し、中性線側（N）に素子のない側を接続する必要があります。これを間違えると、地絡時に遮断されない危険があります。</p>
+                            </div>
+                            
+                            <h4>特殊ブレーカーの種類</h4>
+                            <div class="term-list">
+                                <div class="term-item">
+                                    <strong>漏電ブレーカー（ELB）</strong>
+                                    漏電を検知して自動遮断。感電や火災を防止。中性線欠相保護機能付きを推奨。
+                                </div>
+                                <div class="term-item">
+                                    <strong>感震ブレーカー</strong>
+                                    震度5強以上の揺れを感知して自動遮断。地震時の電気火災を防止。
+                                </div>
+                                <div class="term-item">
+                                    <strong>連系ブレーカー</strong>
+                                    太陽光発電などの分散電源を系統に接続。逆潮流の制御と保護。
+                                </div>
+                            </div>
+                            
+                            <h4>ブレーカー容量の選定基準</h4>
+                            <div class="formula-box">
+                                必要ブレーカー容量 = 負荷電流 × 1.25（安全率）<br>
+                                <br>
+                                例：1500Wの電子レンジ（100V）の場合<br>
+                                電流 = 1500W ÷ 100V = 15A<br>
+                                必要容量 = 15A × 1.25 = 18.75A → 20Aブレーカー選定
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 負荷計算の理論 -->
+                    <div class="explanation-section collapsed" id="load-calculation">
+                        <h3 onclick="toggleSection('load-calculation')">負荷計算の理論と実践</h3>
+                        <div class="explanation-content">
+                            <h4>不平衡率とは</h4>
+                            <p>単相3線式では、R相とT相の負荷をできるだけ均等にすることが重要です。不平衡率は、両相の負荷の偏りを表す指標です。</p>
+                            
+                            <div class="formula-box">
+                                不平衡率（%） = |R相負荷 - T相負荷| ÷ 平均負荷 × 100<br>
+                                <br>
+                                平均負荷 = (R相負荷 + T相負荷) ÷ 2
+                            </div>
+                            
+                            <div class="highlight-box">
+                                <h4>不平衡率の基準値</h4>
+                                <ul>
+                                    <li><strong>20%以下</strong>：理想的な状態</li>
+                                    <li><strong>40%以下</strong>：一般的な許容範囲</li>
+                                    <li><strong>40%超</strong>：改善が必要</li>
+                                </ul>
+                            </div>
+                            
+                            <h4>各種係数の意味</h4>
+                            <table class="explanation-table">
+                                <thead>
+                                    <tr>
+                                        <th>係数名</th>
+                                        <th>一般的な値</th>
+                                        <th>意味</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>需要率</strong></td>
+                                        <td>0.4〜0.5</td>
+                                        <td>最大負荷に対する平均使用率<br>全ての機器が同時に最大電力で動作することはない</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>力率</strong></td>
+                                        <td>0.95〜1.0</td>
+                                        <td>有効電力と皮相電力の比<br>一般家庭では1.0に近い</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>同時使用率</strong></td>
+                                        <td>0.6〜0.8</td>
+                                        <td>複数の機器が同時に使用される確率<br>生活パターンにより変動</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <div class="interactive-demo">
+                                <h4>インタラクティブ計算デモ</h4>
+                                <div class="demo-controls">
+                                    <div class="demo-control">
+                                        <label>R相負荷 (VA)</label>
+                                        <input type="number" id="demo-r-load" value="3000" min="0" max="10000" onchange="updateLoadDemo()">
+                                    </div>
+                                    <div class="demo-control">
+                                        <label>T相負荷 (VA)</label>
+                                        <input type="number" id="demo-t-load" value="3500" min="0" max="10000" onchange="updateLoadDemo()">
+                                    </div>
+                                    <div class="demo-control">
+                                        <label>需要率</label>
+                                        <select id="demo-demand" onchange="updateLoadDemo()">
+                                            <option value="0.3">0.3</option>
+                                            <option value="0.4" selected>0.4</option>
+                                            <option value="0.5">0.5</option>
+                                            <option value="0.6">0.6</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="demo-result" id="demo-result">
+                                    計算結果がここに表示されます
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 幹線径選定 -->
+                    <div class="explanation-section collapsed" id="cable-selection">
+                        <h3 onclick="toggleSection('cable-selection')">幹線径選定の実践</h3>
+                        <div class="explanation-content">
+                            <h4>CVTケーブルとは</h4>
+                            <p>CVTケーブルは、架橋ポリエチレン絶縁ビニルシースケーブルのトリプレックス型です。住宅の引込線や幹線として広く使用されています。</p>
+                            
+                            <h4>CVTケーブルの許容電流表</h4>
+                            <table class="explanation-table">
+                                <thead>
+                                    <tr>
+                                        <th>公称断面積</th>
+                                        <th>許容電流（気中）</th>
+                                        <th>適用主幹容量の目安</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>8sq</td>
+                                        <td>42A</td>
+                                        <td>30A契約</td>
+                                    </tr>
+                                    <tr>
+                                        <td>14sq</td>
+                                        <td>61A</td>
+                                        <td>40〜50A契約</td>
+                                    </tr>
+                                    <tr>
+                                        <td>22sq</td>
+                                        <td>82A</td>
+                                        <td>60A契約</td>
+                                    </tr>
+                                    <tr>
+                                        <td>38sq</td>
+                                        <td>110A</td>
+                                        <td>75A契約</td>
+                                    </tr>
+                                    <tr>
+                                        <td>60sq</td>
+                                        <td>142A</td>
+                                        <td>100A契約</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <div class="formula-box">
+                                幹線径選定の計算式：<br>
+                                必要許容電流 = 主幹電流 ÷ 安全率<br>
+                                <br>
+                                例：60A主幹の場合（安全率0.8）<br>
+                                必要許容電流 = 60A ÷ 0.8 = 75A<br>
+                                → CVT 22sq（許容電流82A）を選定
+                            </div>
+                            
+                            <div class="highlight-box">
+                                <h4>電圧降下の検討</h4>
+                                <p>幹線長が30mを超える場合は、許容電流だけでなく電圧降下も検討が必要です。一般的に電圧降下は2%以内に抑えます。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 安全と法規制 -->
+                    <div class="explanation-section collapsed" id="safety-regulations">
+                        <h3 onclick="toggleSection('safety-regulations')">安全上の注意と法規制</h3>
+                        <div class="explanation-content">
+                            <h4>中性線欠相の危険性</h4>
+                            <p>単相3線式で最も危険な故障が中性線欠相です。中性線が切れると、100V回路に最大200Vがかかる可能性があります。</p>
+                            
+                            <div class="explanation-diagram">
+                                <svg viewBox="0 0 600 250" style="max-width: 600px;">
+                                    <!-- 正常時 -->
+                                    <text x="50" y="30" font-size="14" font-weight="bold">正常時</text>
+                                    <line x1="50" y1="50" x2="200" y2="50" stroke="#ff0000" stroke-width="2"/>
+                                    <line x1="50" y1="100" x2="200" y2="100" stroke="#888888" stroke-width="2"/>
+                                    <line x1="50" y1="150" x2="200" y2="150" stroke="#000000" stroke-width="2"/>
+                                    <rect x="200" y="40" width="60" height="30" fill="#e0e0e0" stroke="#333"/>
+                                    <text x="230" y="60" text-anchor="middle" font-size="12">100V</text>
+                                    <rect x="200" y="130" width="60" height="30" fill="#e0e0e0" stroke="#333"/>
+                                    <text x="230" y="150" text-anchor="middle" font-size="12">100V</text>
+                                    
+                                    <!-- 欠相時 -->
+                                    <text x="350" y="30" font-size="14" font-weight="bold">中性線欠相時</text>
+                                    <line x1="350" y1="50" x2="500" y2="50" stroke="#ff0000" stroke-width="2"/>
+                                    <line x1="350" y1="100" x2="420" y2="100" stroke="#888888" stroke-width="2" stroke-dasharray="5,5"/>
+                                    <text x="430" y="105" font-size="12" fill="red">×断線</text>
+                                    <line x1="350" y1="150" x2="500" y2="150" stroke="#000000" stroke-width="2"/>
+                                    <rect x="500" y="40" width="60" height="30" fill="#ffcccc" stroke="#ff0000" stroke-width="2"/>
+                                    <text x="530" y="60" text-anchor="middle" font-size="12" fill="red">異常電圧!</text>
+                                    <rect x="500" y="130" width="60" height="30" fill="#ffcccc" stroke="#ff0000" stroke-width="2"/>
+                                    <text x="530" y="150" text-anchor="middle" font-size="12" fill="red">異常電圧!</text>
+                                </svg>
+                            </div>
+                            
+                            <div class="highlight-box">
+                                <h4>中性線欠相保護の重要性</h4>
+                                <ul>
+                                    <li>主幹漏電ブレーカーは必ず「中性線欠相保護機能付き」を選定</li>
+                                    <li>中性線には絶対にヒューズやブレーカーを入れない</li>
+                                    <li>定期的な絶縁抵抗測定の実施を推奨</li>
+                                </ul>
+                            </div>
+                            
+                            <h4>電気設備に関する主な法規制</h4>
+                            <table class="explanation-table">
+                                <thead>
+                                    <tr>
+                                        <th>法規・基準</th>
+                                        <th>主な内容</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>電気事業法</strong></td>
+                                        <td>電気工作物の保安に関する基本法</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>電気設備技術基準</strong></td>
+                                        <td>電気設備の技術的要件を規定</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>内線規程</strong></td>
+                                        <td>屋内配線の施工基準（JEAC 8001）</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>電気用品安全法</strong></td>
+                                        <td>PSEマーク表示義務</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <h4>地域による違い</h4>
+                            <div class="term-list">
+                                <div class="term-item">
+                                    <strong>東日本（50Hz地域）</strong>
+                                    北海道・東北・関東の電力会社管内
+                                </div>
+                                <div class="term-item">
+                                    <strong>西日本（60Hz地域）</strong>
+                                    中部・北陸・関西・中国・四国・九州・沖縄の電力会社管内
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 発電設備との連系 -->
+                    <div class="explanation-section collapsed" id="grid-connection">
+                        <h3 onclick="toggleSection('grid-connection')">発電設備との連系</h3>
+                        <div class="explanation-content">
+                            <h4>太陽光発電システムの連系</h4>
+                            <p>住宅用太陽光発電システムを電力系統に接続する場合、安全な連系のための様々な保護機能が必要です。</p>
+                            
+                            <div class="highlight-box">
+                                <h4>連系に必要な保護機能</h4>
+                                <ul>
+                                    <li><strong>系統連系保護装置</strong>：異常時に系統から切り離す</li>
+                                    <li><strong>逆潮流防止機能</strong>：売電しない場合に必要</li>
+                                    <li><strong>単独運転防止機能</strong>：停電時の感電事故防止</li>
+                                    <li><strong>過電圧・不足電圧保護</strong>：系統の電圧異常を検出</li>
+                                </ul>
+                            </div>
+                            
+                            <h4>連系ブレーカーの役割</h4>
+                            <p>連系ブレーカーは、パワーコンディショナーと分電盤を接続する専用のブレーカーです。通常の分岐ブレーカーとは異なり、逆方向（発電側から系統側）への電流も考慮した設計になっています。</p>
+                            
+                            <div class="formula-box">
+                                連系ブレーカー容量の選定：<br>
+                                必要容量 = パワコン定格出力 ÷ 系統電圧 × 1.1<br>
+                                <br>
+                                例：4.0kWシステムの場合<br>
+                                必要容量 = 4000W ÷ 200V × 1.1 = 22A<br>
+                                → 30Aブレーカーを選定
+                            </div>
+                            
+                            <h4>主幹容量への影響</h4>
+                            <p>太陽光発電を設置すると、発電分だけ電力会社からの買電が減るため、実質的な主幹負荷が軽減されます。ただし、夜間や雨天時は発電しないため、主幹容量の削減はできません。</p>
+                        </div>
+                    </div>
+                    
+                    <!-- よくある質問 -->
+                    <div class="explanation-section collapsed" id="faq-section">
+                        <h3 onclick="toggleSection('faq-section')">よくある質問（FAQ）</h3>
+                        <div class="explanation-content">
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFAQ(this)">
+                                    Q: 100Vと200Vはどう使い分ければいいですか？
+                                </div>
+                                <div class="faq-answer">
+                                    <p>一般的に以下のような使い分けをします：</p>
+                                    <ul>
+                                        <li><strong>100V</strong>：照明、テレビ、冷蔵庫、洗濯機など一般的な家電</li>
+                                        <li><strong>200V</strong>：エアコン、IHクッキングヒーター、エコキュート、電気自動車充電器など大容量機器</li>
+                                    </ul>
+                                    <p>200Vの方が同じ電力でも電流が半分になるため、配線を細くでき、電力損失も少なくなります。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFAQ(this)">
+                                    Q: ブレーカーがよく落ちるのですが、どうすればいいですか？
+                                </div>
+                                <div class="faq-answer">
+                                    <p>ブレーカーが落ちる原因と対策：</p>
+                                    <ul>
+                                        <li><strong>主幹ブレーカーが落ちる</strong>：契約アンペアの見直しが必要</li>
+                                        <li><strong>分岐ブレーカーが落ちる</strong>：その回路の負荷を分散させる</li>
+                                        <li><strong>漏電ブレーカーが落ちる</strong>：漏電の可能性があるため、電気工事士に点検を依頼</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFAQ(this)">
+                                    Q: 分電盤の交換時期はいつですか？
+                                </div>
+                                <div class="faq-answer">
+                                    <p>一般的に分電盤の寿命は13〜15年程度とされています。以下の症状がある場合は交換を検討してください：</p>
+                                    <ul>
+                                        <li>ブレーカーの動作が不安定</li>
+                                        <li>焦げ臭いにおいがする</li>
+                                        <li>ブレーカーや端子部が変色している</li>
+                                        <li>設置から15年以上経過している</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFAQ(this)">
+                                    Q: 感震ブレーカーは必要ですか？
+                                </div>
+                                <div class="faq-answer">
+                                    <p>地震時の電気火災は、地震による火災の約6割を占めています。特に以下の場合は設置を推奨します：</p>
+                                    <ul>
+                                        <li>木造密集地域にお住まいの方</li>
+                                        <li>築年数の古い住宅</li>
+                                        <li>一人暮らしや高齢者世帯</li>
+                                    </ul>
+                                    <p>自治体によっては補助金制度もありますので、確認してみてください。</p>
+                                </div>
+                            </div>
+                            
+                            <div class="faq-item">
+                                <div class="faq-question" onclick="toggleFAQ(this)">
+                                    Q: 電気工事は自分でできますか？
+                                </div>
+                                <div class="faq-answer">
+                                    <p>電気工事士法により、以下の作業は電気工事士の資格が必要です：</p>
+                                    <ul>
+                                        <li>分電盤内の配線工事</li>
+                                        <li>コンセントの増設・移設</li>
+                                        <li>ブレーカーの交換</li>
+                                        <li>電線の接続作業</li>
+                                    </ul>
+                                    <p>無資格での電気工事は法律違反となり、火災や感電の危険もあるため、必ず有資格者に依頼してください。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 用語集 -->
+                    <div class="explanation-section collapsed" id="glossary">
+                        <h3 onclick="toggleSection('glossary')">用語集</h3>
+                        <div class="explanation-content">
+                            <div class="term-list">
+                                <div class="term-item">
+                                    <strong>アンペア（A）</strong>
+                                    電流の単位。電気の流れる量を表す。
+                                </div>
+                                <div class="term-item">
+                                    <strong>ボルト（V）</strong>
+                                    電圧の単位。電気を押し出す力を表す。
+                                </div>
+                                <div class="term-item">
+                                    <strong>ワット（W）</strong>
+                                    電力の単位。実際に消費される電気の量。
+                                </div>
+                                <div class="term-item">
+                                    <strong>主幹ブレーカー（MLB）</strong>
+                                    Main Line Breaker。住宅全体の電気を制御する大元のブレーカー。
+                                </div>
+                                <div class="term-item">
+                                    <strong>分岐ブレーカー</strong>
+                                    主幹から各回路へ電気を分配する個別のブレーカー。
+                                </div>
+                                <div class="term-item">
+                                    <strong>CVTケーブル</strong>
+                                    架橋ポリエチレン絶縁ビニルシースケーブルトリプレックス。住宅の幹線に使用。
+                                </div>
+                                <div class="term-item">
+                                    <strong>需要率</strong>
+                                    設備容量に対する実際の使用率。通常0.4〜0.5程度。
+                                </div>
+                                <div class="term-item">
+                                    <strong>力率</strong>
+                                    有効電力と皮相電力の比。電力の利用効率を表す。
+                                </div>
+                                <div class="term-item">
+                                    <strong>不平衡率</strong>
+                                    単相3線式におけるR相とT相の負荷の偏り具合。
+                                </div>
+                                <div class="term-item">
+                                    <strong>皮相電力（VA）</strong>
+                                    見かけの電力。ブレーカーや配線の容量計算に使用。
+                                </div>
+                                <div class="term-item">
+                                    <strong>中性線欠相</strong>
+                                    単相3線式で中性線が切れる故障。100V回路に異常電圧が発生する危険な状態。
+                                </div>
+                                <div class="term-item">
+                                    <strong>逆潮流</strong>
+                                    太陽光発電などから電力系統へ電気が流れること。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 使い方タブ -->
+                <div id="info-tab" class="tab-content">
+                    <h3>シミュレーターの使い方</h3>
+                    
+                    <div style="margin-bottom: 20px; padding: 15px; background-color: #f0f8ff; border-radius: 8px;">
+                        <h4 style="color: var(--primary-color); margin-bottom: 10px;">基本操作</h4>
+                        <ul style="padding-left: 20px; line-height: 1.6;">
+                            <li>左側に表示される分電盤の各ブレーカーはクリックでON/OFF切り替えができます</li>
+                            <li>右側の表で回路の種類や負荷を設定できます</li>
+                            <li>表示が見づらい場合は上部のズームボタンで拡大/縮小できます</li>
+                            <li>計算結果をCSVで出力することもできます</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- 新機能：発電設備連携についての説明 -->
+                    <div style="margin-bottom: 20px; padding: 15px; background-color: #e0f7fa; border-radius: 8px;">
+                        <h4 style="color: #00838f; margin-bottom: 10px;">発電設備連携について</h4>
+                        <ul style="padding-left: 20px; line-height: 1.6;">
+                            <li><strong>発電容量設定</strong>: システム設定タブで太陽光発電などの発電容量を設定できます</li>
+                            <li><strong>連系ブレーカー</strong>: 発電設備を連系する場合は「連系」タイプのブレーカーを設定してください</li>
+                            <li><strong>自動連動機能</strong>: 連系ブレーカーを追加すると発電容量の設定が促されます（逆も同様）</li>
+                            <li><strong>逆潮流計算</strong>: 発電量が消費量を上回る場合、逆潮流として計算されます</li>
+                            <li><strong>主幹容量への影響</strong>: 発電設備がある場合、その容量を考慮して主幹容量が計算されます</li>
+                            <li><strong>相バランス</strong>: 発電設備は両相に均等に接続されるため、不平衡率計算には影響しません</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; padding: 15px; background-color: #fff3e0; border-radius: 8px;">
+                        <h4 style="color: var(--accent-color); margin-bottom: 10px;">機能の説明</h4>
+                        <ul style="padding-left: 20px; line-height: 1.6;">
+                            <li><strong>漏電遮断機能付きブレーカー</strong>: 種類から「漏電」を選択すると設定できます</li>
+                            <li><strong>2スペース消費ブレーカー</strong>: 大容量の回路向けに2スペース分の幅を持つブレーカーを設定できます</li>
+                            <li><strong>相ごとの負荷表示</strong>: R相/T相それぞれの負荷がリアルタイムで計算・表示されます</li>
+                            <li><strong>計算ロジックの詳細表示</strong>: 計算の過程が詳しく表示されるようになりました</li>
+                            <li><strong>発電容量の視覚化</strong>: 発電設備が設定されると、その影響がグラフィカルに表示されます</li>
+                            <li><strong>レスポンシブ表示</strong>: 画面サイズによって最適な表示に自動調整されます</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; padding: 15px; background-color: #e8f5e9; border-radius: 8px;">
+                        <h4 style="color: var(--green-color); margin-bottom: 10px;">計算ロジックについて</h4>
+                        <ul style="padding-left: 20px; line-height: 1.6;">
+                            <li><strong>不平衡率</strong>: R相とT相の負荷差を平均値で割った百分率で、40%以下が推奨です</li>
+                            <li><strong>VA計算</strong>: 各機器のW数を力率で割ってVA値を算出します</li>
+                            <li><strong>需要率</strong>: 全負荷に対して実際に同時使用される割合です（デフォルト0.4）</li>
+                            <li><strong>発電量の影響</strong>: 発電容量は需要率適用後の負荷から差し引かれます</li>
+                            <li><strong>主幹容量計算</strong>: 総VA値に需要率を掛けて発電量を考慮し、200Vで割った値から標準サイズを選定します</li>
+                            <li><strong>幹線径選定</strong>: 必要電流を安全率で割った値から適切なケーブルサイズを選定します</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="padding: 15px; background-color: #ffebee; border-radius: 8px;">
+                        <h4 style="color: var(--red-color); margin-bottom: 10px;">注意事項</h4>
+                        <ul style="padding-left: 20px; line-height: 1.6;">
+                            <li>本シミュレーターは参考値を示すものであり、実際の設計は専門家にご相談ください</li>
+                            <li>電気設備に関する法規・規格を遵守してください</li>
+                            <li>地域によって規制や基準が異なる場合がありますので、必ず確認してください</li>
+                            <li>発電設備の連系には電力会社との協議が必要です</li>
+                            <li>自己責任で使用し、結果については開発者は責任を負いかねます</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-top: 20px; text-align: center; font-size: 12px; color: #666;">
+                        住宅分電盤回路シミュレーター  v8.3
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 回路データ
+        let circuits = [];
+        let config = {
+            demandFactor: 0.4,
+            powerFactor: 1.0,
+            imbalanceLimit: 40,
+            generationCapacity: 0,
+            cableSafetyFactor: 0.8,
+            simultaneityFactor: 0.7,  // 同時使用率
+            fixedMainCapacity: 60,    // 強制的に設定する主幹容量（0=自動計算）
+            minSpareCircuits: 2       // 最低余裕回路数
+        };
+
+        // ズーム状態
+        let zoomLevel = 100;
+        let panelHeight = 550;
+        let detailsVisible = true;
+        
+        // CVTケーブル選定データ
+        const cvtCables = [
+            { size: '8sq', allowableCurrent: 42 },
+            { size: '14sq', allowableCurrent: 61 },
+            { size: '22sq', allowableCurrent: 82 },
+            { size: '38sq', allowableCurrent: 110 },
+            { size: '60sq', allowableCurrent: 142 },
+            { size: '100sq', allowableCurrent: 195 },
+            { size: '150sq', allowableCurrent: 250 },
+            { size: '200sq', allowableCurrent: 287 }
+        ];
+
+        // ブレーカータイプごとのデフォルト設定
+        const breakerDefaults = {
+            '2P1E': { current: 20, voltage: 100, load: 1500, color: '#5cb85c', spaces: 1 },
+            '2P2E': { current: 20, voltage: 200, load: 3000, color: '#5cb85c', spaces: 1 },
+            '漏電': { current: 30, voltage: 100, load: 1500, color: '#9c27b0', spaces: 2 },
+            '感震': { current: 30, voltage: 100, load: 0, color: '#e91e63', spaces: 1 },
+            '連系': { current: 30, voltage: 200, load: 0, color: '#2196f3', spaces: 2 },
+            '空き': { current: 0, voltage: 0, load: 0, color: '#f0f0f0', spaces: 1 }
+        };
+
+        // Panasonic品番データベース
+        const panasonicModels = {
+            'BQR': {
+                name: 'コスモパネル（ドア付）',
+                baseUrl: 'https://www2.panasonic.biz/scvb/a2A/simpleSearch.G02?target_category_kaiso=/CGS000003/CGS300011/CGS300048/CGS300303&s_end_flg=&sort_value=&s_hinban_key=&START_CNT=1',
+                models: {
+                    '30-4': 'BQR8344',
+                    '30-6': 'BQR8366',
+                    '30-8': 'BQR8384',
+                    '30-10': 'BQR83102',
+                    '30-12': 'BQR83124',
+                    '30-14': 'BQR83142',
+                    '30-16': 'BQR83162',
+                    '30-18': 'BQR83182',
+                    '30-20': 'BQR83202',
+                    '40-4': 'BQR8444',
+                    '40-6': 'BQR8462',
+                    '40-8': 'BQR8484',
+                    '40-10': 'BQR84102',
+                    '40-12': 'BQR84124',
+                    '40-14': 'BQR84142',
+                    '40-16': 'BQR84162',
+                    '40-18': 'BQR84182',
+                    '40-20': 'BQR84202',
+                    '50-4': 'BQR8544',
+                    '50-6': 'BQR8562',
+                    '50-8': 'BQR8584',
+                    '50-10': 'BQR85102',
+                    '50-12': 'BQR85124',
+                    '50-14': 'BQR85142',
+                    '50-16': 'BQR85162',
+                    '50-18': 'BQR85182',
+                    '50-20': 'BQR85202',
+                    '60-12': 'BQR86124',
+                    '60-14': 'BQR86142',
+                    '60-16': 'BQR86162',
+                    '60-18': 'BQR86182',
+                    '60-20': 'BQR86202',
+                    '60-22': 'BQR86222',
+                    '60-24': 'BQR86242',
+                    '60-26': 'BQR86262',
+                    '60-28': 'BQR86282',
+                    '60-30': 'BQR86302',
+                    '75-20': 'BQR87202',
+                    '75-22': 'BQR87222',
+                    '75-24': 'BQR87242',
+                    '75-26': 'BQR87262',
+                    '75-28': 'BQR87282',
+                    '75-30': 'BQR87302',
+                    '75-32': 'BQR87322',
+                    '100-20': 'BQR810202',
+                    '100-22': 'BQR810222',
+                    '100-24': 'BQR810242',
+                    '100-26': 'BQR810262',
+                    '100-28': 'BQR810282',
+                    '100-30': 'BQR810302',
+                    '100-32': 'BQR810322',
+                    '100-34': 'BQR810342',
+                    '100-36': 'BQR810362',
+                    '100-38': 'BQR810382',
+                    '100-40': 'BQR810402'
+                }
+            },
+            'BQWF': {
+                name: 'スマートコスモ（スマート分電盤）',
+                baseUrl: 'https://www2.panasonic.biz/scvb/a2A/simpleSearch.G02?target_category_kaiso=/CGS000003/CGS300011/CGS300048/CGS300303&s_end_flg=&sort_value=&s_hinban_key=&START_CNT=1',
+                models: {
+                    '50-12': 'BQWF85124',
+                    '50-14': 'BQWF85144',
+                    '50-16': 'BQWF85164',
+                    '50-18': 'BQWF85184',
+                    '60-12': 'BQWF86124',
+                    '60-14': 'BQWF86144',
+                    '60-16': 'BQWF86164',
+                    '60-18': 'BQWF86184'
+                }
+            }
+        };
+
+        // プリセット設定（更新版）
+        const presets = {
+            apartment: {
+                name: '集合住宅',
+                circuits: [
+                    { type: '2P1E', voltage: 100, load: 1000, name: 'リビング', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1000, name: '居室1', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1000, name: '居室2', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: 'キッチン', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 500, name: '浴室', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 750, name: '玄関・廊下', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 800, name: '洗面所', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 750, name: '浴室', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '電子レンジ', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: 'エアコン1', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: 'エアコン2', current: 20 },
+                    { type: '2P2E', voltage: 100, load: 1500, name: 'エアコン主', current: 20 }
+                ]
+            },
+            house: {
+                name: '戸建住宅',
+                circuits: [
+                    { type: '2P1E', voltage: 100, load: 1500, name: '玄関・廊下', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1400, name: 'リビング', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 800, name: 'ダイニング', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: 'キッチン', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1000, name: '主寝室', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 800, name: '子供部屋1', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 800, name: '子供部屋2', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1200, name: '洗面・浴室', current: 30 },
+                    { type: '2P1E', voltage: 100, load: 500, name: '暖房便座', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 500, name: '階段・廊下', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '駐車場', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '洗濯機', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '食洗機', current: 30 },
+                    { type: '2P1E', voltage: 100, load: 1200, name: '洗濯機', current: 30 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '電子レンジ', current: 20 },
+                    { type: '2P2E', voltage: 200, load: 4000, name: 'IHクッキングヒーター', current: 30 },
+                    { type: '2P2E', voltage: 200, load: 3000, name: 'エコキュート', current: 20 },
+                    { type: '2P2E', voltage: 200, load: 2500, name: 'ヒートポンプ床暖房', current: 20 },
+                    { type: '2P2E', voltage: 200, load: 2500, name: 'エアコンリビング', current: 20 },
+                    { type: '2P2E', voltage: 200, load: 3000, name: 'EV', current: 20 },
+                    { type: '連系', voltage: 200, load: 0, name: '太陽光連系用', current: 30 },
+                    { type: '感震', voltage: 100, load: 0, name: '感震ブレーカー', current: 30 }
+                ],
+                generationCapacity: 5000 // 太陽光発電容量を設定（5kW）
+            },
+            allElectric: {
+                name: 'オール電化住宅',
+                circuits: [
+                    { type: '2P1E', voltage: 100, load: 1400, name: 'リビング', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 700, name: 'ダイニング', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: 'キッチン', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1000, name: '主寝室', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 800, name: '子供部屋1', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 800, name: '子供部屋2', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1200, name: '洗濯機', current: 30 },
+                    { type: '2P1E', voltage: 100, load: 500, name: '暖房便座', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1000, name: '洗面所', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '玄関・廊下', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '階段・廊下', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '書斎', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '食洗機', current: 30 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '電子レンジ', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '浴室乾燥機', current: 30 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: 'エアコン主寝室', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: 'エアコン子供部屋1', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: 'エアコン子供部屋2', current: 20 },
+                    { type: '2P2E', voltage: 200, load: 4000, name: 'エコキュート', current: 20 },
+                    { type: '2P2E', voltage: 200, load: 3000, name: 'エアコンLDK', current: 20 },
+                    { type: '2P2E', voltage: 200, load: 4500, name: 'IHクッキングヒーター', current: 30 },
+                    { type: '2P2E', voltage: 200, load: 3000, name: 'EV', current: 20 }
+                ]
+            },
+            ecoHouse: {
+                name: '省エネ住宅',
+                circuits: [
+                    { type: '2P1E', voltage: 100, load: 1500, name: 'リビング', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 750, name: 'ダイニング', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: 'キッチン', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1000, name: '洗面所・浴室', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '玄関・廊下', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '階段・廊下', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1000, name: '主寝室', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 800, name: '子供部屋1', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 800, name: '子供部屋2', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: 'エアコン主寝室', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 500, name: '暖房便座', current: 20 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '浴室乾燥機', current: 30 },
+                    { type: '2P1E', voltage: 100, load: 1500, name: '食洗機', current: 30 }
+                ]
+            }
+        };
+
+        // 初期化
+        window.addEventListener('DOMContentLoaded', function() {
+            // UIコントロールの初期化
+            initUIControls();
+            
+            // 力率の設定を最初に確実に反映
+            const powerFactorElement = document.getElementById('power-factor');
+            if (powerFactorElement) {
+                config.powerFactor = parseFloat(powerFactorElement.value);
+            }
+            
+            // 需要率も同様に反映
+            const demandFactorElement = document.getElementById('demand-factor');
+            if (demandFactorElement) {
+                config.demandFactor = parseFloat(demandFactorElement.value);
+            }
+            
+            // 固定主幹容量の設定を反映
+            const fixedMainElement = document.getElementById('fixed-main-capacity');
+            if (fixedMainElement) {
+                config.fixedMainCapacity = parseInt(fixedMainElement.value);
+            }
+            
+            // 最低余裕回路数の設定を反映
+            const minSpareElement = document.getElementById('min-spare-circuits');
+            if (minSpareElement) {
+                config.minSpareCircuits = parseInt(minSpareElement.value);
+            }
+            
+            // 発電容量の変更イベントを登録
+            document.getElementById('generation-capacity').addEventListener('change', function() {
+                const newValue = parseInt(this.value) || 0;
+                if (newValue !== config.generationCapacity) {
+                    config.generationCapacity = newValue;
+                    
+                    // 発電容量が設定されたのに連系ブレーカーがない場合
+                    if (newValue > 0 && !hasGridTieBreaker()) {
+                        const addGridTie = confirm('発電容量を設定しました。連系ブレーカーを追加しますか？');
+                        if (addGridTie) {
+                            addGridTieBreaker();
+                        }
+                    }
+                    
+                    // 太陽光アイコンの表示制御
+                    updateSolarIconVisibility();
+                    
+                    // 発電容量が0になったら、発電カードを削除
+                    if (newValue === 0) {
+                        removeGenerationCard();
+                    }
+                    
+                    // 計算更新
+                    calculateAll();
+                }
+            });
+            
+            // 初期回路を20個作成
+            setCircuitCount(20);
+            initializeSVG();
+            renderCircuitTable();
+            calculateAll();
+            
+            // 主幹ブレーカーのクリックイベント
+            const mainBreaker = document.getElementById('main-breaker');
+            mainBreaker.addEventListener('click', function() {
+                toggleMainBreaker();
+            });
+            
+            // 設定表示の更新
+            updateConfigDisplay();
+            
+            // 連系ブレーカーと発電容量の連動を初期化
+            updateGridTieIndicator();
+            updateSolarIconVisibility();
+        });
+
+        // UIコントロールの初期化
+        function initUIControls() {
+            // ズームコントロール
+            document.getElementById('zoom-in').addEventListener('click', function() {
+                zoomLevel += 10;
+                updateZoom();
+            });
+            
+            document.getElementById('zoom-out').addEventListener('click', function() {
+                if (zoomLevel > 50) {
+                    zoomLevel -= 10;
+                    updateZoom();
+                }
+            });
+            
+            document.getElementById('zoom-reset').addEventListener('click', function() {
+                zoomLevel = 100;
+                updateZoom();
+            });
+            
+            // パネル拡大ボタン
+            document.getElementById('panel-expand').addEventListener('click', function() {
+                const button = document.getElementById('panel-expand');
+                const svgContainer = document.querySelector('.svg-container');
+                
+                if (panelHeight === 550) {
+                    panelHeight = 700;
+                    svgContainer.style.height = '700px';
+                    button.innerHTML = '<svg class="btn-icon" viewBox="0 0 24 24"><path d="M19 19h-6v-2h6v-6h2v6h6v2h-6v6h-2v-6zm-8-8h-6v-2h6V3h2v6h6v2h-6v6h-2v-6z"/></svg> 分電盤を縮小';
+                } else {
+                    panelHeight = 550;
+                    svgContainer.style.height = '550px';
+                    button.innerHTML = '<svg class="btn-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg> 分電盤を拡大';
+                }
+            });
+            
+            // 詳細表示切替ボタン
+            document.getElementById('collapse-details').addEventListener('click', function() {
+                const details = document.getElementById('calculation-details');
+                const button = document.getElementById('collapse-details');
+                
+                if (detailsVisible) {
+                    details.style.display = 'none';
+                    button.textContent = '詳細表示';
+                    detailsVisible = false;
+                } else {
+                    details.style.display = 'block';
+                    button.textContent = '詳細非表示';
+                    detailsVisible = true;
+                }
+            });
+            
+            // 詳細表示拡張ボタン
+            document.getElementById('expand-logic').addEventListener('click', function() {
+                const expandedLogic = document.getElementById('expanded-logic');
+                const button = document.getElementById('expand-logic');
+                
+                if (expandedLogic.style.display === 'none') {
+                    expandedLogic.style.display = 'block';
+                    button.textContent = '簡易表示';
+                } else {
+                    expandedLogic.style.display = 'none';
+                    button.textContent = '詳細表示';
+                }
+            });
+        }
+
+        // ズーム更新
+        function updateZoom() {
+            document.getElementById('zoom-level').textContent = zoomLevel + '%';
+            document.querySelector('.panel-svg').style.transform = `scale(${zoomLevel/100})`;
+            document.querySelector('.panel-svg').style.transformOrigin = 'center center';
+        }
+
+        // SVGの初期化
+        function initializeSVG() {
+            renderAllBreakers();
+        }
+
+        // 太陽光アイコンの表示制御
+        function updateSolarIconVisibility() {
+            const solarIcon = document.getElementById('solar-icon');
+            const hasGeneration = config.generationCapacity > 0;
+            const hasGridTie = hasGridTieBreaker();
+            
+            if (hasGeneration && hasGridTie) {
+                solarIcon.style.display = 'block';
+            } else {
+                solarIcon.style.display = 'none';
+            }
+        }
+
+        // 連系ブレーカーのステータス表示更新
+        function updateGridTieIndicator() {
+            const indicator = document.getElementById('grid-tie-indicator');
+            const input = document.getElementById('generation-capacity');
+            
+            if (hasGridTieBreaker()) {
+                indicator.style.display = 'block';
+                input.classList.add('generation-input-highlight');
+            } else {
+                indicator.style.display = 'none';
+                input.classList.remove('generation-input-highlight');
+            }
+        }
+
+        // 連系ブレーカーがあるかチェック
+        function hasGridTieBreaker() {
+            return circuits.some(c => c.breakerType === '連系');
+        }
+
+        // 連系ブレーカーを追加
+        function addGridTieBreaker() {
+            // 空きブレーカーを探す
+            const emptyIndex = circuits.findIndex(c => c.breakerType === '空き');
+            
+            if (emptyIndex >= 0) {
+                // 空きブレーカーを連系ブレーカーに変更
+                updateCircuit(emptyIndex, 'breakerType', '連系');
+                updateCircuit(emptyIndex, 'name', '太陽光連系用');
+            } else {
+                // 空きがなければ新しい回路を追加
+                const newCircuitIndex = circuits.length;
+                addDefaultCircuit(newCircuitIndex + 1);
+                updateCircuit(newCircuitIndex, 'breakerType', '連系');
+                updateCircuit(newCircuitIndex, 'name', '太陽光連系用');
+            }
+            
+            updateGridTieIndicator();
+            updateSolarIconVisibility();
+        }
+
+        // 発電カードの作成・更新
+        function updateGenerationCard(actualTotalLoad) {
+            // 発電容量が0の場合は表示しない
+            if (config.generationCapacity === 0 || !hasGridTieBreaker()) {
+                removeGenerationCard();
+                return;
+            }
+            
+            // 発電カードがまだない場合は作成
+            if (!document.getElementById('generation-card')) {
+                const statusCards = document.querySelector('.status-cards');
+                
+                const generationCard = document.createElement('div');
+                generationCard.id = 'generation-card';
+                generationCard.className = 'status-card generation';
+                generationCard.innerHTML = `
+                    <h4>
+                        発電・消費バランス
+                        <span class="tooltip">ℹ️
+                            <span class="tooltiptext">発電量と消費量の比較。逆潮流は電力会社へ送電される余剰電力</span>
+                        </span>
+                    </h4>
+                    <div class="status-value" id="generation-value">0W</div>
+                    <div class="capacity-bar">
+                        <div class="capacity-bar-fill" id="generation-bar" style="width: 0%; background-color: var(--solar-color);" data-value="0%"></div>
+                    </div>
+                    <div id="generation-status" style="margin-top: 10px; font-size: 14px; text-align: center;"></div>
+                `;
+                
+                statusCards.appendChild(generationCard);
+            }
+            
+            // カードを更新
+            document.getElementById('generation-value').textContent = `${config.generationCapacity}W`;
+            
+            // 発電量と消費量の比率
+            const generationRatio = Math.min(100, (config.generationCapacity / actualTotalLoad) * 100);
+            
+            // バー表示の更新
+            const generationBar = document.getElementById('generation-bar');
+            generationBar.style.width = `${generationRatio}%`;
+            generationBar.setAttribute('data-value', `${Math.round(generationRatio)}%`);
+            
+            // ステータスメッセージ
+            const generationStatus = document.getElementById('generation-status');
+            if (config.generationCapacity > actualTotalLoad) {
+                generationStatus.innerHTML = `<strong style="color:var(--solar-color)">逆潮流: ${Math.round(config.generationCapacity - actualTotalLoad)}W</strong><br>（発電量 > 消費量）`;
+            } else {
+                generationStatus.innerHTML = `<strong>通常給電: ${Math.round(actualTotalLoad - config.generationCapacity)}W</strong><br>（消費量 > 発電量）`;
+            }
+        }
+
+        // 発電カードの削除
+        function removeGenerationCard() {
+            const generationCard = document.getElementById('generation-card');
+            if (generationCard) {
+                generationCard.remove();
+            }
+        }
+
+        // SVGブレーカーをクリア
+        function clearSVGBreakers() {
+            document.getElementById('upper-breakers').innerHTML = '';
+            document.getElementById('lower-breakers').innerHTML = '';
+            document.getElementById('circuit-connections').innerHTML = '';
+        }
+
+        // すべてのブレーカーを描画（改良版）
+        function renderAllBreakers() {
+            const upperBreakers = document.getElementById('upper-breakers');
+            const lowerBreakers = document.getElementById('lower-breakers');
+            const connections = document.getElementById('circuit-connections');
+            const svg = document.getElementById('distribution-panel');
+            
+            // 既存のSVG要素をクリア
+            clearSVGBreakers();
+            
+            // 回路数と必要スペースの計算
+            const circuitCount = circuits.length;
+            let totalSpaces = 0;
+            
+            // 各回路の必要スペース数を計算
+            circuits.forEach(circuit => {
+                totalSpaces += breakerDefaults[circuit.breakerType]?.spaces || 1;
+            });
+            
+            // 回路数に応じてスケーリング
+            let breakerWidth = 50;
+            let spacing = 65;
+            let startX = 210;
+            
+            // 高スペース数の場合はスケーリングを適用
+            if (totalSpaces >= 24) {
+                const scaleFactor = Math.min(1, 24 / totalSpaces);
+                breakerWidth = Math.max(35, Math.round(50 * scaleFactor));
+                spacing = Math.max(45, Math.round(65 * scaleFactor));
+            }
+            
+            // 必要な幅を計算（スペース数を考慮）
+            const requiredWidth = startX + Math.ceil(totalSpaces / 2) * spacing + 100;
+            const viewBoxWidth = Math.max(800, requiredWidth);
+            
+            // SVGのviewBoxを動的に設定
+            svg.setAttribute('viewBox', `0 0 ${viewBoxWidth} 500`);
+            
+            // 配線バーの長さを調整
+            const totalWidth = startX + Math.ceil(totalSpaces / 2) * spacing + 50;
+            document.querySelectorAll('.wire').forEach(wire => {
+                wire.setAttribute('x2', totalWidth);
+            });
+            
+            // スペース配置のカウンタ
+            let upperSpaceCount = 0;
+            let lowerSpaceCount = 0;
+            
+            // 回路ごとの配置処理
+            circuits.forEach((circuit, index) => {
+                const isUpperRow = circuit.phase === 'R';
+                const spaceCount = isUpperRow ? upperSpaceCount : lowerSpaceCount;
+                const spaces = breakerDefaults[circuit.breakerType]?.spaces || 1;
+                
+                const x = startX + spaceCount * spacing;
+                const y = isUpperRow ? 100 : 320;
+                
+                // 2スペース用のブレーカーは特別処理
+                const isDoubleSpace = spaces === 2;
+                
+                const breaker = createBreaker(circuit, x, y, breakerWidth, isDoubleSpace);
+                (isUpperRow ? upperBreakers : lowerBreakers).appendChild(breaker);
+                
+                if (circuit.breakerType !== '空き') {
+                    const connection = createConnection(x + (isDoubleSpace ? breakerWidth : breakerWidth/2), y + (isUpperRow ? 80 : 0), isUpperRow ? 210 : 250, breakerWidth);
+                    connections.appendChild(connection);
+                }
+                
+                // スペースカウンターを更新
+                if (isUpperRow) {
+                    upperSpaceCount += spaces;
+                } else {
+                    lowerSpaceCount += spaces;
+                }
+            });
+        }
+        
+        // ブレーカー要素を作成（改良版）
+        function createBreaker(circuit, x, y, width, isDoubleSpace) {
+            const breaker = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            const breakerType = circuit.breakerType;
+            const isSpecial = ['感震', '連系', '漏電', '空き'].includes(breakerType);
+            const baseColor = breakerDefaults[breakerType]?.color || '#5cb85c';
+            
+            // クラス設定
+            let classNames = `breaker ${isSpecial ? breakerType : ''} ${circuit.enabled ? 'on' : 'off'} ${breakerType === '空き' ? 'space' : ''}`;
+            if (isDoubleSpace) classNames += ' double-space';
+            
+            breaker.setAttribute('class', classNames);
+            breaker.setAttribute('transform', `translate(${x}, ${y})`);
+            breaker.setAttribute('data-circuit', circuit.number);
+            
+            const fillColor = breakerType === '空き' ? '#f0f0f0' : (circuit.enabled ? baseColor : '#d32f2f');
+            const strokeDash = breakerType === '空き' ? 'stroke-dasharray="3 3"' : '';
+            
+            // 2スペース用幅調整
+            const actualWidth = isDoubleSpace ? width * 1.8 : width;
+            
+            // フォントサイズをブレーカー幅に応じて調整
+            const fontSize1 = width > 45 ? 12 : 10;
+            const fontSize2 = width > 45 ? 8 : 7;
+            
+            // 漏電ブレーカー用アイコン
+            const elcbIcon = isDoubleSpace ? `
+                <circle cx="${actualWidth/2}" cy="55" r="4" fill="white"/>
+                <path d="M${actualWidth/2 - 10} 55 L${actualWidth/2 + 10} 55 M${actualWidth/2} 45 L${actualWidth/2} 65" stroke="white" stroke-width="1.5"/>
+            ` : '';
+            
+            // 連系ブレーカー用アイコン
+            const gridTieIcon = breakerType === '連系' ? `
+                <path d="M${actualWidth/2 - 12} 40 L${actualWidth/2 + 12} 40 
+                         M${actualWidth/2 - 8} 30 L${actualWidth/2 - 8} 50 
+                         M${actualWidth/2 + 8} 30 L${actualWidth/2 + 8} 50" 
+                      stroke="white" stroke-width="1.5"/>
+                <circle cx="${actualWidth/2 - 8}" cy="30" r="3" fill="white"/>
+                <circle cx="${actualWidth/2 + 8}" cy="50" r="3" fill="white"/>
+            ` : '';
+            
+            const breakerHTML = `
+                <rect x="0" y="0" width="${actualWidth}" height="80" fill="${fillColor}" rx="4" ${strokeDash}/>
+                ${breakerType !== '空き' ? `
+                    <text x="${actualWidth/2}" y="25" text-anchor="middle" fill="white" font-size="${fontSize1}" font-weight="bold" id="capacity-${circuit.number}">${circuit.current}A</text>
+                    <text x="${actualWidth/2}" y="45" text-anchor="middle" fill="white" font-size="${fontSize2}" id="name-${circuit.number}">${isDoubleSpace ? circuit.name : circuit.name.substr(0, width > 45 ? 5 : 4)}</text>
+                    <text x="${actualWidth/2}" y="65" text-anchor="middle" fill="white" font-size="${fontSize2}" id="load-${circuit.number}">${circuit.loadW}W</text>
+                    <circle cx="${actualWidth/2}" cy="15" r="3" fill="white"/>
+                    ${elcbIcon}
+                    ${gridTieIcon}
+                ` : `
+                    <text x="${actualWidth/2}" y="45" text-anchor="middle" fill="#999" font-size="${width > 45 ? 10 : 8}">空き</text>
+                `}
+            `;
+            
+            breaker.innerHTML = breakerHTML;
+            if (breakerType !== '空き') {
+                breaker.addEventListener('click', function() { toggleBreaker(circuit.number); });
+            }
+            
+            return breaker;
+        }
+        
+        // 接続線を作成
+        function createConnection(x1, y1, y2, breakerWidth) {
+            const connection = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            connection.setAttribute('x1', x1);
+            connection.setAttribute('y1', y1);
+            connection.setAttribute('x2', x1);
+            connection.setAttribute('y2', y2);
+            connection.setAttribute('stroke', '#333');
+            connection.setAttribute('stroke-width', '2');
+            return connection;
+        }
+
+        // 回路数を設定（スペース計算を追加）
+        function setCircuitCount(count) {
+            count = parseInt(count);
+            const currentCount = circuits.length;
+            
+            if (count < currentCount) {
+                // 回路を削減
+                circuits = circuits.slice(0, count);
+            } else if (count > currentCount) {
+                // 回路を追加
+                for (let i = currentCount; i < count; i++) {
+                    addDefaultCircuit(i + 1);
+                }
+            }
+            
+            // 相の再割り当て（漏電ブレーカーのスペース考慮）
+            let rPhaseSpaces = 0;
+            let tPhaseSpaces = 0;
+            
+            circuits.forEach((circuit, i) => {
+                circuit.number = i + 1;
+                
+                // スペース数を取得
+                const spaces = breakerDefaults[circuit.breakerType]?.spaces || 1;
+                
+                // 負荷バランスを考慮して相を割り当て
+                if (rPhaseSpaces <= tPhaseSpaces) {
+                    circuit.phase = 'R';
+                    rPhaseSpaces += spaces;
+                } else {
+                    circuit.phase = 'T';
+                    tPhaseSpaces += spaces;
+                }
+            });
+            
+            // 全回路の相別負荷を更新
+            circuits.forEach(circuit => {
+                updateCircuitPhaseLoads(circuit);
+            });
+            
+            renderAllBreakers();
+            renderCircuitTable();
+            calculateAll();
+        }
+
+        // デフォルト回路追加（修正版）
+        function addDefaultCircuit(number) {
+            const circuit = {
+                number: number,
+                phase: number % 2 === 1 ? 'R' : 'T',
+                breakerType: '2P1E',
+                name: `回路${number}`,
+                current: 20,
+                voltage: 100,
+                loadW: 1500,
+                loadVA: 1500 / config.powerFactor,
+                enabled: true,
+                // R相とT相のVA負荷値を追加
+                rPhaseVA: 0,
+                tPhaseVA: 0
+            };
+            
+            // 初期相別VA負荷計算
+            updateCircuitPhaseLoads(circuit);
+            
+            circuits.push(circuit);
+        }
+
+        // 回路の相別VA負荷計算（新関数）
+        function updateCircuitPhaseLoads(circuit) {
+            if (circuit.breakerType === '空き' || circuit.loadW === 0) {
+                circuit.rPhaseVA = 0;
+                circuit.tPhaseVA = 0;
+                return;
+            }
+            
+            circuit.loadVA = circuit.loadW / config.powerFactor;
+            
+            if (circuit.voltage === 100) {
+                // 100V回路は該当相のみに負荷がかかる
+                if (circuit.phase === 'R') {
+                    circuit.rPhaseVA = circuit.loadVA;
+                    circuit.tPhaseVA = 0;
+                } else {
+                    circuit.rPhaseVA = 0;
+                    circuit.tPhaseVA = circuit.loadVA;
+                }
+            } else if (circuit.voltage === 200) {
+                // 200V回路は両相に均等に負荷がかかる
+                circuit.rPhaseVA = circuit.loadVA / 2;
+                circuit.tPhaseVA = circuit.loadVA / 2;
+            }
+        }
+
+        // 回路テーブルの描画（改良版 - 相別VA表示対応）
+        function renderCircuitTable() {
+            const tbody = document.getElementById('circuit-table-body');
+            tbody.innerHTML = '';
+            
+            circuits.forEach((circuit, index) => {
+                const row = document.createElement('tr');
+                const phaseClass = circuit.phase === 'R' ? 'phase-r' : 'phase-t';
+                const isDoubleSpace = breakerDefaults[circuit.breakerType]?.spaces === 2;
+                
+                // 回路クラスを設定（相クラスと2スペースクラスの組み合わせ）
+                if (isDoubleSpace) {
+                    row.classList.add(phaseClass, 'double-space');
+                } else {
+                    row.classList.add(phaseClass);
+                }
+                
+                // 相別VA負荷の計算を確実に行う
+                updateCircuitPhaseLoads(circuit);
+                
+                row.innerHTML = `
+                    <td class="${phaseClass}">${circuit.number}</td>
+                    <td class="${phaseClass}">${circuit.phase}</td>
+                    <td>
+                        <select onchange="updateCircuit(${index}, 'breakerType', this.value)">
+                            <option value="2P1E" ${circuit.breakerType === '2P1E' ? 'selected' : ''}>2P1E</option>
+                            <option value="2P2E" ${circuit.breakerType === '2P2E' ? 'selected' : ''}>2P2E</option>
+                            <option value="漏電" ${circuit.breakerType === '漏電' ? 'selected' : ''}>漏電</option>
+                            <option value="感震" ${circuit.breakerType === '感震' ? 'selected' : ''}>感震</option>
+                            <option value="連系" ${circuit.breakerType === '連系' ? 'selected' : ''}>連系</option>
+                            <option value="空き" ${circuit.breakerType === '空き' ? 'selected' : ''}>空き</option>
+                        </select>
+                        ${isDoubleSpace ? '<span class="breaker-type double">2倍幅</span>' : ''}
+                        ${circuit.breakerType === '漏電' ? '<span class="breaker-type elcb">漏電</span>' : ''}
+                        ${circuit.breakerType === '連系' ? '<span class="breaker-type grid-tie">連系</span>' : ''}
+                    </td>
+                    <td><input type="text" value="${circuit.name}" onchange="updateCircuit(${index}, 'name', this.value)"></td>
+                    <td>
+                        <select onchange="updateCircuit(${index}, 'current', this.value)" ${circuit.breakerType === '空き' ? 'disabled' : ''}>
+                            <option value="0" ${circuit.current === 0 ? 'selected' : ''}>-</option>
+                            <option value="10" ${circuit.current === 10 ? 'selected' : ''}>10A</option>
+                            <option value="15" ${circuit.current === 15 ? 'selected' : ''}>15A</option>
+                            <option value="20" ${circuit.current === 20 ? 'selected' : ''}>20A</option>
+                            <option value="30" ${circuit.current === 30 ? 'selected' : ''}>30A</option>
+                            <option value="40" ${circuit.current === 40 ? 'selected' : ''}>40A</option>
+                            <option value="50" ${circuit.current === 50 ? 'selected' : ''}>50A</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select onchange="updateCircuit(${index}, 'voltage', this.value)" ${circuit.breakerType === '空き' ? 'disabled' : ''}>
+                            <option value="0" ${circuit.voltage === 0 ? 'selected' : ''}>-</option>
+                            <option value="100" ${circuit.voltage === 100 ? 'selected' : ''}>100V</option>
+                            <option value="200" ${circuit.voltage === 200 ? 'selected' : ''}>200V</option>
+                        </select>
+                    </td>
+                    <td><input type="number" value="${circuit.loadW}" onchange="updateCircuit(${index}, 'loadW', this.value)" min="0" max="10000" ${circuit.breakerType === '空き' ? 'disabled' : ''}></td>
+                    <td class="r-phase-load"><input type="text" value="${Math.round(circuit.rPhaseVA)}" readonly style="background-color: rgba(255, 107, 107, 0.1);"></td>
+                    <td class="t-phase-load"><input type="text" value="${Math.round(circuit.tPhaseVA)}" readonly style="background-color: rgba(77, 171, 247, 0.1);"></td>
+                    <td>${isDoubleSpace ? '2' : '1'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 回路データ更新（改良版 - 相別VA表示対応）
+        function updateCircuit(index, field, value) {
+            if (field === 'current' || field === 'voltage' || field === 'loadW') {
+                value = parseFloat(value) || 0;
+            }
+            
+            const circuit = circuits[index];
+            const oldBreakerType = circuit.breakerType;
+            
+            // ブレーカータイプ変更時の処理
+            if (field === 'breakerType') {
+                const defaults = breakerDefaults[value];
+                if (defaults) {
+                    circuit.current = defaults.current;
+                    circuit.voltage = defaults.voltage;
+                    circuit.loadW = defaults.load;
+                    circuit.enabled = value !== '空き';
+                    // VA値も更新
+                    circuit.loadVA = circuit.loadW / config.powerFactor;
+                }
+                
+                // スペース数の変更があった場合、相のバランスを再計算
+                if (breakerDefaults[oldBreakerType]?.spaces !== breakerDefaults[value]?.spaces) {
+                    rebalancePhases();
+                }
+                
+                // 連系ブレーカーへの変更または連系ブレーカーからの変更
+                if ((oldBreakerType !== '連系' && value === '連系') || (oldBreakerType === '連系' && value !== '連系')) {
+                    // 連系ブレーカーが追加された場合
+                    if (value === '連系') {
+                        // 発電容量が0なら設定を促す
+                        if (config.generationCapacity === 0) {
+                            const generationCapacity = prompt('連系ブレーカーを追加しました。発電設備の定格容量(W)を入力してください:', '3000');
+                            if (generationCapacity !== null) {
+                                config.generationCapacity = parseInt(generationCapacity) || 0;
+                                document.getElementById('generation-capacity').value = config.generationCapacity;
+                            }
+                        }
+                    }
+                    
+                    // 連系ブレーカーと発電容量の状態を更新
+                    updateGridTieIndicator();
+                    updateSolarIconVisibility();
+                }
+            }
+            
+            // 電圧変更時のデフォルト負荷設定
+            if (field === 'voltage' && circuit.breakerType !== '空き') {
+                if (value === 100) {
+                    circuit.loadW = 1500;
+                } else if (value === 200) {
+                    circuit.loadW = 3000;
+                }
+            }
+            
+            circuit[field] = value;
+            
+            // W→VA計算（常に最新の力率を使用）と相別VA計算
+            if (field === 'loadW' || field === 'voltage' || field === 'breakerType' || field === 'phase') {
+                updateCircuitPhaseLoads(circuit);
+            }
+            
+            renderAllBreakers();
+            renderCircuitTable();
+            calculateAll();
+        }
+
+        // 相のバランスの再計算
+        function rebalancePhases() {
+            let rPhaseSpaces = 0;
+            let tPhaseSpaces = 0;
+            
+            // 現在のスペース数を計算
+            circuits.forEach(circuit => {
+                const spaces = breakerDefaults[circuit.breakerType]?.spaces || 1;
+                if (circuit.phase === 'R') {
+                    rPhaseSpaces += spaces;
+                } else {
+                    tPhaseSpaces += spaces;
+                }
+            });
+            
+            // 相の再割り当て（スペース数を考慮）
+            rPhaseSpaces = 0;
+            tPhaseSpaces = 0;
+            
+            circuits.forEach(circuit => {
+                const spaces = breakerDefaults[circuit.breakerType]?.spaces || 1;
+                
+                // スペース数が均等になるように相を割り当て
+                if (rPhaseSpaces <= tPhaseSpaces) {
+                    circuit.phase = 'R';
+                    rPhaseSpaces += spaces;
+                } else {
+                    circuit.phase = 'T';
+                    tPhaseSpaces += spaces;
+                }
+                
+                // 相が変更された場合、相別VA負荷を再計算
+                updateCircuitPhaseLoads(circuit);
+            });
+        }
+
+        // ブレーカー切り替え
+        function toggleBreaker(circuitNum) {
+            const circuit = circuits.find(c => c.number === circuitNum);
+            if (circuit && circuit.breakerType !== '空き') {
+                circuit.enabled = !circuit.enabled;
+                
+                const breaker = document.querySelector(`g[data-circuit="${circuitNum}"]`);
+                if (breaker) {
+                    const rect = breaker.querySelector('rect');
+                    const breakerType = circuit.breakerType;
+                    const baseColor = breakerDefaults[breakerType]?.color || '#5cb85c';
+                    
+                    if (circuit.enabled) {
+                        breaker.classList.remove('off');
+                        breaker.classList.add('on');
+                        rect.setAttribute('fill', baseColor);
+                    } else {
+                        breaker.classList.remove('on');
+                        breaker.classList.add('off');
+                        rect.setAttribute('fill', '#d32f2f');
+                    }
+                }
+                
+                // 連系ブレーカーがON/OFFされたら太陽光アイコンを更新
+                if (circuit.breakerType === '連系') {
+                    updateSolarIconVisibility();
+                }
+                
+                calculateAll();
+            }
+        }
+
+        // 主幹ブレーカーのトグル
+        function toggleMainBreaker() {
+            const mainBreaker = document.getElementById('main-breaker');
+            const isOn = mainBreaker.classList.contains('on');
+            
+            if (isOn) {
+                // MLBをOFFにする
+                mainBreaker.classList.remove('on');
+                mainBreaker.classList.add('off');
+                
+                // 全回路をOFFにする
+                circuits.forEach(circuit => {
+                    circuit.enabled = false;
+                });
+                
+                // SVGを再描画
+                renderAllBreakers();
+            } else {
+                // MLBをONにする
+                mainBreaker.classList.remove('off');
+                mainBreaker.classList.add('on');
+                
+                // 全回路をONにする（空き以外）
+                circuits.forEach(circuit => {
+                    if (circuit.breakerType !== '空き') {
+                        circuit.enabled = true;
+                    }
+                });
+                
+                // SVGを再描画
+                renderAllBreakers();
+            }
+            
+            calculateAll();
+        }
+
+        // 全体計算（改良版 - 相別VA表示対応）
+        function calculateAll() {
+            const mainBreaker = document.getElementById('main-breaker');
+            const isMainOn = mainBreaker.classList.contains('on');
+            
+            // 初期化
+            let rPhaseLoadVA = 0;
+            let tPhaseLoadVA = 0;
+            let totalLoadVA = 0;
+            let totalLoadW = 0;
+            
+            // 各回路の負荷計算（不平衡率算出用：ON/OFF関係なく全回路で計算）
+            circuits.forEach(circuit => {
+                if (circuit.loadW > 0 && circuit.breakerType !== '空き') {
+                    // 相別VA負荷の計算を確実に行う
+                    updateCircuitPhaseLoads(circuit);
+                    
+                    totalLoadW += circuit.loadW;
+                    totalLoadVA += circuit.loadVA;
+                    
+                    // 相別負荷の合計を計算
+                    rPhaseLoadVA += circuit.rPhaseVA;
+                    tPhaseLoadVA += circuit.tPhaseVA;
+                }
+            });
+            
+            // 不平衡率計算（全回路での計算）
+            const avgLoadVA = (rPhaseLoadVA + tPhaseLoadVA) / 2;
+            let imbalanceRate = 0;
+            if (avgLoadVA > 0) {
+                const maxLoadVA = Math.max(rPhaseLoadVA, tPhaseLoadVA);
+                const minLoadVA = Math.min(rPhaseLoadVA, tPhaseLoadVA);
+                imbalanceRate = ((maxLoadVA - minLoadVA) / avgLoadVA) * 100;
+            }
+            
+            // 実際の使用電流計算用（ON回路のみ）
+            let actualRPhaseLoadVA = 0;
+            let actualTPhaseLoadVA = 0;
+            let actualTotalLoadVA = 0;
+            
+            if (isMainOn) {
+                circuits.forEach(circuit => {
+                    if (circuit.enabled && circuit.loadW > 0 && circuit.breakerType !== '空き') {
+                        actualTotalLoadVA += circuit.loadVA;
+                        actualRPhaseLoadVA += circuit.rPhaseVA;
+                        actualTPhaseLoadVA += circuit.tPhaseVA;
+                    }
+                });
+            }
+            
+            // 需要率適用後の負荷計算（実際のON回路のみ）に同時使用率を加味
+            const totalLoadAfterDemand = actualTotalLoadVA * config.demandFactor * config.simultaneityFactor;
+            
+            // ★発電容量の考慮（連系ブレーカーがONの場合のみ有効）★
+            const hasActiveGridTie = circuits.some(c => c.breakerType === '連系' && c.enabled);
+            let effectiveGenerationCapacity = hasActiveGridTie ? config.generationCapacity : 0;
+            
+            // ★発電による負荷軽減（最小0まで）★
+            const totalLoadWithGeneration = Math.max(0, totalLoadAfterDemand - (effectiveGenerationCapacity * config.powerFactor));
+            
+            // 発電情報の表示更新
+            updateGenerationCard(totalLoadAfterDemand);
+            
+            // ★発電設備の影響を計算ロジックに表示★
+            const generationEffectCalc = document.getElementById('generation-effect-calc');
+            if (effectiveGenerationCapacity > 0) {
+                generationEffectCalc.style.display = 'block';
+                document.getElementById('generation-effect-value').textContent = 
+                    `${totalLoadAfterDemand.toFixed(0)}VA - ${(effectiveGenerationCapacity * config.powerFactor).toFixed(0)}VA = ${totalLoadWithGeneration.toFixed(0)}VA`;
+                
+                // 発電影響の容量計算表示も更新
+                document.getElementById('generation-effect-group').style.display = 'block';
+                document.getElementById('generation-reduction').value = 
+                    `${(effectiveGenerationCapacity * config.powerFactor).toFixed(0)}VA (${effectiveGenerationCapacity}W)`;
+            } else {
+                generationEffectCalc.style.display = 'none';
+                document.getElementById('generation-effect-group').style.display = 'none';
+            }
+            
+            // 主幹容量計算（電流）
+            // 固定容量が設定されていなければ自動計算
+            let recommendedMainCapacity;
+            
+            if (config.fixedMainCapacity === 0) {
+                // ★自動計算ロジック（発電容量を考慮）★
+                const mainCurrentRequired = totalLoadWithGeneration / 200;
+                const mainCapacityRequired = Math.ceil(mainCurrentRequired / 5) * 5; // 5A単位で切り上げ
+                
+                // 標準容量から選択
+                const standardCapacities = [30, 40, 50, 60, 75, 100];
+                recommendedMainCapacity = standardCapacities.find(cap => cap >= mainCapacityRequired) || 100;
+            } else {
+                // 固定値を使用
+                recommendedMainCapacity = config.fixedMainCapacity;
+            }
+            
+            // 幹線径選定（詳細計算）
+            // ★発電容量を考慮した電流値で計算★
+            const requiredCurrent = (totalLoadWithGeneration / 200) / config.cableSafetyFactor;
+            const cable = cvtCables.find(c => c.allowableCurrent >= requiredCurrent);
+            const recommendedCable = cable ? `CVT ${cable.size}` : 'CVT 200sq以上';
+            
+            // 幹線径計算式
+            const mainCurrentForCable = totalLoadWithGeneration / 200;
+            const cableFormula = `必要電流 = ${mainCurrentForCable.toFixed(1)}A ÷ 安全率${config.cableSafetyFactor} = ${requiredCurrent.toFixed(1)}A`;
+            
+            // 相電流計算
+            const rPhaseAmpere = actualRPhaseLoadVA * config.demandFactor / 100;
+            const tPhaseAmpere = actualTPhaseLoadVA * config.demandFactor / 100;
+            
+            // 表示更新（実際の使用電流のみ表示）
+            updateDisplay(
+                actualRPhaseLoadVA, 
+                actualTPhaseLoadVA, 
+                rPhaseAmpere,
+                tPhaseAmpere,
+                actualTotalLoadVA, 
+                totalLoadAfterDemand, 
+                totalLoadWithGeneration,
+                imbalanceRate,
+                recommendedMainCapacity
+            );
+            
+            // 計算ロジック表示
+            const imbalanceCalc = `|${Math.max(rPhaseLoadVA, tPhaseLoadVA).toFixed(0)} - ${Math.min(rPhaseLoadVA, tPhaseLoadVA).toFixed(0)}| ÷ ${avgLoadVA.toFixed(0)} × 100 = ${imbalanceRate.toFixed(1)}%`;
+            // ★発電容量を考慮した主幹計算式の表示★
+            const mainCalc = `(${(totalLoadVA * config.demandFactor).toFixed(0)}VA${effectiveGenerationCapacity > 0 ? 
+                ` - ${(effectiveGenerationCapacity * config.powerFactor).toFixed(0)}VA` : ''}) ÷ 200V = ${(totalLoadWithGeneration / 200).toFixed(1)}A → ${recommendedMainCapacity}A`;
+            
+            updateCalculationLogic(rPhaseLoadVA, tPhaseLoadVA, imbalanceCalc, mainCalc, recommendedCable, cableFormula);
+            
+            // 主幹ブレーカー容量表示更新
+            document.getElementById('mlb-capacity').textContent = `${recommendedMainCapacity}A`;
+            
+            // Panasonic品番選定
+            selectPanasonicModel(recommendedMainCapacity, circuits.length);
+        }
+
+        // 表示更新（実際の使用電流のみ表示）
+        function updateDisplay(rPhaseVA, tPhaseVA, rPhaseA, tPhaseA, totalBefore, totalAfterDemand, totalAfterGeneration, imbalanceRate, mainCapacity) {
+            // 単相3線式の総使用電流は需要率適用後の値を200Vで割る
+            const totalCurrent = totalAfterGeneration / 200;
+            document.getElementById('total-current').textContent = `${totalCurrent.toFixed(1)}A`;
+            document.getElementById('imbalance-rate').textContent = `${imbalanceRate.toFixed(1)}%`;
+            
+            // R相とT相の個別電流表示
+            document.getElementById('r-phase-current').textContent = `${rPhaseA.toFixed(1)}A`;
+            document.getElementById('t-phase-current').textContent = `${tPhaseA.toFixed(1)}A`;
+            
+            // R相とT相のVA表示
+            document.getElementById('r-phase-va').textContent = `${Math.round(rPhaseVA)}VA`;
+            document.getElementById('t-phase-va').textContent = `${Math.round(tPhaseVA)}VA`;
+            
+            // 不平衡率の警告表示
+            const imbalanceCard = document.getElementById('imbalance-card');
+            const imbalanceWarning = document.getElementById('imbalance-warning');
+            
+            if (imbalanceRate > config.imbalanceLimit) {
+                imbalanceCard.classList.add('danger');
+                imbalanceCard.classList.remove('warning');
+                imbalanceWarning.style.display = 'flex';
+            } else if (imbalanceRate > config.imbalanceLimit * 0.8) {
+                imbalanceCard.classList.add('warning');
+                imbalanceCard.classList.remove('danger');
+                imbalanceWarning.style.display = 'none';
+            } else {
+                imbalanceCard.classList.remove('warning', 'danger');
+                imbalanceWarning.style.display = 'none';
+            }
+            
+            // 電流容量バー更新
+            const currentBar = document.getElementById('current-bar');
+            const rPhaseBar = document.getElementById('r-phase-bar');
+            const tPhaseBar = document.getElementById('t-phase-bar');
+            
+            const currentPercentage = (totalCurrent / mainCapacity) * 100;
+            const rPhasePercentage = (rPhaseA / mainCapacity) * 100;
+            const tPhasePercentage = (tPhaseA / mainCapacity) * 100;
+            
+            currentBar.style.width = `${Math.min(currentPercentage, 100)}%`;
+            currentBar.setAttribute('data-value', `${Math.round(currentPercentage)}%`);
+            
+            rPhaseBar.style.width = `${Math.min(rPhasePercentage, 100)}%`;
+            rPhaseBar.setAttribute('data-value', `${Math.round(rPhasePercentage)}%`);
+            
+            tPhaseBar.style.width = `${Math.min(tPhasePercentage, 100)}%`;
+            tPhaseBar.setAttribute('data-value', `${Math.round(tPhasePercentage)}%`);
+            
+            // 電流バーの色設定
+            if (currentPercentage > 90) {
+                currentBar.classList.add('danger');
+                currentBar.classList.remove('warning');
+            } else if (currentPercentage > 70) {
+                currentBar.classList.add('warning');
+                currentBar.classList.remove('danger');
+            } else {
+                currentBar.classList.remove('warning', 'danger');
+            }
+            
+            // 不平衡率バーの更新
+            const imbalanceBar = document.getElementById('imbalance-bar');
+            const imbalancePercentage = (imbalanceRate / config.imbalanceLimit) * 100;
+            
+            imbalanceBar.style.width = `${Math.min(imbalancePercentage, 100)}%`;
+            imbalanceBar.setAttribute('data-value', `${Math.round(imbalanceRate)}%`);
+            
+            if (imbalancePercentage > 100) {
+                imbalanceBar.classList.add('danger');
+                imbalanceBar.classList.remove('warning');
+            } else if (imbalancePercentage > 80) {
+                imbalanceBar.classList.add('warning');
+                imbalanceBar.classList.remove('danger');
+            } else {
+                imbalanceBar.classList.remove('warning', 'danger');
+            }
+            
+            // 容量計算結果の表示更新
+            document.getElementById('r-phase-load').value = `${Math.round(rPhaseVA)}VA`;
+            document.getElementById('t-phase-load').value = `${Math.round(tPhaseVA)}VA`;
+            document.getElementById('r-phase-ampere').value = `${rPhaseA.toFixed(1)}A`;
+            document.getElementById('t-phase-ampere').value = `${tPhaseA.toFixed(1)}A`;
+            document.getElementById('total-load-before').value = `${Math.round(totalBefore)}VA`;
+            document.getElementById('total-load-after').value = `${Math.round(totalAfterDemand)}VA`;
+            document.getElementById('recommended-main').value = `${mainCapacity}A`;
+            document.getElementById('imbalance-result').value = `${imbalanceRate.toFixed(1)}%（基準値：${config.imbalanceLimit}%）`;
+            
+            const cable = cvtCables.find(c => c.allowableCurrent >= parseInt(mainCapacity));
+            document.getElementById('recommended-cable').value = cable ? `CVT ${cable.size}` : 'CVT 200sq以上';
+            
+            // 幹線径計算詳細
+            const mainCurrent = totalAfterGeneration / 200;
+            const requiredCurrent = mainCurrent / config.cableSafetyFactor;
+            const actualCable = cvtCables.find(c => c.allowableCurrent >= requiredCurrent);
+            
+            // 発電容量の影響を含めた詳細表示
+            const hasActiveGridTie = circuits.some(c => c.breakerType === '連系' && c.enabled);
+            let effectiveGeneration = hasActiveGridTie ? config.generationCapacity : 0;
+            
+            const detail = `● 負荷集計\n` +
+                         `・R相負荷: ${Math.round(rPhaseVA)}VA (${rPhaseA.toFixed(1)}A)\n` +
+                         `・T相負荷: ${Math.round(tPhaseVA)}VA (${tPhaseA.toFixed(1)}A)\n` +
+                         `・総負荷(需要率適用前): ${Math.round(totalBefore)}VA\n` +
+                         `・不平衡率: ${imbalanceRate.toFixed(1)}%\n` +
+                         (effectiveGeneration > 0 ? `・発電容量: ${effectiveGeneration}W (${(effectiveGeneration * config.powerFactor).toFixed(0)}VA)\n` : '') +
+                         `\n● 計算パラメータ\n` +
+                         `・需要率: ${config.demandFactor}\n` +
+                         `・力率: ${config.powerFactor}\n` +
+                         `・同時使用率: ${config.simultaneityFactor}\n` +
+                         `・安全率: ${config.cableSafetyFactor}\n` +
+                         `\n● 容量計算\n` +
+                         `・総負荷(需要率適用後): ${Math.round(totalAfterDemand)}VA\n` +
+                         (effectiveGeneration > 0 ? `・発電影響後の負荷: ${Math.round(totalAfterGeneration)}VA\n` : '') +
+                         `・主幹電流: ${mainCurrent.toFixed(1)}A\n` +
+                         `・必要電流: ${mainCurrent.toFixed(1)}A ÷ 安全率${config.cableSafetyFactor} = ${requiredCurrent.toFixed(1)}A\n` +
+                         `・選定結果: ${actualCable ? `CVT ${actualCable.size} (許容電流: ${actualCable.allowableCurrent}A)` : '規格外'}`;
+                         
+            document.getElementById('cable-calculation-detail').value = detail;
+        }
+
+        // 計算ロジック表示更新
+        function updateCalculationLogic(rPhaseVA, tPhaseVA, imbalanceCalc, mainCalc, cableCalc, cableFormula) {
+            document.getElementById('r-phase-load-display').textContent = `${Math.round(rPhaseVA)}VA`;
+            document.getElementById('t-phase-load-display').textContent = `${Math.round(tPhaseVA)}VA`;
+            document.getElementById('imbalance-calc').textContent = imbalanceCalc;
+            document.getElementById('main-calc').textContent = mainCalc;
+            document.getElementById('cable-calc-formula').textContent = cableFormula;
+            document.getElementById('cable-calc-result').textContent = `推奨: ${cableCalc}`;
+            
+            // 設定表示の更新
+            updateConfigDisplay();
+        }
+
+        // 設定表示の更新
+        function updateConfigDisplay() {
+            document.getElementById('display-demand-factor').textContent = config.demandFactor;
+            document.getElementById('display-power-factor').textContent = config.powerFactor;
+            document.getElementById('display-imbalance-limit').textContent = `${config.imbalanceLimit}%`;
+            document.getElementById('display-safety-factor').textContent = config.cableSafetyFactor;
+            document.getElementById('display-simultaneity-factor').textContent = config.simultaneityFactor;
+        }
+
+        // CSV出力機能（相別VA表示対応版）
+        function exportToCSV() {
+            // 計算実行
+            calculateAll();
+            
+            // CSVヘッダー（UTF-8でBOM付き）
+            let csvContent = '回路番号,相,種類,名称,ブレーカーサイズ(A),電圧(V),負荷(W),R相負荷(VA),T相負荷(VA),スペース数,状態\n';
+            
+            // 回路データ
+            circuits.forEach(circuit => {
+                const spaces = breakerDefaults[circuit.breakerType]?.spaces || 1;
+                csvContent += `${circuit.number},${circuit.phase},${circuit.breakerType},${circuit.name},${circuit.current},${circuit.voltage},${circuit.loadW},${Math.round(circuit.rPhaseVA)},${Math.round(circuit.tPhaseVA)},${spaces},${circuit.enabled ? 'ON' : 'OFF'}\n`;
+            });
+            
+            // 相毎の集計を計算（全回路で計算）
+            let rPhaseLoadVA = 0;
+            let tPhaseLoadVA = 0;
+            let totalLoadVA = 0;
+            
+            circuits.forEach(circuit => {
+                if (circuit.loadW > 0 && circuit.breakerType !== '空き') {
+                    totalLoadVA += circuit.loadVA;
+                    rPhaseLoadVA += circuit.rPhaseVA;
+                    tPhaseLoadVA += circuit.tPhaseVA;
+                }
+            });
+            
+            // 集計データを追加
+            csvContent += '\n集計データ\n';
+            csvContent += 'R相負荷(VA),T相負荷(VA),総負荷(VA),不平衡率(%)\n';
+            
+            const avgLoadVA = (rPhaseLoadVA + tPhaseLoadVA) / 2;
+            let imbalanceRate = 0;
+            if (avgLoadVA > 0) {
+                const maxLoadVA = Math.max(rPhaseLoadVA, tPhaseLoadVA);
+                const minLoadVA = Math.min(rPhaseLoadVA, tPhaseLoadVA);
+                imbalanceRate = ((maxLoadVA - minLoadVA) / avgLoadVA) * 100;
+            }
+            
+            csvContent += `${Math.round(rPhaseLoadVA)},${Math.round(tPhaseLoadVA)},${Math.round(totalLoadVA)},${imbalanceRate.toFixed(1)}\n`;
+            
+            // 需要率適用後のデータ
+            const totalLoadAfterDemand = totalLoadVA * config.demandFactor;
+            csvContent += '\n需要率適用後\n';
+            csvContent += '需要率,力率,同時使用率,総負荷(VA),主幹電流(A)\n';
+            csvContent += `${config.demandFactor},${config.powerFactor},${config.simultaneityFactor},${Math.round(totalLoadAfterDemand)},${(totalLoadAfterDemand / 200).toFixed(1)}\n`;
+            
+            // 発電データ
+            if (config.generationCapacity > 0) {
+                csvContent += '\n発電設備\n';
+                csvContent += '発電容量(W),発電VA,連系ブレーカー有無\n';
+                csvContent += `${config.generationCapacity},${Math.round(config.generationCapacity * config.powerFactor)},${hasGridTieBreaker() ? 'あり' : 'なし'}\n`;
+            }
+            
+            // システム設定
+            csvContent += '\nシステム設定\n';
+            csvContent += '不平衡率基準(%),安全率,主幹容量(A),余裕回路数\n';
+            csvContent += `${config.imbalanceLimit},${config.cableSafetyFactor},${config.fixedMainCapacity || '自動計算'},${config.minSpareCircuits}\n`;
+            
+            // BOMを付加（Excelでの文字化け対策）
+            const bom = '\uFEFF';
+            const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+            
+            // ファイル名を生成（現在の日時を使用）
+            const date = new Date();
+            const filename = `分電盤負荷計算_${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}_${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}.csv`;
+            
+            // ダウンロード処理
+            const link = document.createElement('a');
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // Panasonic品番選定（改良版）
+        function selectPanasonicModel(mainCapacity, circuitCount) {
+            // 実際のスペース数を計算
+            let totalSpaces = 0;
+            circuits.forEach(circuit => {
+                totalSpaces += breakerDefaults[circuit.breakerType]?.spaces || 1;
+            });
+            
+            // 余裕スペースを追加
+            const requiredSpaces = totalSpaces + config.minSpareCircuits;
+            
+            // 必要回路数に最適な分電盤を選定
+            // 主幹容量と必要回路数から最適なモデルを選定
+            const key = `${mainCapacity}-${Math.ceil(requiredSpaces/2)*2}`; // 偶数に切り上げ
+            
+            // スマートコスモ（BQWF）シリーズを優先的に検討
+            if (mainCapacity >= 50 && requiredSpaces <= 18 && panasonicModels.BQWF.models[key]) {
+                const model = panasonicModels.BQWF.models[key];
+                document.getElementById('panasonic-model').value = model;
+                document.getElementById('panasonic-type').value = panasonicModels.BQWF.name;
+                
+                // 商品リンクの設定
+                const link = document.getElementById('panasonic-link');
+                link.href = panasonicModels.BQWF.baseUrl;
+                link.textContent = `${model} - ${panasonicModels.BQWF.name}`;
+                return;
+            }
+            
+            // 通常のBQRシリーズで検索
+            const model = panasonicModels.BQR.models[key];
+            
+            if (model) {
+                document.getElementById('panasonic-model').value = model;
+                document.getElementById('panasonic-type').value = panasonicModels.BQR.name;
+                
+                // 商品リンクの設定
+                const link = document.getElementById('panasonic-link');
+                link.href = panasonicModels.BQR.baseUrl;
+                link.textContent = `${model} - ${panasonicModels.BQR.name}`;
+            } else {
+                // 適合するモデルがない場合
+                let closestModel = '';
+                let closestDiff = 999;
+                let preferredSeries = 'BQR';
+                
+                // BQRシリーズで近似品番を検索
+                for (const [modelKey, modelValue] of Object.entries(panasonicModels.BQR.models)) {
+                    const [modelMain, modelCircuits] = modelKey.split('-').map(Number);
+                    if (modelMain >= mainCapacity && modelCircuits >= requiredSpaces) {
+                        const diff = (modelMain - mainCapacity) + (modelCircuits - requiredSpaces);
+                        if (diff < closestDiff) {
+                            closestDiff = diff;
+                            closestModel = modelValue;
+                            preferredSeries = 'BQR';
+                        }
+                    }
+                }
+                
+                // BQWFシリーズも考慮
+                if (mainCapacity >= 50) {
+                    for (const [modelKey, modelValue] of Object.entries(panasonicModels.BQWF.models)) {
+                        const [modelMain, modelCircuits] = modelKey.split('-').map(Number);
+                        if (modelMain >= mainCapacity && modelCircuits >= requiredSpaces) {
+                            const diff = (modelMain - mainCapacity) + (modelCircuits - requiredSpaces);
+                            // スマートコスモを優先するために少し小さい値を使用
+                            if (diff * 0.9 < closestDiff) {
+                                closestDiff = diff * 0.9;
+                                closestModel = modelValue;
+                                preferredSeries = 'BQWF';
+                            }
+                        }
+                    }
+                }
+                
+                if (closestModel) {
+                    document.getElementById('panasonic-model').value = closestModel + ' (近似品番)';
+                    document.getElementById('panasonic-type').value = panasonicModels[preferredSeries].name;
+                    
+                    const link = document.getElementById('panasonic-link');
+                    link.href = panasonicModels[preferredSeries].baseUrl;
+                    link.textContent = `${closestModel} - ${panasonicModels[preferredSeries].name} (近似品番)`;
+                } else {
+                    document.getElementById('panasonic-model').value = '該当なし（特注品）';
+                    document.getElementById('panasonic-type').value = '個別相談';
+                    document.getElementById('panasonic-link').href = 'https://www2.panasonic.biz/jp/densetsu/denro/compact21/';
+                    document.getElementById('panasonic-link').textContent = 'Panasonic分電盤総合ページ';
+                }
+            }
+        }
+
+        // タブ切り替え
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-nav button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const buttons = document.querySelectorAll('.tab-nav button');
+            for (let i = 0; i < buttons.length; i++) {
+                if (buttons[i].textContent.includes(tab === 'circuits' ? '回路設定' : 
+                                                tab === 'system' ? 'システム設定' : 
+                                                tab === 'calculation' ? '容量計算' : 
+                                                tab === 'explanation' ? '解説' : '使い方')) {
+                    buttons[i].classList.add('active');
+                }
+            }
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tab}-tab`).classList.add('active');
+        }
+
+        // 設定保存
+        function saveConfig() {
+            const oldGenerationCapacity = config.generationCapacity;
+            
+            config.demandFactor = parseFloat(document.getElementById('demand-factor').value);
+            config.powerFactor = parseFloat(document.getElementById('power-factor').value);
+            config.imbalanceLimit = parseFloat(document.getElementById('imbalance-limit').value);
+            config.generationCapacity = parseFloat(document.getElementById('generation-capacity').value) || 0;
+            config.cableSafetyFactor = parseFloat(document.getElementById('cable-safety-factor').value);
+            config.simultaneityFactor = parseFloat(document.getElementById('simultaneity-factor').value);
+            config.fixedMainCapacity = parseInt(document.getElementById('fixed-main-capacity').value);
+            config.minSpareCircuits = parseInt(document.getElementById('min-spare-circuits').value);
+            
+            // すべての回路のVA値を再計算
+            circuits.forEach(circuit => {
+                if (circuit.loadW > 0) {
+                    updateCircuitPhaseLoads(circuit);
+                }
+            });
+            
+            // 発電容量が変更された場合の処理
+            if (oldGenerationCapacity !== config.generationCapacity) {
+                // 発電容量が0 → 設定された場合で連系ブレーカーがない場合
+                if (oldGenerationCapacity === 0 && config.generationCapacity > 0 && !hasGridTieBreaker()) {
+                    const addGridTie = confirm('発電容量を設定しました。連系ブレーカーを追加しますか？');
+                    if (addGridTie) {
+                        addGridTieBreaker();
+                    }
+                }
+                
+                // 太陽光アイコンの表示更新
+                updateSolarIconVisibility();
+                
+                // 発電容量が0になった場合、発電カードを削除
+                if (config.generationCapacity === 0) {
+                    removeGenerationCard();
+                }
+            }
+            
+            // 主幹容量を再計算
+            calculateAll();
+            
+            // 設定表示の更新
+            updateConfigDisplay();
+            
+            // 成功通知
+            alert('設定を保存しました');
+        }
+
+        // 全クリア
+        function clearAll() {
+            if (confirm('すべての回路データをクリアしますか？')) {
+                circuits.forEach(circuit => {
+                    circuit.loadW = 0;
+                    circuit.loadVA = 0;
+                    circuit.rPhaseVA = 0;
+                    circuit.tPhaseVA = 0;
+                });
+                renderCircuitTable();
+                renderAllBreakers();
+                calculateAll();
+                
+                alert('全ての回路データをクリアしました');
+            }
+        }
+
+        // プリセット読み込み（改良版 - 相別VA対応）
+        function loadPreset(presetName) {
+            const preset = presets[presetName];
+            if (!preset) return;
+            
+            // 回路数を設定
+            setCircuitCount(preset.circuits.length);
+            
+            // 相のバランスを考慮して再割り当て
+            let rPhaseSpaces = 0;
+            let tPhaseSpaces = 0;
+            
+            // 各回路の設定を適用
+            preset.circuits.forEach((presetCircuit, index) => {
+                if (index < circuits.length) {
+                    // ブレーカータイプを設定
+                    circuits[index].breakerType = presetCircuit.type;
+                    
+                    // スペース数を取得
+                    const spaces = breakerDefaults[presetCircuit.type]?.spaces || 1;
+                    
+                    // 負荷バランスを考慮して相を割り当て
+                    if (rPhaseSpaces <= tPhaseSpaces) {
+                        circuits[index].phase = 'R';
+                        rPhaseSpaces += spaces;
+                    } else {
+                        circuits[index].phase = 'T';
+                        tPhaseSpaces += spaces;
+                    }
+                    
+                    // その他の設定を適用
+                    circuits[index].voltage = presetCircuit.voltage;
+                    circuits[index].loadW = presetCircuit.load;
+                    circuits[index].name = presetCircuit.name;
+                    circuits[index].current = presetCircuit.current || 20;
+                    circuits[index].enabled = true;
+                    
+                    // 相別VA負荷を計算
+                    updateCircuitPhaseLoads(circuits[index]);
+                }
+            });
+            
+            // プリセットに発電容量設定がある場合は適用
+            if (preset.generationCapacity) {
+                config.generationCapacity = preset.generationCapacity;
+                document.getElementById('generation-capacity').value = config.generationCapacity;
+            }
+            
+            // 連系ブレーカーと発電容量の関連付けを更新
+            updateGridTieIndicator();
+            updateSolarIconVisibility();
+            
+            renderAllBreakers();
+            renderCircuitTable();
+            calculateAll();
+            
+            alert(`${preset.name}のプリセットを読み込みました`);
+        }
+
+        // 解説タブの機能
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            section.classList.toggle('collapsed');
+        }
+
+        function toggleFAQ(element) {
+            const faqItem = element.parentElement;
+            faqItem.classList.toggle('open');
+        }
+
+        // インタラクティブデモの更新
+        function updateLoadDemo() {
+            const rLoad = parseFloat(document.getElementById('demo-r-load').value) || 0;
+            const tLoad = parseFloat(document.getElementById('demo-t-load').value) || 0;
+            const demand = parseFloat(document.getElementById('demo-demand').value) || 0.4;
+            
+            const avgLoad = (rLoad + tLoad) / 2;
+            const imbalance = avgLoad > 0 ? Math.abs(rLoad - tLoad) / avgLoad * 100 : 0;
+            const totalLoad = (rLoad + tLoad) * demand;
+            const mainCurrent = totalLoad / 200;
+            
+            const resultText = `
+                不平衡率: ${imbalance.toFixed(1)}%<br>
+                総負荷（需要率適用後）: ${totalLoad.toFixed(0)}VA<br>
+                必要主幹電流: ${mainCurrent.toFixed(1)}A<br>
+                推奨主幹容量: ${Math.ceil(mainCurrent / 5) * 5}A
+            `;
+            
+            document.getElementById('demo-result').innerHTML = resultText;
+        }
+
+        // ウィンドウサイズに応じた自動スケーリング
+        function adjustScale() {
+            const container = document.querySelector('.container');
+            const viewportWidth = window.innerWidth;
+            
+            // ビューポート幅に基づいた自動調整
+            if (viewportWidth < 768) {
+                // モバイル向けの調整
+                document.documentElement.style.fontSize = '14px';
+            } else if (viewportWidth < 992) {
+                // タブレット向けの調整
+                document.documentElement.style.fontSize = '15px';
+            } else {
+                // デスクトップ向けの調整
+                document.documentElement.style.fontSize = '16px';
+            }
+            
+            // SVGパネルの自動調整
+            const svg = document.querySelector('.panel-svg');
+            if (svg) {
+                const containerWidth = svg.parentElement.offsetWidth;
+                const svgWidth = 800; // viewBoxの幅
+                const scale = Math.min(1, containerWidth / svgWidth);
+                svg.style.maxWidth = '100%';
+                svg.style.height = 'auto';
+            }
+        }
+
+        // 初期化時とリサイズ時に実行
+        window.addEventListener('DOMContentLoaded', adjustScale);
+        window.addEventListener('resize', adjustScale);
+    </script>
+</body>
+</html>

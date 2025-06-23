@@ -1,0 +1,3134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>電気基礎インタラクティブシミュレーター</title>
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --secondary-color: #FF961C;
+            --light-blue: #E0EEF9;
+            --medium-blue: #4D8BC9;
+            --neutral-grey: #F5F5F5;
+            --dark-grey: #616161;
+            --text-dark: #333333;
+            --text-light: #FFFFFF;
+            --success-color: #4CAF50;
+            --warning-color: #FFC107;
+            --danger-color: #F44336;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: Meiryo, "Hiragino Kaku Gothic Pro", sans-serif;
+            background-color: #f0f4f8;
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--medium-blue) 100%);
+            color: var(--text-light);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .back-to-home {
+            position: absolute;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        .back-to-home:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.05);
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            z-index: 1;
+            position: relative;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            z-index: 1;
+            position: relative;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+        
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 1rem 2rem;
+            margin: 0.25rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark-grey);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tab-button::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--secondary-color);
+            transition: width 0.3s ease;
+        }
+        
+        .tab-button:hover {
+            background: var(--light-blue);
+            transform: translateY(-2px);
+        }
+        
+        .tab-button.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .tab-button.active::before {
+            width: 100%;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        
+        .control-group {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: var(--neutral-grey);
+            border-radius: 8px;
+        }
+        
+        .control-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0.5rem 0;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 8px rgba(255,150,28,0.2);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .value-display {
+            min-width: 80px;
+            padding: 0.5rem 1rem;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        select {
+            padding: 0.75rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        select:hover {
+            border-color: var(--secondary-color);
+        }
+        
+        select:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,91,171,0.2);
+        }
+        
+        .result-box {
+            background: linear-gradient(135deg, var(--light-blue) 0%, white 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            border: 2px solid var(--primary-color);
+        }
+        
+        .result-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+        
+        .formula {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .svg-container {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+        
+        .comparison-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .comparison-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .comparison-item:hover {
+            border-color: var(--primary-color);
+            transform: scale(1.02);
+        }
+        
+        .comparison-item h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-good {
+            background: var(--success-color);
+            box-shadow: 0 0 10px rgba(76,175,80,0.5);
+        }
+        
+        .status-warning {
+            background: var(--warning-color);
+            box-shadow: 0 0 10px rgba(255,193,7,0.5);
+        }
+        
+        .status-danger {
+            background: var(--danger-color);
+            box-shadow: 0 0 10px rgba(244,67,54,0.5);
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            color: var(--primary-color);
+            cursor: help;
+            text-decoration: underline dotted;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 300px;
+            background-color: #333;
+            color: #fff;
+            text-align: left;
+            border-radius: 8px;
+            padding: 12px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -150px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .interactive-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+        
+        .interactive-button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,150,28,0.3);
+        }
+        
+        .alert {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .alert-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            color: #1565c0;
+        }
+        
+        .alert-warning {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            color: #e65100;
+        }
+        
+        .alert-danger {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #b71c1c;
+        }
+        
+        /* 改善された情報ボックススタイル */
+        .info-section {
+            background: var(--light-blue);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+        }
+        
+        .info-section h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--medium-blue);
+            padding-bottom: 0.5rem;
+        }
+        
+        .info-section h5 {
+            color: var(--primary-color);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        .info-list {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
+        }
+        
+        .info-list li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(0,91,171,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .info-list strong {
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        
+        .power-types {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .power-type-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .power-type-item strong {
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* トグル機能のスタイル */
+        .toggle-section {
+            margin: 1rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(0,91,171,0.2);
+        }
+        
+        .toggle-header {
+            background: var(--light-blue);
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+        
+        .toggle-header:hover {
+            background: #c8ddf1;
+        }
+        
+        .toggle-header h4, .toggle-header h5 {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        
+        .toggle-icon {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-section.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+        
+        .toggle-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: white;
+        }
+        
+        .toggle-section.active .toggle-content {
+            max-height: 2000px;
+        }
+        
+        .toggle-content-inner {
+            padding: 1.5rem;
+        }
+        
+        .comparison-panel {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: -4px 0 12px rgba(0,0,0,0.15);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .comparison-panel.active {
+            right: 0;
+        }
+        
+        .comparison-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .comparison-content {
+            padding: 1rem;
+        }
+        
+        .saved-result {
+            background: var(--light-blue);
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            position: relative;
+        }
+        
+        .delete-result {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translate(-50%, -100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; transform: translate(-50%, -20px); }
+        }
+        
+        @media (max-width: 768px) {
+            .comparison-panel {
+                width: 100%;
+            }
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .tabs {
+                padding: 0.25rem;
+            }
+            
+            .tab-button {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="back-to-home">
+            ← ポータルへ戻る
+        </a>
+        <h1>⚡ 電気基礎インタラクティブシミュレーター</h1>
+        <p class="subtitle">初心者でも楽しく学べる電力・電圧・電流の世界</p>
+    </header>
+    
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('power-factor')">電力と力率</button>
+            <button class="tab-button" onclick="showTab('voltage-drop')">電圧降下計算</button>
+            <button class="tab-button" onclick="showTab('allowable-current')">電線の許容電流</button>
+            <button class="tab-button" onclick="showTab('distribution-system')">配電方式比較</button>
+        </div>
+    
+    <!-- 比較パネル -->
+    <div id="comparison-panel" class="comparison-panel">
+        <div class="comparison-header">
+            <h3>📊 保存した計算結果</h3>
+            <button onclick="toggleComparisonPanel()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">×</button>
+        </div>
+        <div class="comparison-content" id="saved-results">
+            <p style="text-align: center; color: #999;">保存された結果がありません</p>
+        </div>
+    </div>
+    
+    <!-- 比較ボタン -->
+    <button onclick="toggleComparisonPanel()" style="position: fixed; right: 20px; bottom: 20px; background: var(--secondary-color); color: white; border: none; padding: 1rem; border-radius: 50%; width: 60px; height: 60px; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: all 0.3s ease;">
+        📊
+    </button>
+        
+        <!-- 電力と力率タブ -->
+        <div id="power-factor" class="tab-content active">
+            <div class="card">
+                <h2>📊 電力と力率の関係</h2>
+                
+                <div class="info-section">
+                    <h4>🔍 基本概念の理解</h4>
+                    <p><strong>電力には3種類あります：</strong></p>
+                    
+                    <div class="power-types">
+                        <div class="power-type-item">
+                            <strong>有効電力（P）</strong>
+                            <span>実際に仕事をする電力。単位は W（ワット）</span>
+                        </div>
+                        <div class="power-type-item">
+                            <strong>無効電力（Q）</strong>
+                            <span>磁界を作るだけで仕事をしない電力。単位は var（バール）</span>
+                        </div>
+                        <div class="power-type-item">
+                            <strong>皮相電力（S）</strong>
+                            <span>電線を流れる全体の電力。単位は VA（ボルトアンペア）</span>
+                        </div>
+                    </div>
+                    
+                    <p style="margin-top: 1rem;">これらは「力率三角形」という直角三角形の関係にあります。</p>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">電圧 (V)</label>
+                    <div class="slider-container">
+                        <input type="range" id="voltage-pf" min="100" max="500" value="200" step="10" onchange="updatePowerFactor()">
+                        <span class="value-display" id="voltage-pf-value">200V</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">電流 (A)</label>
+                    <div class="slider-container">
+                        <input type="range" id="current-pf" min="1" max="100" value="50" step="1" onchange="updatePowerFactor()">
+                        <span class="value-display" id="current-pf-value">50A</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">力率 (cosθ)</label>
+                    <div class="slider-container">
+                        <input type="range" id="power-factor" min="0" max="100" value="85" step="1" onchange="updatePowerFactor()">
+                        <span class="value-display" id="power-factor-value">0.85</span>
+                    </div>
+                </div>
+                
+                <div class="svg-container">
+                    <svg id="power-triangle" width="600" height="400" viewBox="0 0 600 400">
+                        <!-- 力率三角形 -->
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+                            </marker>
+                        </defs>
+                        
+                        <!-- 背景グリッド -->
+                        <g opacity="0.2">
+                            <line x1="50" y1="300" x2="550" y2="300" stroke="#ddd" stroke-width="1"/>
+                            <line x1="100" y1="50" x2="100" y2="350" stroke="#ddd" stroke-width="1"/>
+                        </g>
+                        
+                        <!-- 力率三角形 -->
+                        <g id="triangle-group">
+                            <!-- 有効電力 (横) -->
+                            <line x1="100" y1="300" x2="400" y2="300" stroke="#4CAF50" stroke-width="4" marker-end="url(#arrowhead)"/>
+                            <text x="250" y="320" text-anchor="middle" font-size="16" font-weight="bold" fill="#4CAF50">有効電力 P</text>
+                            <text x="250" y="340" text-anchor="middle" font-size="14" id="active-power-text">8500W</text>
+                            
+                            <!-- 無効電力 (縦) -->
+                            <line x1="400" y1="300" x2="400" y2="200" stroke="#FF9800" stroke-width="4" marker-end="url(#arrowhead)"/>
+                            <text x="430" y="250" font-size="16" font-weight="bold" fill="#FF9800">無効電力 Q</text>
+                            <text x="430" y="270" font-size="14" id="reactive-power-text">5268var</text>
+                            
+                            <!-- 皮相電力 (斜辺) -->
+                            <line x1="100" y1="300" x2="400" y2="200" stroke="#2196F3" stroke-width="4" marker-end="url(#arrowhead)"/>
+                            <text x="200" y="240" font-size="16" font-weight="bold" fill="#2196F3" transform="rotate(-18 200 240)">皮相電力 S</text>
+                            <text x="200" y="260" font-size="14" id="apparent-power-text" transform="rotate(-18 200 260)">10000VA</text>
+                            
+                            <!-- 角度表示 -->
+                            <path d="M 150 300 A 50 50 0 0 0 173 266" fill="none" stroke="#FF961C" stroke-width="2"/>
+                            <text x="170" y="290" font-size="14" fill="#FF961C" id="angle-text">θ=31.8°</text>
+                        </g>
+                    </svg>
+                </div>
+                
+                <div class="result-box">
+                    <h3>計算結果</h3>
+                    <div class="formula">
+                        S² = P² + Q² （ピタゴラスの定理）
+                    </div>
+                    <p><strong>有効電力 (P):</strong> <span class="result-value" id="active-power">8,500 W</span></p>
+                    <p><strong>無効電力 (Q):</strong> <span class="result-value" id="reactive-power">5,268 var</span></p>
+                    <p><strong>皮相電力 (S):</strong> <span class="result-value" id="apparent-power">10,000 VA</span></p>
+                    <p><strong>位相角 (θ):</strong> <span class="result-value" id="phase-angle">31.8°</span></p>
+                    <button class="interactive-button" onclick="savePowerFactorResult()">📊 結果を保存</button>
+                </div>
+                
+                <div class="card" style="background: #f8f9fa;">
+                    <h3>📚 実用知識：力率の実例</h3>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>🏭 機器別の典型的な力率</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <table style="width: 100%; margin: 1rem 0;">
+                                    <thead>
+                                        <tr style="background: var(--primary-color); color: white;">
+                                            <th style="padding: 0.5rem;">機器</th>
+                                            <th style="padding: 0.5rem;">力率</th>
+                                            <th style="padding: 0.5rem;">特徴</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">白熱電球</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">1.0（100%）</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">抵抗のみ、理想的</td>
+                                        </tr>
+                                        <tr style="background: #f5f5f5;">
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">LED照明</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">0.95～0.98</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">電源回路により高力率</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">蛍光灯（安定器）</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">0.5～0.6</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">インダクタンスが大きい</td>
+                                        </tr>
+                                        <tr style="background: #f5f5f5;">
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">エアコン（インバータ）</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">0.95～0.98</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">インバータ制御で改善</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">モーター（無負荷）</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">0.2～0.3</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">空回りは力率最悪</td>
+                                        </tr>
+                                        <tr style="background: #f5f5f5;">
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">モーター（定格負荷）</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">0.8～0.85</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">適正負荷で改善</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>💰 電気料金への影響（実例）</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <p><strong>契約電力50kWの工場の場合：</strong></p>
+                                <ul class="info-list">
+                                    <li>
+                                        <strong>力率85%</strong>
+                                        <span>基本料金は標準（割引なし）</span>
+                                    </li>
+                                    <li>
+                                        <strong>力率95%</strong>
+                                        <span>基本料金5%割引 → 年間約6万円削減</span>
+                                    </li>
+                                    <li>
+                                        <strong>力率75%</strong>
+                                        <span>基本料金5%割増 → 年間約6万円増加</span>
+                                    </li>
+                                </ul>
+                                <p style="margin-top: 0.5rem;">※基本料金1,000円/kWで計算</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>🔧 力率改善シミュレーション</h3>
+                    
+                    <div class="toggle-section active">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>💡 なぜ力率改善が必要？</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <ul class="info-list">
+                                    <li>
+                                        <strong>電気料金の削減</strong>
+                                        <span>力率が85%未満だと割増料金、85%以上で割引</span>
+                                    </li>
+                                    <li>
+                                        <strong>送電損失の削減</strong>
+                                        <span>電流が減ることで電線での発熱ロスが減少</span>
+                                    </li>
+                                    <li>
+                                        <strong>設備容量の有効活用</strong>
+                                        <span>同じ設備でより多くの有効電力を送れる</span>
+                                    </li>
+                                    <li>
+                                        <strong>電圧降下の改善</strong>
+                                        <span>電流減少により電圧の安定性が向上</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label class="control-label">目標力率</label>
+                        <div class="slider-container">
+                            <input type="range" id="target-pf" min="85" max="100" value="95" step="1" onchange="calculateCapacitor()">
+                            <span class="value-display" id="target-pf-value">0.95</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-box">
+                        <h4>必要な進相コンデンサ容量</h4>
+                        <div class="formula">
+                            Q_c = P × (tanθ₁ - tanθ₂)<br>
+                            ここで、θ₁ = cos⁻¹(現在の力率)、θ₂ = cos⁻¹(目標力率)
+                        </div>
+                        <p><strong>必要容量:</strong> <span class="result-value" id="capacitor-kvar">3,000 kvar</span></p>
+                        <p><strong>改善効果:</strong></p>
+                        <ul>
+                            <li>電流削減率: <span id="current-reduction">10.5%</span></li>
+                            <li>基本料金削減: <span id="cost-reduction">約10%</span></li>
+                            <li>送電損失削減: <span id="loss-reduction">約20%</span></li>
+                        </ul>
+                        <div class="alert alert-warning" style="margin-top: 1rem;">
+                            <p>⚠️ <strong>注意:</strong> 進相コンデンサの過補償は電圧上昇を引き起こすため、適切な容量選定が重要です。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 電圧降下計算タブ -->
+        <div id="voltage-drop" class="tab-content">
+            <div class="card">
+                <h2>📉 電圧降下計算ツール</h2>
+                
+                <div class="info-section">
+                    <h4>🔍 電圧降下とは？</h4>
+                    <p><strong>電線には抵抗があるため、電流が流れると電圧が下がります。</strong></p>
+                    <p>例：100Vの電源から50m離れた場所では、98Vになってしまう（2V降下）</p>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h5>📊 許容される電圧降下</h5>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <ul class="info-list">
+                                    <li>
+                                        <strong>幹線：2%以内</strong>
+                                        <span>200Vなら4V以内</span>
+                                    </li>
+                                    <li>
+                                        <strong>分岐回路：2%以内</strong>
+                                        <span>合計で4%以内</span>
+                                    </li>
+                                    <li>
+                                        <strong>一時的な負荷（モーター起動時など）：7%程度</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h5>⚠️ 電圧降下が大きいと...</h5>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <ul class="info-list">
+                                    <li>
+                                        <strong>照明が暗くなる</strong>
+                                        <span>90Vで約80%の明るさ</span>
+                                    </li>
+                                    <li>
+                                        <strong>モーターの力が弱くなる</strong>
+                                        <span>電圧の2乗に比例</span>
+                                    </li>
+                                    <li>
+                                        <strong>電子機器が誤動作する可能性</strong>
+                                    </li>
+                                    <li>
+                                        <strong>発熱による電力損失が増加</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">配電方式</label>
+                    <select id="distribution-type" onchange="updateVoltageDrop()">
+                        <option value="single2">単相2線式</option>
+                        <option value="single3">単相3線式</option>
+                        <option value="three3">三相3線式</option>
+                    </select>
+                    <div class="alert alert-info" style="margin-top: 0.5rem;">
+                        <p>💡 <strong>係数の根拠:</strong> 銅の抵抗率 1.78×10⁻⁸ Ωm を基に、往復分を考慮した簡易式です。<br>
+                        単相2線式: 35.6 = 2 × 17.8（往復）<br>
+                        単相3線式: 17.8（片道）<br>
+                        三相3線式: 30.8 = √3 × 17.8</p>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">電線長さ (m)</label>
+                    <div class="slider-container">
+                        <input type="range" id="cable-length" min="10" max="500" value="100" step="10" onchange="updateVoltageDrop()">
+                        <span class="value-display" id="cable-length-value">100m</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">電流 (A)</label>
+                    <div class="slider-container">
+                        <input type="range" id="current-vd" min="1" max="100" value="30" step="1" onchange="updateVoltageDrop()">
+                        <span class="value-display" id="current-vd-value">30A</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label">電線断面積 (mm²)</label>
+                    <select id="cable-size" onchange="updateVoltageDrop()">
+                        <option value="1.6">1.6 mm²</option>
+                        <option value="2.0" selected>2.0 mm²</option>
+                        <option value="2.6">2.6 mm²</option>
+                        <option value="5.5">5.5 mm²</option>
+                        <option value="8">8.0 mm²</option>
+                        <option value="14">14 mm²</option>
+                        <option value="22">22 mm²</option>
+                        <option value="38">38 mm²</option>
+                    </select>
+                </div>
+                
+                <div class="svg-container">
+                    <svg width="600" height="300" viewBox="0 0 600 300">
+                        <!-- 電圧降下の視覚化 -->
+                        <defs>
+                            <linearGradient id="voltageGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#FF5252;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        
+                        <!-- 電圧レベル表示 -->
+                        <rect x="50" y="100" width="500" height="40" fill="url(#voltageGradient)" opacity="0.3"/>
+                        
+                        <!-- 電源側 -->
+                        <rect x="40" y="80" width="20" height="80" fill="#005BAB"/>
+                        <text x="50" y="70" text-anchor="middle" font-size="14" font-weight="bold">電源</text>
+                        <text x="50" y="180" text-anchor="middle" font-size="12" id="source-voltage">200V</text>
+                        
+                        <!-- 負荷側 -->
+                        <rect x="540" y="80" width="20" height="80" fill="#FF961C"/>
+                        <text x="550" y="70" text-anchor="middle" font-size="14" font-weight="bold">負荷</text>
+                        <text x="550" y="180" text-anchor="middle" font-size="12" id="load-voltage">194V</text>
+                        
+                        <!-- 電圧降下の矢印 -->
+                        <path d="M 50 120 Q 300 140 550 120" fill="none" stroke="#333" stroke-width="2" stroke-dasharray="5,5"/>
+                        <text x="300" y="135" text-anchor="middle" font-size="16" font-weight="bold" id="voltage-drop-text">電圧降下: 6V (3%)</text>
+                        
+                        <!-- 許容値ライン -->
+                        <line x1="50" y1="200" x2="550" y2="200" stroke="#F44336" stroke-width="2" stroke-dasharray="10,5"/>
+                        <text x="300" y="215" text-anchor="middle" font-size="12" fill="#F44336">許容値: 2% (4V)</text>
+                    </svg>
+                </div>
+                
+                <div class="result-box">
+                    <h3>計算結果</h3>
+                    <div class="formula" id="voltage-drop-formula">
+                        e = 30.8 × L × I / (1000 × A)
+                    </div>
+                    <p><strong>電圧降下:</strong> <span class="result-value" id="voltage-drop-result">6.0 V</span></p>
+                    <p><strong>電圧降下率:</strong> <span class="result-value" id="voltage-drop-percent">3.0 %</span></p>
+                    <p><strong>判定:</strong> <span id="voltage-drop-status">
+                        <span class="status-indicator status-danger"></span>許容値を超えています
+                    </span></p>
+                    
+                    <div class="alert alert-info">
+                        <p>💡 <strong>ヒント:</strong> 電圧降下を減らすには、電線を太くするか、電線長を短くしましょう。</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>📊 電線サイズ別比較</h3>
+                    <div class="comparison-container" id="cable-comparison">
+                        <!-- JavaScriptで動的に生成 -->
+                    </div>
+                </div>
+                
+                <div class="card" style="background: #f8f9fa;">
+                    <h3>📚 実用知識：電圧降下の実例</h3>
+                    
+                    <div class="toggle-section active">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>🏠 家庭での実例</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <p><strong>エアコン専用回路（200V、20A、配線長30m）の場合：</strong></p>
+                                <ul>
+                                    <li>VVF 2.0mm²使用：電圧降下 = 5.3V（2.7%）→ <span style="color: #FF9800;">ギリギリ</span></li>
+                                    <li>VVF 2.6mm²使用：電圧降下 = 4.1V（2.1%）→ <span style="color: #4CAF50;">適切</span></li>
+                                    <li>VVF 1.6mm²使用：電圧降下 = 6.7V（3.4%）→ <span style="color: #F44336;">不適切</span></li>
+                                </ul>
+                                <p style="margin-top: 0.5rem;"><strong>結論：</strong>少し太い電線を使うことで、エアコンの効きが良くなり、電気代も節約できます。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>🏭 工場での実例</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <p><strong>モーター（三相200V、50A、配線長100m）の場合：</strong></p>
+                                <ul>
+                                    <li>CVT 14mm²：電圧降下 = 11.0V（5.5%）→ 起動困難の可能性</li>
+                                    <li>CVT 22mm²：電圧降下 = 7.0V（3.5%）→ 通常運転OK</li>
+                                    <li>CVT 38mm²：電圧降下 = 4.1V（2.1%）→ 理想的</li>
+                                </ul>
+                                <p style="margin-top: 0.5rem;"><strong>注意：</strong>モーター起動時は定格の6倍程度の電流が流れるため、余裕を持った設計が必要です。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>⚡ 電圧降下による具体的な影響</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <table style="width: 100%; margin: 1rem 0;">
+                                    <thead>
+                                        <tr style="background: var(--primary-color); color: white;">
+                                            <th style="padding: 0.5rem;">電圧降下率</th>
+                                            <th style="padding: 0.5rem;">影響</th>
+                                            <th style="padding: 0.5rem;">対策</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">1%以内</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">ほぼ影響なし</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">理想的な設計</td>
+                                        </tr>
+                                        <tr style="background: #f5f5f5;">
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">2%程度</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">わずかな効率低下</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">許容範囲内</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">3～5%</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">機器の性能低下、発熱増加</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">電線サイズアップ推奨</td>
+                                        </tr>
+                                        <tr style="background: #f5f5f5;">
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">5%以上</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">起動不良、故障の原因</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">設計見直し必要</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 電線の許容電流タブ -->
+        <div id="allowable-current" class="tab-content">
+            <div class="card">
+                <h2>⚡ 電線の許容電流チェッカー</h2>
+                
+                <div class="info-section">
+                    <h4>🔍 許容電流とは？</h4>
+                    <p><strong>電線に安全に流せる最大電流のことです。これを超えると...</strong></p>
+                    <ul class="info-list">
+                        <li>電線が発熱し、被覆が溶ける危険</li>
+                        <li>最悪の場合、火災の原因に</li>
+                        <li>電線の寿命が著しく短くなる</li>
+                    </ul>
+                </div>
+                
+                <!-- 計算パネル -->
+                <div class="card" style="background: #f8f9fa;">
+                    <h3>📐 計算条件設定</h3>
+                    
+                    <div class="control-group">
+                        <label class="control-label">電線種類</label>
+                        <select id="cable-type" onchange="updateAllowableCurrent()">
+                            <option value="vvf">VVF（平形ビニル絶縁電線）</option>
+                            <option value="iv">IV（600Vビニル絶縁電線）</option>
+                            <option value="cv">CV（架橋ポリエチレン絶縁電線）</option>
+                            <option value="cvt">CVT（トリプレックス形）</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label class="control-label">電線サイズ</label>
+                        <select id="cable-size-ac" onchange="updateAllowableCurrent()">
+                            <option value="1.6">1.6 mm²</option>
+                            <option value="2.0" selected>2.0 mm²</option>
+                            <option value="2.6">2.6 mm²</option>
+                            <option value="5.5">5.5 mm²</option>
+                            <option value="8">8.0 mm²</option>
+                            <option value="14">14 mm²</option>
+                            <option value="22">22 mm²</option>
+                            <option value="38">38 mm²</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label class="control-label">布設条件</label>
+                        <select id="installation-type" onchange="updateAllowableCurrent()">
+                            <option value="air">気中布設（単独）</option>
+                            <option value="conduit" selected>電線管内布設</option>
+                            <option value="bundle">たばね布設</option>
+                            <option value="buried">地中埋設</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label class="control-label">周囲温度</label>
+                        <div class="slider-container">
+                            <input type="range" id="ambient-temp" min="20" max="50" value="30" step="5" onchange="updateAllowableCurrent()">
+                            <span class="value-display" id="ambient-temp-value">30°C</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label class="control-label">使用電流 (A)</label>
+                        <div class="slider-container">
+                            <input type="range" id="actual-current" min="0" max="100" value="20" step="1" onchange="updateAllowableCurrent()">
+                            <span class="value-display" id="actual-current-value">20A</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 結果表示パネル -->
+                <div class="result-box">
+                    <h3>📊 計算結果</h3>
+                    <div class="result-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin: 1rem 0;">
+                        <div style="background: linear-gradient(135deg, #4CAF50, #45a049); color: white; padding: 1rem; border-radius: 12px; text-align: center;">
+                            <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">許容電流</h4>
+                            <div style="font-size: 2.5rem; font-weight: bold;" id="allowable-current-result">23 A</div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;" id="base-current-info">基準値: 27A @ 30℃</div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #2196F3, #1976D2); color: white; padding: 1rem; border-radius: 12px; text-align: center;">
+                            <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">使用電流</h4>
+                            <div style="font-size: 2.5rem; font-weight: bold;" id="used-current-result">20 A</div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">設定値</div>
+                        </div>
+                        
+                        <div style="padding: 1rem; border-radius: 12px; text-align: center; border: 3px solid #4CAF50;" id="usage-rate-panel">
+                            <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">使用率</h4>
+                            <div style="font-size: 2.5rem; font-weight: bold; color: #4CAF50;" id="usage-rate-result">87.0%</div>
+                            <div style="font-size: 0.9rem; color: #666;" id="safety-assessment">安全範囲</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 安全性判定 -->
+                    <div style="margin: 1.5rem 0; padding: 1rem; border-radius: 8px; text-align: center;" id="safety-status">
+                        <h4 style="margin: 0 0 0.5rem 0;">🛡️ 安全性判定</h4>
+                        <div style="font-size: 1.2rem; font-weight: bold;" id="safety-message">✅ 安全に使用できます</div>
+                    </div>
+                    
+                    <button class="interactive-button" onclick="saveAllowableCurrentResult()">📊 結果を保存</button>
+                </div>
+                
+                <!-- 計算ロジック詳細 -->
+                <div class="card" style="background: #f0f8ff;">
+                    <h3>🧮 計算ロジック詳細</h3>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>📐 計算手順とステップ</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <div id="calculation-steps" style="background: #fafafa; padding: 1rem; border-radius: 8px; font-family: 'Courier New', monospace;">
+                                    <!-- 計算ステップがここに動的に表示される -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>📊 使用している数式</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【基準許容電流の取得】</h5>
+                                    <p><code>基準許容電流 = データベース[電線種類][サイズ][布設条件]</code></p>
+                                    <p><strong>地中埋設の場合：</strong> <code>基準許容電流 = 気中布設値 × 1.4</code></p>
+                                </div>
+                                
+                                <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【温度補正係数の計算】</h5>
+                                    <p><strong>温度が30℃より高い場合：</strong></p>
+                                    <p><code>補正係数 = 1.0 - (温度 - 30) × 0.015</code></p>
+                                    <p><strong>温度が30℃より低い場合：</strong></p>
+                                    <p><code>補正係数 = 1.0 + (30 - 温度) × 0.01</code></p>
+                                    <p><strong>30℃の場合：</strong> <code>補正係数 = 1.0</code>（補正なし）</p>
+                                </div>
+                                
+                                <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【最終許容電流の算出】</h5>
+                                    <p><code>許容電流 = 基準許容電流 × 温度補正係数</code></p>
+                                </div>
+                                
+                                <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【使用率の計算】</h5>
+                                    <p><code>使用率(%) = (使用電流 ÷ 許容電流) × 100</code></p>
+                                </div>
+                                
+                                <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【安全性判定基準】</h5>
+                                    <ul style="margin: 0.5rem 0;">
+                                        <li><strong>使用率 ≤ 80%：</strong> <span style="color: #4CAF50;">✅ 安全に使用できます</span></li>
+                                        <li><strong>80% < 使用率 ≤ 100%：</strong> <span style="color: #FF9800;">⚠️ 使用率が高いです</span></li>
+                                        <li><strong>使用率 > 100%：</strong> <span style="color: #F44336;">❌ 許容電流を超えています！</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>📚 技術的根拠</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>🔗 準拠規格・基準</h5>
+                                    <ul>
+                                        <li><strong>電気設備技術基準の解釈</strong>（経済産業省）</li>
+                                        <li><strong>JIS C 3606</strong>（600Vビニル絶縁電線）</li>
+                                        <li><strong>JIS C 3605</strong>（架橋ポリエチレン絶縁電線）</li>
+                                        <li><strong>内線規程</strong>（日本電気協会）</li>
+                                    </ul>
+                                </div>
+                                
+                                <div style="background: #fff3e0; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>⚗️ 温度補正の科学的根拠</h5>
+                                    <p><strong>温度上昇による影響：</strong></p>
+                                    <ul>
+                                        <li>導体抵抗の増加（銅の抵抗温度係数：+0.4%/℃）</li>
+                                        <li>絶縁材料の劣化促進</li>
+                                        <li>熱膨張による接続部の緩み</li>
+                                    </ul>
+                                    <p><strong>補正係数の設定理由：</strong></p>
+                                    <ul>
+                                        <li>高温時：-1.5%/℃（安全マージン重視）</li>
+                                        <li>低温時：+1.0%/℃（保守的な増加率）</li>
+                                    </ul>
+                                </div>
+                                
+                                <div style="background: #f3e5f5; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>🔧 80%ルールの工学的根拠</h5>
+                                    <ul>
+                                        <li><strong>安全率確保：</strong> 突入電流や短時間過負荷への対応</li>
+                                        <li><strong>長期信頼性：</strong> 絶縁材料の熱劣化抑制</li>
+                                        <li><strong>将来拡張性：</strong> 負荷増加への対応余裕</li>
+                                        <li><strong>規制遵守：</strong> 国際的な電気安全基準</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 温度補正の現在値表示 -->
+                <div class="card" style="background: #fff8e1;">
+                    <h3>🌡️ 現在の温度補正</h3>
+                    <p id="temp-correction-detail" style="margin: 1rem 0; padding: 0.5rem; background: #f5f5f5; border-radius: 4px;">
+                        現在の温度補正：30℃基準なので補正なし
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0;">
+                        <div style="background: #e3f2fd; padding: 0.8rem; border-radius: 8px; text-align: center;">
+                            <strong>温度が低い場合</strong><br>
+                            <span style="color: #1976d2;">許容電流 ↑ 増加</span><br>
+                            <small>1℃下降で +1.0%</small>
+                        </div>
+                        <div style="background: #ffebee; padding: 0.8rem; border-radius: 8px; text-align: center;">
+                            <strong>温度が高い場合</strong><br>
+                            <span style="color: #d32f2f;">許容電流 ↓ 減少</span><br>
+                            <small>1℃上昇で -1.5%</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 許容電流一覧表 -->
+                <div class="card">
+                    <h3>📋 許容電流一覧表</h3>
+                    <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">
+                        <strong id="selected-cable-info">VVF（平形ビニル絶縁電線）</strong> の許容電流値（30℃基準）
+                    </p>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; min-width: 500px;">
+                            <thead>
+                                <tr style="background: var(--primary-color); color: white;">
+                                    <th style="padding: 0.75rem; text-align: center;">サイズ (mm²)</th>
+                                    <th style="padding: 0.75rem; text-align: center;">気中布設</th>
+                                    <th style="padding: 0.75rem; text-align: center;">管内布設</th>
+                                    <th style="padding: 0.75rem; text-align: center;">たばね布設</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allowable-current-table">
+                                <!-- JavaScriptで動的生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 計算例とサンプル -->
+                <div class="card" style="background: #f5f5ff;">
+                    <h3>📝 実際の計算例</h3>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>🧪 サンプル計算 1：標準的な家庭用配線</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【設定条件】</h5>
+                                    <ul>
+                                        <li>電線：VVF 2.0mm²</li>
+                                        <li>布設：電線管内布設</li>
+                                        <li>温度：30℃（標準）</li>
+                                        <li>使用電流：15A（1500W機器）</li>
+                                    </ul>
+                                </div>
+                                
+                                <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【計算過程】</h5>
+                                    <p><strong>STEP 1:</strong> 基準許容電流 = 23A（データベースより）</p>
+                                    <p><strong>STEP 2:</strong> 温度補正係数 = 1.0（30℃のため補正なし）</p>
+                                    <p><strong>STEP 3:</strong> 許容電流 = 23 × 1.0 = 23A</p>
+                                    <p><strong>STEP 4:</strong> 使用率 = (15 ÷ 23) × 100 = 65.2%</p>
+                                    <p><strong>STEP 5:</strong> 判定 = ✅ 安全（65.2% ≤ 80%）</p>
+                                </div>
+                                
+                                <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【結論】</h5>
+                                    <p>この配線は<strong>安全に使用できます</strong>。一般的な家庭用コンセント回路として適切な構成です。</p>
+                                </div>
+                                
+                                <button class="interactive-button" onclick="loadSample1()" style="margin-top: 0.5rem;">
+                                    📋 この条件をシミュレーターに読み込む
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>🔥 サンプル計算 2：高温環境での使用例</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【設定条件】</h5>
+                                    <ul>
+                                        <li>電線：VVF 2.6mm²</li>
+                                        <li>布設：たばね布設</li>
+                                        <li>温度：45℃（天井裏・夏季）</li>
+                                        <li>使用電流：20A（エアコン）</li>
+                                    </ul>
+                                </div>
+                                
+                                <div style="background: #fff3e0; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【計算過程】</h5>
+                                    <p><strong>STEP 1:</strong> 基準許容電流 = 26A（たばね布設）</p>
+                                    <p><strong>STEP 2:</strong> 温度補正係数 = 1.0 - (45-30) × 0.015 = 0.775</p>
+                                    <p><strong>STEP 3:</strong> 許容電流 = 26 × 0.775 = 20.2A</p>
+                                    <p><strong>STEP 4:</strong> 使用率 = (20 ÷ 20.2) × 100 = 99.0%</p>
+                                    <p><strong>STEP 5:</strong> 判定 = ⚠️ 注意が必要（99.0% > 80%）</p>
+                                </div>
+                                
+                                <div style="background: #ffebee; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【結論】</h5>
+                                    <p>この配線は<strong>使用率が高く注意が必要</strong>です。より太い電線（5.5mm²以上）の使用を推奨します。</p>
+                                </div>
+                                
+                                <button class="interactive-button" onclick="loadSample2()" style="margin-top: 0.5rem;">
+                                    📋 この条件をシミュレーターに読み込む
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>❄️ サンプル計算 3：低温環境での使用例</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【設定条件】</h5>
+                                    <ul>
+                                        <li>電線：IV 5.5mm²</li>
+                                        <li>布設：気中布設</li>
+                                        <li>温度：20℃（屋外・冬季）</li>
+                                        <li>使用電流：65A（大型機器）</li>
+                                    </ul>
+                                </div>
+                                
+                                <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【計算過程】</h5>
+                                    <p><strong>STEP 1:</strong> 基準許容電流 = 76A（気中布設）</p>
+                                    <p><strong>STEP 2:</strong> 温度補正係数 = 1.0 + (30-20) × 0.01 = 1.1</p>
+                                    <p><strong>STEP 3:</strong> 許容電流 = 76 × 1.1 = 83.6A</p>
+                                    <p><strong>STEP 4:</strong> 使用率 = (65 ÷ 83.6) × 100 = 77.8%</p>
+                                    <p><strong>STEP 5:</strong> 判定 = ✅ 安全（77.8% ≤ 80%）</p>
+                                </div>
+                                
+                                <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                    <h5>【結論】</h5>
+                                    <p>低温環境により許容電流が増加し、<strong>安全に使用できます</strong>。寒冷地での配線設計例です。</p>
+                                </div>
+                                
+                                <button class="interactive-button" onclick="loadSample3()" style="margin-top: 0.5rem;">
+                                    📋 この条件をシミュレーターに読み込む
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 実用的なアドバイス -->
+                <div class="card" style="background: #f0f8f0;">
+                    <h3>💡 実用的なアドバイス</h3>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>🏠 家庭での電線選定例</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="background: #e8f5e8;">
+                                            <th style="padding: 0.75rem; border: 1px solid #ddd;">回路</th>
+                                            <th style="padding: 0.75rem; border: 1px solid #ddd;">ブレーカー</th>
+                                            <th style="padding: 0.75rem; border: 1px solid #ddd;">推奨電線</th>
+                                            <th style="padding: 0.75rem; border: 1px solid #ddd;">理由</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">照明回路</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">15A</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;"><strong>VVF 1.6mm²</strong></td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">許容19A > 15A で安全</td>
+                                        </tr>
+                                        <tr style="background: #fafafa;">
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">コンセント回路</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">20A</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;"><strong>VVF 2.0mm²</strong></td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">許容27A > 20A で余裕</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">エアコン専用</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">30A</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;"><strong>VVF 2.6mm²</strong></td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">大容量機器用</td>
+                                        </tr>
+                                        <tr style="background: #fafafa;">
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">IH・電気温水器</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">40A</td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;"><strong>VVF 5.5mm²</strong></td>
+                                            <td style="padding: 0.5rem; border: 1px solid #ddd;">高負荷機器対応</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>⚠️ 安全のポイント</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <div class="alert alert-info">
+                                    <ul style="margin: 0;">
+                                        <li><strong>80%ルール</strong>：許容電流の80%以下で使用する</li>
+                                        <li><strong>温度考慮</strong>：夏場の高温環境では能力低下に注意</li>
+                                        <li><strong>将来計画</strong>：後から太くするのは困難、最初から余裕を</li>
+                                        <li><strong>定期点検</strong>：コンセントやプラグの発熱チェック</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 配電方式比較タブ -->
+        <div id="distribution-system" class="tab-content">
+            <div class="card">
+                <h2>🔌 配電方式の詳細解説</h2>
+                
+                <div class="info-section">
+                    <h4>🔍 配電方式の基本理解</h4>
+                    <p><strong>電気を送る方法には主に3つの方式があります：</strong></p>
+                    
+                    <table style="width: 100%; margin: 1rem 0; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: var(--primary-color); color: white;">
+                                <th style="padding: 0.75rem; border: 1px solid #ddd;">方式</th>
+                                <th style="padding: 0.75rem; border: 1px solid #ddd;">電線数</th>
+                                <th style="padding: 0.75rem; border: 1px solid #ddd;">主な用途</th>
+                                <th style="padding: 0.75rem; border: 1px solid #ddd;">特徴</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 0.5rem; border: 1px solid #ddd;"><strong>単相2線式</strong></td>
+                                <td style="padding: 0.5rem; border: 1px solid #ddd;">2本</td>
+                                <td style="padding: 0.5rem; border: 1px solid #ddd;">小規模・低電力</td>
+                                <td style="padding: 0.5rem; border: 1px solid #ddd;">シンプル、安価</td>
+                            </tr>
+                            <tr style="background: #f5f5f5;">
+                                <td style="padding: 0.5rem; border: 1px solid #ddd;"><strong>単相3線式</strong></td>
+                                <td style="padding: 0.5rem; border: 1px solid #ddd;">3本</td>
+                                <td style="padding: 0.5rem; border: 1px solid #ddd;">一般住宅</td>
+                                <td style="padding: 0.5rem; border: 1px solid #ddd;">100V/200V両用</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 0.5rem; border: 1px solid #ddd;"><strong>三相3線式</strong></td>
+                                <td style="padding: 0.5rem; border: 1px solid #ddd;">3本</td>
+                                <td style="padding: 0.5rem; border: 1px solid #ddd;">工業・大電力</td>
+                                <td style="padding: 0.5rem; border: 1px solid #ddd;">高効率、モーター向け</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h5>💡 重要なポイント</h5>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <ul class="info-list">
+                                    <li>
+                                        <strong>電線数と送電能力は比例しない</strong>
+                                        <span>三相は3本で√3倍（約1.73倍）の電力</span>
+                                    </li>
+                                    <li>
+                                        <strong>電圧の種類</strong>
+                                        <span>日本では100V、200V、400V（特殊用途）が主流</span>
+                                    </li>
+                                    <li>
+                                        <strong>周波数の違い</strong>
+                                        <span>東日本50Hz、西日本60Hz（静岡県富士川が境界）</span>
+                                    </li>
+                                    <li>
+                                        <strong>契約種別</strong>
+                                        <span>従量電灯（家庭用）と動力（工業用）で料金体系が異なる</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="comparison-container">
+                    <div class="comparison-item" style="border: 2px solid #4CAF50;">
+                        <h4>🏠 単相2線式</h4>
+                        <div class="svg-container">
+                            <svg width="250" height="200" viewBox="0 0 250 200">
+                                <!-- 電源 -->
+                                <rect x="20" y="60" width="40" height="80" fill="#005BAB"/>
+                                <text x="40" y="50" text-anchor="middle" font-size="12" font-weight="bold">電源</text>
+                                
+                                <!-- 配線 -->
+                                <line x1="60" y1="80" x2="190" y2="80" stroke="#333" stroke-width="3"/>
+                                <text x="125" y="75" text-anchor="middle" font-size="10">L (電圧線)</text>
+                                
+                                <line x1="60" y1="120" x2="190" y2="120" stroke="#666" stroke-width="3"/>
+                                <text x="125" y="135" text-anchor="middle" font-size="10">N (中性線)</text>
+                                
+                                <!-- 負荷 -->
+                                <rect x="190" y="60" width="40" height="80" fill="#FF961C"/>
+                                <text x="210" y="50" text-anchor="middle" font-size="12" font-weight="bold">負荷</text>
+                                
+                                <!-- 電圧表示 -->
+                                <text x="125" y="160" text-anchor="middle" font-size="14" font-weight="bold">100V or 200V</text>
+                            </svg>
+                        </div>
+                        
+                        <h5>📋 特徴と用途</h5>
+                        <ul>
+                            <li><strong>構成:</strong> 2本線（L:ライブ線、N:ニュートラル線）</li>
+                            <li><strong>電圧:</strong> 100V または 200V（どちらか一方）</li>
+                            <li><strong>実際の使用例:</strong>
+                                <ul>
+                                    <li>アパートの照明回路</li>
+                                    <li>小さな店舗の電源</li>
+                                    <li>農業用小屋の電源</li>
+                                </ul>
+                            </li>
+                            <li><strong>メリット:</strong> 
+                                <ul>
+                                    <li>配線がシンプルで工事費が安い</li>
+                                    <li>メンテナンスが簡単</li>
+                                    <li>小規模用途に最適</li>
+                                </ul>
+                            </li>
+                            <li><strong>デメリット:</strong>
+                                <ul>
+                                    <li>大きな電力は送れない（最大3kW程度）</li>
+                                    <li>100Vと200Vを同時に使えない</li>
+                                    <li>電圧降下の影響を受けやすい</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        
+                        <div class="alert alert-warning">
+                            <p>⚡ <strong>具体例:</strong> 6畳間のエアコン（100V、10A）と照明を使うだけなら十分ですが、IHクッキングヒーターは使えません。</p>
+                        </div>
+                        
+                        <div class="card" style="background: #f8f9fa; margin-top: 1rem;">
+                            <div class="toggle-section">
+                                <div class="toggle-header" onclick="toggleSection(this)">
+                                    <h5>🔧 技術的な詳細</h5>
+                                    <span class="toggle-icon">▼</span>
+                                </div>
+                                <div class="toggle-content">
+                                    <div class="toggle-content-inner">
+                                        <p><strong>なぜ2本の電線が必要？</strong></p>
+                                        <p>電気は「行き」と「帰り」の道が必要です。水道でいえば、蛇口（L線）と排水口（N線）のような関係です。</p>
+                                        
+                                        <p style="margin-top: 0.5rem;"><strong>L線とN線の違い：</strong></p>
+                                        <ul>
+                                            <li><strong>L線（ライブ線）</strong>：電圧がかかっている危険な線（触ると感電）</li>
+                                            <li><strong>N線（ニュートラル線）</strong>：大地と同じ電位で比較的安全（それでも触らない）</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-item" style="border: 2px solid #2196F3;">
+                        <h4>🏘️ 単相3線式</h4>
+                        <div class="svg-container">
+                            <svg width="250" height="200" viewBox="0 0 250 200">
+                                <!-- 電源 -->
+                                <rect x="20" y="40" width="40" height="120" fill="#005BAB"/>
+                                <text x="40" y="30" text-anchor="middle" font-size="12" font-weight="bold">電源</text>
+                                
+                                <!-- 配線 -->
+                                <line x1="60" y1="60" x2="190" y2="60" stroke="#333" stroke-width="3"/>
+                                <text x="125" y="55" text-anchor="middle" font-size="10">L1</text>
+                                
+                                <line x1="60" y1="100" x2="190" y2="100" stroke="#666" stroke-width="3"/>
+                                <text x="125" y="95" text-anchor="middle" font-size="10">N</text>
+                                
+                                <line x1="60" y1="140" x2="190" y2="140" stroke="#333" stroke-width="3"/>
+                                <text x="125" y="155" text-anchor="middle" font-size="10">L2</text>
+                                
+                                <!-- 負荷 -->
+                                <rect x="190" y="40" width="40" height="120" fill="#FF961C"/>
+                                <text x="210" y="30" text-anchor="middle" font-size="12" font-weight="bold">負荷</text>
+                                
+                                <!-- 電圧表示 -->
+                                <text x="125" y="175" text-anchor="middle" font-size="12" font-weight="bold">100V/200V両用</text>
+                            </svg>
+                        </div>
+                        
+                        <h5>📋 特徴と用途</h5>
+                        <ul>
+                            <li><strong>構成:</strong> 3本線（L1、N:中性線、L2）</li>
+                            <li><strong>電圧:</strong> 
+                                <ul>
+                                    <li>L1-N間: 100V（テレビ、照明用）</li>
+                                    <li>L2-N間: 100V（冷蔵庫、洗濯機用）</li>
+                                    <li>L1-L2間: 200V（エアコン、IH用）</li>
+                                </ul>
+                            </li>
+                            <li><strong>実際の使用例:</strong>
+                                <ul>
+                                    <li>一般的な戸建て住宅（ほぼ100%）</li>
+                                    <li>マンションの各戸</li>
+                                    <li>小規模事務所</li>
+                                </ul>
+                            </li>
+                            <li><strong>メリット:</strong>
+                                <ul>
+                                    <li>100Vと200Vを同時に使える</li>
+                                    <li>電力のバランスが取りやすい</li>
+                                    <li>将来の増設に対応しやすい</li>
+                                    <li>電線3本で2倍の電力が送れる（効率的）</li>
+                                </ul>
+                            </li>
+                            <li><strong>デメリット:</strong>
+                                <ul>
+                                    <li>配線がやや複雑</li>
+                                    <li>L1とL2のバランスを考慮する必要がある</li>
+                                    <li>工事費が2線式より高い</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        
+                        <div class="alert alert-success">
+                            <p>🏠 <strong>家庭での実例:</strong><br>
+                            - L1-N（100V）: リビングの照明、テレビ、パソコン<br>
+                            - L2-N（100V）: 寝室の照明、扇風機、スマホ充電<br>
+                            - L1-L2（200V）: エアコン、IHクッキングヒーター、エコキュート</p>
+                        </div>
+                        
+                        <div class="card" style="background: #f8f9fa; margin-top: 1rem;">
+                            <div class="toggle-section">
+                                <div class="toggle-header" onclick="toggleSection(this)">
+                                    <h5>🔧 技術的な詳細</h5>
+                                    <span class="toggle-icon">▼</span>
+                                </div>
+                                <div class="toggle-content">
+                                    <div class="toggle-content-inner">
+                                        <p><strong>なぜ3本で100Vと200Vが使える？</strong></p>
+                                        <p>中性線（N）を中心に、L1とL2が逆位相（180度ずれた）の電圧を持っているためです。</p>
+                                        
+                                        <div style="background: white; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                            <p><strong>電圧の関係：</strong></p>
+                                            <ul>
+                                                <li>L1-N間：+100V</li>
+                                                <li>L2-N間：-100V（L1と逆位相）</li>
+                                                <li>L1-L2間：100V - (-100V) = 200V</li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <p style="margin-top: 1rem;"><strong>バランスの重要性：</strong></p>
+                                        <p>L1側とL2側の使用電力が偏ると、中性線に電流が流れて損失が増えます。電気工事士は両側のバランスを考えて配線設計します。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-item" style="border: 2px solid #FF5722;">
+                        <h4>🏭 三相3線式</h4>
+                        <div class="svg-container">
+                            <svg width="250" height="220" viewBox="0 0 250 220">
+                                <!-- 電源 -->
+                                <rect x="20" y="40" width="40" height="120" fill="#005BAB"/>
+                                <text x="40" y="30" text-anchor="middle" font-size="12" font-weight="bold">電源</text>
+                                
+                                <!-- 配線 -->
+                                <line x1="60" y1="60" x2="190" y2="60" stroke="#F44336" stroke-width="3"/>
+                                <text x="125" y="55" text-anchor="middle" font-size="10">R相（赤）</text>
+                                
+                                <line x1="60" y1="100" x2="190" y2="100" stroke="#4CAF50" stroke-width="3"/>
+                                <text x="125" y="95" text-anchor="middle" font-size="10">S相（白）</text>
+                                
+                                <line x1="60" y1="140" x2="190" y2="140" stroke="#2196F3" stroke-width="3"/>
+                                <text x="125" y="155" text-anchor="middle" font-size="10">T相（青）</text>
+                                
+                                <!-- 負荷（モーター） -->
+                                <circle cx="210" cy="100" r="35" fill="#FF961C" stroke="#333" stroke-width="2"/>
+                                <text x="210" y="105" text-anchor="middle" font-size="16" font-weight="bold">M</text>
+                                <text x="210" y="30" text-anchor="middle" font-size="12" font-weight="bold">モーター</text>
+                                
+                                <!-- 電圧表示 -->
+                                <text x="125" y="175" text-anchor="middle" font-size="12" font-weight="bold">200V (線間)</text>
+                                
+                                <!-- 位相表示 -->
+                                <text x="125" y="195" text-anchor="middle" font-size="10">各相120°ずつずれている</text>
+                            </svg>
+                        </div>
+                        
+                        <h5>📋 特徴と用途</h5>
+                        <ul>
+                            <li><strong>構成:</strong> 3本線（R相、S相、T相）各相は120°位相がずれている</li>
+                            <li><strong>電圧:</strong>
+                                <ul>
+                                    <li>線間電圧: 200V（R-S、S-T、T-R間）</li>
+                                    <li>相電圧: 約115V（中性点がある場合）</li>
+                                </ul>
+                            </li>
+                            <li><strong>実際の使用例:</strong>
+                                <ul>
+                                    <li>工場の生産ライン</li>
+                                    <li>ビルの大型エレベーター</li>
+                                    <li>ショッピングモールの空調システム</li>
+                                    <li>電車のモーター</li>
+                                    <li>大型ポンプ、コンプレッサー</li>
+                                </ul>
+                            </li>
+                            <li><strong>メリット:</strong>
+                                <ul>
+                                    <li>同じ電線サイズで√3倍（約1.73倍）の電力が送れる</li>
+                                    <li>モーターが滑らかに回転する</li>
+                                    <li>電力の脈動が少ない</li>
+                                    <li>大電力の送電に最適</li>
+                                </ul>
+                            </li>
+                            <li><strong>デメリット:</strong>
+                                <ul>
+                                    <li>一般家庭では使えない（工業用）</li>
+                                    <li>配線・保護装置が複雑</li>
+                                    <li>感電時の危険性が高い</li>
+                                    <li>専門知識が必要</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        
+                        <div class="alert alert-danger">
+                            <p>⚠️ <strong>なぜモーターに最適？</strong><br>
+                            3つの波が順番に来ることで、モーターに連続的に力が加わるため、振動が少なく効率的に回転します。単相だと力に脈動があり効率が悪いのです。</p>
+                        </div>
+                        
+                        <div class="card" style="background: #f8f9fa; margin-top: 1rem;">
+                            <div class="toggle-section">
+                                <div class="toggle-header" onclick="toggleSection(this)">
+                                    <h5>🔧 技術的な詳細</h5>
+                                    <span class="toggle-icon">▼</span>
+                                </div>
+                                <div class="toggle-content">
+                                    <div class="toggle-content-inner">
+                                        <p><strong>なぜ√3（1.732）倍の電力？</strong></p>
+                                        <p>3つの電圧が120度ずつずれているため、ベクトル計算すると√3倍になります。</p>
+                                        
+                                        <div style="background: white; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                                            <p><strong>計算例（200V、50A）：</strong></p>
+                                            <ul>
+                                                <li>単相の電力：200V × 50A = 10kW</li>
+                                                <li>三相の電力：√3 × 200V × 50A = 1.732 × 10kW = <strong>17.32kW</strong></li>
+                                                <li>つまり、同じ電線で<strong>73%も多く</strong>の電力が送れる！</li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <p style="margin-top: 1rem;"><strong>位相のずれとは？</strong></p>
+                                        <p>3つの電圧波形が時間的に120度（1/3周期）ずつずれています。これにより：</p>
+                                        <ul>
+                                            <li>どの瞬間も必ずどれかの相が高い電圧を持つ</li>
+                                            <li>3相の合計電流は常にゼロ（バランス時）</li>
+                                            <li>中性線が不要（Y結線の中性点は電位ゼロ）</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="background: linear-gradient(135deg, #FFF9C4 0%, #FFECB3 100%); margin-top: 2rem;">
+                    <h3>🎓 配電方式の選び方ガイド</h3>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                        <thead>
+                            <tr style="background: var(--primary-color); color: white;">
+                                <th style="padding: 1rem; text-align: left;">使用場所・目的</th>
+                                <th style="padding: 1rem; text-align: center;">推奨方式</th>
+                                <th style="padding: 1rem; text-align: left;">理由</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background: white;">
+                                <td style="padding: 1rem; border: 1px solid #e0e0e0;">
+                                    <strong>ワンルームマンション</strong><br>
+                                    <small>照明とコンセント程度</small>
+                                </td>
+                                <td style="padding: 1rem; border: 1px solid #e0e0e0; text-align: center;">
+                                    <span style="background: #4CAF50; color: white; padding: 0.25rem 0.75rem; border-radius: 20px;">単相2線式</span>
+                                </td>
+                                <td style="padding: 1rem; border: 1px solid #e0e0e0;">
+                                    必要電力が小さく、コストを抑えられる
+                                </td>
+                            </tr>
+                            <tr style="background: #f5f5f5;">
+                                <td style="padding: 1rem; border: 1px solid #e0e0e0;">
+                                    <strong>一般住宅</strong><br>
+                                    <small>エアコン、IH、家電多数</small>
+                                </td>
+                                <td style="padding: 1rem; border: 1px solid #e0e0e0; text-align: center;">
+                                    <span style="background: #2196F3; color: white; padding: 0.25rem 0.75rem; border-radius: 20px;">単相3線式</span>
+                                </td>
+                                <td style="padding: 1rem; border: 1px solid #e0e0e0;">
+                                    100V/200V両方使え、将来の増設にも対応
+                                </td>
+                            </tr>
+                            <tr style="background: white;">
+                                <td style="padding: 1rem; border: 1px solid #e0e0e0;">
+                                    <strong>町工場・製造業</strong><br>
+                                    <small>大型機械、モーター多数</small>
+                                </td>
+                                <td style="padding: 1rem; border: 1px solid #e0e0e0; text-align: center;">
+                                    <span style="background: #FF5722; color: white; padding: 0.25rem 0.75rem; border-radius: 20px;">三相3線式</span>
+                                </td>
+                                <td style="padding: 1rem; border: 1px solid #e0e0e0;">
+                                    モーター効率が良く、大電力を扱える
+                                </td>
+                            </tr>
+                            <tr style="background: #f5f5f5;">
+                                <td style="padding: 1rem; border: 1px solid #e0e0e0;">
+                                    <strong>コンビニ・小規模店舗</strong><br>
+                                    <small>照明、冷蔵庫、エアコン</small>
+                                </td>
+                                <td style="padding: 1rem; border: 1px solid #e0e0e0; text-align: center;">
+                                    <span style="background: #2196F3; color: white; padding: 0.25rem 0.75rem; border-radius: 20px;">単相3線式</span>
+                                </td>
+                                <td style="padding: 1rem; border: 1px solid #e0e0e0;">
+                                    200V機器も使え、電気料金を抑えられる
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="card">
+                    <h3>🔄 配電方式別の実用計算ツール</h3>
+                    
+                    <div class="control-group">
+                        <label class="control-label">計算したい内容</label>
+                        <select id="calc-type" onchange="updateDistributionCalc()">
+                            <option value="power">送電可能電力の比較</option>
+                            <option value="current">必要な電流値の計算</option>
+                            <option value="efficiency">送電効率の比較</option>
+                            <option value="cost">月間電気料金の試算</option>
+                        </select>
+                    </div>
+                    
+                    <div id="power-calc" class="calc-section">
+                        <div class="control-group">
+                            <label class="control-label">比較する配電方式</label>
+                            <select id="compare-distribution" onchange="compareDistribution()">
+                                <option value="all">全方式を比較</option>
+                                <option value="single2">単相2線式のみ</option>
+                                <option value="single3">単相3線式のみ</option>
+                                <option value="three3">三相3線式のみ</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label class="control-label">電圧 (V)</label>
+                            <div class="slider-container">
+                                <input type="range" id="compare-voltage" min="100" max="400" value="200" step="10" onchange="compareDistribution()">
+                                <span class="value-display" id="compare-voltage-value">200V</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label class="control-label">電流 (A)</label>
+                            <div class="slider-container">
+                                <input type="range" id="compare-current" min="10" max="100" value="50" step="5" onchange="compareDistribution()">
+                                <span class="value-display" id="compare-current-value">50A</span>
+                            </div>
+                        </div>
+                        
+                        <div class="result-box">
+                            <h4>配電方式別の送電能力</h4>
+                            <div id="distribution-comparison-result">
+                                <!-- JavaScriptで動的に生成 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="current-calc" class="calc-section" style="display: none;">
+                        <div class="control-group">
+                            <label class="control-label">必要な電力 (kW)</label>
+                            <div class="slider-container">
+                                <input type="range" id="required-power" min="1" max="50" value="10" step="1" onchange="calculateRequiredCurrent()">
+                                <span class="value-display" id="required-power-value">10kW</span>
+                            </div>
+                        </div>
+                        
+                        <div class="result-box">
+                            <h4>各配電方式で必要な電流値</h4>
+                            <div id="required-current-result">
+                                <!-- JavaScriptで動的に生成 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="efficiency-calc" class="calc-section" style="display: none;">
+                        <div class="control-group">
+                            <label class="control-label">送電距離 (m)</label>
+                            <div class="slider-container">
+                                <input type="range" id="transmission-distance" min="10" max="500" value="100" step="10" onchange="calculateEfficiency()">
+                                <span class="value-display" id="transmission-distance-value">100m</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label class="control-label">送電電力 (kW)</label>
+                            <div class="slider-container">
+                                <input type="range" id="transmission-power" min="1" max="50" value="10" step="1" onchange="calculateEfficiency()">
+                                <span class="value-display" id="transmission-power-value">10kW</span>
+                            </div>
+                        </div>
+                        
+                        <div class="result-box">
+                            <h4>送電損失の比較</h4>
+                            <div id="efficiency-result">
+                                <!-- JavaScriptで動的に生成 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="cost-calc" class="calc-section" style="display: none;">
+                        <div class="control-group">
+                            <label class="control-label">使用電力量 (kWh/月)</label>
+                            <div class="slider-container">
+                                <input type="range" id="monthly-usage" min="100" max="1000" value="300" step="50" onchange="calculateCost()">
+                                <span class="value-display" id="monthly-usage-value">300kWh</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label class="control-label">契約電力 (kW)</label>
+                            <div class="slider-container">
+                                <input type="range" id="contract-power" min="3" max="50" value="10" step="1" onchange="calculateCost()">
+                                <span class="value-display" id="contract-power-value">10kW</span>
+                            </div>
+                        </div>
+                        
+                        <div class="result-box">
+                            <h4>月間電気料金の試算</h4>
+                            <div id="cost-result">
+                                <!-- JavaScriptで動的に生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card" style="background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);">
+                    <h3>💡 配電方式の豆知識</h3>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>🤔 なぜ三相は効率が良いの？</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <p>三相交流は、3つの波が120度ずつずれて重なることで、電力の「谷間」がなくなります。単相だと電力に脈動（強弱）があるため、効率が落ちるのです。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-section">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>⚡ 家庭で三相を使わない理由</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <ul style="margin: 0.5rem 0;">
+                                    <li><strong>安全性:</strong> 三相は常に電圧がかかっているため、感電リスクが高い</li>
+                                    <li><strong>必要性:</strong> 家庭用機器はモーターが小さく、単相で十分</li>
+                                    <li><strong>コスト:</strong> 三相の配線工事は高額で、保護装置も複雑</li>
+                                    <li><strong>契約:</strong> 電力会社との契約が「動力」となり、基本料金が高い</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="toggle-section active">
+                        <div class="toggle-header" onclick="toggleSection(this)">
+                            <h4>🏠 単相3線式が家庭の標準になった理由</h4>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                        <div class="toggle-content">
+                            <div class="toggle-content-inner">
+                                <p><strong>歴史的背景:</strong> 昔は100Vのみでしたが、エアコンやIHなど200V機器が普及し、単相3線式が標準になりました。アメリカでは120V/240V、ヨーロッパでは230V単相が主流など、国によって異なります。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // タブ切り替え機能
+        function showTab(tabId) {
+            const tabs = document.querySelectorAll('.tab-content');
+            const buttons = document.querySelectorAll('.tab-button');
+            
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // 保存された結果
+        let savedResults = [];
+        
+        // 比較パネルの表示切替
+        function toggleComparisonPanel() {
+            const panel = document.getElementById('comparison-panel');
+            panel.classList.toggle('active');
+        }
+        
+        // 結果を保存
+        function saveResult(type, data) {
+            const result = {
+                id: Date.now(),
+                type: type,
+                timestamp: new Date().toLocaleString('ja-JP'),
+                data: data
+            };
+            
+            savedResults.push(result);
+            updateSavedResults();
+            
+            // 保存完了の通知
+            showNotification('計算結果を保存しました');
+        }
+        
+        // 保存結果の表示更新
+        function updateSavedResults() {
+            const container = document.getElementById('saved-results');
+            
+            if (savedResults.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999;">保存された結果がありません</p>';
+                return;
+            }
+            
+            container.innerHTML = savedResults.map(result => `
+                <div class="saved-result">
+                    <button class="delete-result" onclick="deleteResult(${result.id})">削除</button>
+                    <h4>${result.type}</h4>
+                    <p style="font-size: 0.8rem; color: #666;">${result.timestamp}</p>
+                    <div style="margin-top: 0.5rem;">
+                        ${formatResultData(result.type, result.data)}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 結果データのフォーマット
+        function formatResultData(type, data) {
+            switch(type) {
+                case '電力と力率':
+                    return `
+                        <p>有効電力: ${data.activePower}</p>
+                        <p>無効電力: ${data.reactivePower}</p>
+                        <p>皮相電力: ${data.apparentPower}</p>
+                        <p>力率: ${data.powerFactor}</p>
+                    `;
+                case '電圧降下':
+                    return `
+                        <p>電圧降下: ${data.drop}</p>
+                        <p>降下率: ${data.percent}</p>
+                        <p>電線: ${data.size}</p>
+                        <p>長さ: ${data.length}</p>
+                    `;
+                case '許容電流':
+                    return `
+                        <p>許容電流: ${data.allowable}</p>
+                        <p>使用電流: ${data.actual}</p>
+                        <p>使用率: ${data.usage}</p>
+                        <p>電線: ${data.cableType}</p>
+                        <p>布設: ${data.installation}</p>
+                        <p>温度: ${data.temperature}</p>
+                    `;
+                default:
+                    return '';
+            }
+        }
+        
+        // 結果を削除
+        function deleteResult(id) {
+            savedResults = savedResults.filter(r => r.id !== id);
+            updateSavedResults();
+        }
+        
+        // 通知表示
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--success-color);
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 2000;
+                animation: slideDown 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }
+        
+        // 許容電流計算データ
+        const allowableCurrentData = {
+            'vvf': {
+                '1.6': { air: 19, conduit: 17, bundle: 15 },
+                '2.0': { air: 27, conduit: 23, bundle: 19 },
+                '2.6': { air: 36, conduit: 31, bundle: 26 },
+                '5.5': { air: 58, conduit: 49, bundle: 42 },
+                '8': { air: 75, conduit: 63, bundle: 54 },
+                '14': { air: 107, conduit: 90, bundle: 77 },
+                '22': { air: 139, conduit: 117, bundle: 100 },
+                '38': { air: 183, conduit: 154, bundle: 132 }
+            },
+            'iv': {
+                '1.6': { air: 27, conduit: 19, bundle: 17 },
+                '2.0': { air: 35, conduit: 25, bundle: 22 },
+                '2.6': { air: 48, conduit: 34, bundle: 30 },
+                '5.5': { air: 76, conduit: 54, bundle: 48 },
+                '8': { air: 99, conduit: 70, bundle: 62 },
+                '14': { air: 139, conduit: 99, bundle: 88 },
+                '22': { air: 183, conduit: 130, bundle: 115 },
+                '38': { air: 257, conduit: 183, bundle: 162 }
+            },
+            'cv': {
+                '2.0': { air: 42, conduit: 31, bundle: 27 },
+                '2.6': { air: 56, conduit: 42, bundle: 37 },
+                '5.5': { air: 86, conduit: 64, bundle: 56 },
+                '8': { air: 110, conduit: 82, bundle: 72 },
+                '14': { air: 155, conduit: 115, bundle: 101 },
+                '22': { air: 205, conduit: 152, bundle: 134 },
+                '38': { air: 280, conduit: 208, bundle: 183 }
+            },
+            'cvt': {
+                '2.0': { air: 52, conduit: 37, bundle: 33 },
+                '2.6': { air: 70, conduit: 50, bundle: 44 },
+                '5.5': { air: 105, conduit: 75, bundle: 66 },
+                '8': { air: 135, conduit: 96, bundle: 85 },
+                '14': { air: 190, conduit: 135, bundle: 120 },
+                '22': { air: 250, conduit: 180, bundle: 160 },
+                '38': { air: 345, conduit: 245, bundle: 220 }
+            }
+        };
+
+        // 許容電流計算関数
+        function updateAllowableCurrent() {
+            const cableType = document.getElementById('cable-type').value;
+            const size = document.getElementById('cable-size-ac').value;
+            const installation = document.getElementById('installation-type').value;
+            const temp = parseFloat(document.getElementById('ambient-temp').value);
+            const actualCurrent = parseFloat(document.getElementById('actual-current').value);
+            
+            // スライダー値の表示更新
+            document.getElementById('ambient-temp-value').textContent = temp + '°C';
+            document.getElementById('actual-current-value').textContent = actualCurrent + 'A';
+            
+            // 基準許容電流取得
+            let baseCurrent;
+            if (allowableCurrentData[cableType] && allowableCurrentData[cableType][size]) {
+                const data = allowableCurrentData[cableType][size];
+                switch(installation) {
+                    case 'air': baseCurrent = data.air; break;
+                    case 'conduit': baseCurrent = data.conduit; break;
+                    case 'bundle': baseCurrent = data.bundle; break;
+                    case 'buried': baseCurrent = data.air * 1.4; break;
+                }
+            } else {
+                baseCurrent = 30; // デフォルト値
+            }
+            
+            // 温度補正計算
+            let tempCorrection = 1.0;
+            if (temp > 30) {
+                tempCorrection = 1.0 - (temp - 30) * 0.015; // 1℃上昇で1.5%減
+            } else if (temp < 30) {
+                tempCorrection = 1.0 + (30 - temp) * 0.01; // 1℃低下で1%増
+            }
+            
+            const allowableCurrent = baseCurrent * tempCorrection;
+            const usagePercent = actualCurrent / allowableCurrent * 100;
+            
+            // 結果表示の更新
+            document.getElementById('allowable-current-result').textContent = allowableCurrent.toFixed(0) + ' A';
+            document.getElementById('used-current-result').textContent = actualCurrent + ' A';
+            document.getElementById('usage-rate-result').textContent = usagePercent.toFixed(1) + '%';
+            document.getElementById('base-current-info').textContent = `基準値: ${baseCurrent}A @ 30℃`;
+            
+            // 温度補正の詳細説明
+            let tempDetail = '';
+            if (temp === 30) {
+                tempDetail = '現在の温度補正：30℃基準なので補正なし';
+            } else if (temp > 30) {
+                const reduction = ((temp - 30) * 1.5).toFixed(1);
+                tempDetail = `現在の温度補正：${temp}℃環境で${reduction}%減少（${baseCurrent}A → ${allowableCurrent.toFixed(0)}A）`;
+            } else {
+                const increase = ((30 - temp) * 1.0).toFixed(1);
+                tempDetail = `現在の温度補正：${temp}℃環境で${increase}%増加（${baseCurrent}A → ${allowableCurrent.toFixed(0)}A）`;
+            }
+            document.getElementById('temp-correction-detail').textContent = tempDetail;
+            
+            // 計算ステップの詳細表示を更新
+            updateCalculationSteps(cableType, size, installation, temp, actualCurrent, baseCurrent, tempCorrection, allowableCurrent, usagePercent);
+            
+            // 安全性判定の更新
+            const usageRatePanel = document.getElementById('usage-rate-panel');
+            const safetyStatus = document.getElementById('safety-status');
+            const safetyMessage = document.getElementById('safety-message');
+            const safetyAssessment = document.getElementById('safety-assessment');
+            
+            if (usagePercent <= 80) {
+                usageRatePanel.style.border = '3px solid #4CAF50';
+                usageRatePanel.querySelector('#usage-rate-result').style.color = '#4CAF50';
+                safetyStatus.style.background = 'linear-gradient(135deg, #E8F5E8, #C8E6C9)';
+                safetyMessage.innerHTML = '✅ 安全に使用できます';
+                safetyMessage.style.color = '#2E7D32';
+                safetyAssessment.textContent = '安全範囲';
+                safetyAssessment.style.color = '#4CAF50';
+            } else if (usagePercent <= 100) {
+                usageRatePanel.style.border = '3px solid #FF9800';
+                usageRatePanel.querySelector('#usage-rate-result').style.color = '#FF9800';
+                safetyStatus.style.background = 'linear-gradient(135deg, #FFF8E1, #FFECB3)';
+                safetyMessage.innerHTML = '⚠️ 使用率が高いです';
+                safetyMessage.style.color = '#F57C00';
+                safetyAssessment.textContent = '注意が必要';
+                safetyAssessment.style.color = '#FF9800';
+            } else {
+                usageRatePanel.style.border = '3px solid #F44336';
+                usageRatePanel.querySelector('#usage-rate-result').style.color = '#F44336';
+                safetyStatus.style.background = 'linear-gradient(135deg, #FFEBEE, #FFCDD2)';
+                safetyMessage.innerHTML = '❌ 許容電流を超えています！';
+                safetyMessage.style.color = '#D32F2F';
+                safetyAssessment.textContent = '危険状態';
+                safetyAssessment.style.color = '#F44336';
+            }
+            
+            // 電線種類の表示更新
+            const cableNames = {
+                'vvf': 'VVF（平形ビニル絶縁電線）',
+                'iv': 'IV（600Vビニル絶縁電線）',
+                'cv': 'CV（架橋ポリエチレン絶縁電線）',
+                'cvt': 'CVT（トリプレックス形）'
+            };
+            document.getElementById('selected-cable-info').textContent = cableNames[cableType];
+            
+            // 許容電流一覧表の更新
+            updateAllowableCurrentTable(cableType);
+        }
+        
+        // 許容電流一覧表の更新関数
+        function updateAllowableCurrentTable(cableType) {
+            const sizes = ['1.6', '2.0', '2.6', '5.5', '8', '14', '22', '38'];
+            const tbody = document.getElementById('allowable-current-table');
+            tbody.innerHTML = '';
+            
+            sizes.forEach((size, index) => {
+                if (allowableCurrentData[cableType] && allowableCurrentData[cableType][size]) {
+                    const data = allowableCurrentData[cableType][size];
+                    const row = tbody.insertRow();
+                    row.style.background = index % 2 === 0 ? '#fff' : '#f9f9f9';
+                    row.innerHTML = `
+                        <td style="padding: 0.75rem; border: 1px solid #e0e0e0; text-align: center; font-weight: bold;">${size}</td>
+                        <td style="padding: 0.75rem; border: 1px solid #e0e0e0; text-align: center;">${data.air}A</td>
+                        <td style="padding: 0.75rem; border: 1px solid #e0e0e0; text-align: center;">${data.conduit}A</td>
+                        <td style="padding: 0.75rem; border: 1px solid #e0e0e0; text-align: center;">${data.bundle}A</td>
+                    `;
+                }
+            });
+        }
+        
+        // 計算ステップ詳細表示関数
+        function updateCalculationSteps(cableType, size, installation, temp, actualCurrent, baseCurrent, tempCorrection, allowableCurrent, usagePercent) {
+            const cableNames = {
+                'vvf': 'VVF（平形ビニル絶縁電線）',
+                'iv': 'IV（600Vビニル絶縁電線）',
+                'cv': 'CV（架橋ポリエチレン絶縁電線）',
+                'cvt': 'CVT（トリプレックス形）'
+            };
+            
+            const installationNames = {
+                'air': '気中布設（単独）',
+                'conduit': '電線管内布設',
+                'bundle': 'たばね布設',
+                'buried': '地中埋設'
+            };
+            
+            let steps = `
+<strong>【計算条件】</strong>
+├ 電線種類: ${cableNames[cableType]}
+├ 電線サイズ: ${size} mm²
+├ 布設条件: ${installationNames[installation]}
+├ 周囲温度: ${temp}℃
+└ 使用電流: ${actualCurrent} A
+
+<strong>【STEP 1: 基準許容電流の取得】</strong>`;
+
+            if (installation === 'buried') {
+                const airCurrent = allowableCurrentData[cableType][size].air;
+                steps += `
+├ 地中埋設のため気中布設値を基準にする
+├ 気中布設値: ${airCurrent} A
+├ 地中係数: 1.4（熱放散が良好なため）
+└ 基準許容電流 = ${airCurrent} × 1.4 = ${baseCurrent} A`;
+            } else {
+                steps += `
+├ データベースから取得
+└ 基準許容電流 = ${baseCurrent} A`;
+            }
+
+            steps += `
+
+<strong>【STEP 2: 温度補正係数の計算】</strong>`;
+
+            if (temp === 30) {
+                steps += `
+├ 周囲温度: ${temp}℃（基準温度）
+└ 温度補正係数 = 1.0（補正なし）`;
+            } else if (temp > 30) {
+                const tempDiff = temp - 30;
+                const reduction = (tempDiff * 1.5).toFixed(1);
+                steps += `
+├ 周囲温度: ${temp}℃（基準温度より高い）
+├ 温度差: ${temp} - 30 = ${tempDiff}℃
+├ 補正率: ${tempDiff} × (-1.5%) = -${reduction}%
+├ 計算式: 1.0 - (${tempDiff} × 0.015) = ${tempCorrection.toFixed(3)}
+└ 温度補正係数 = ${tempCorrection.toFixed(3)}`;
+            } else {
+                const tempDiff = 30 - temp;
+                const increase = (tempDiff * 1.0).toFixed(1);
+                steps += `
+├ 周囲温度: ${temp}℃（基準温度より低い）
+├ 温度差: 30 - ${temp} = ${tempDiff}℃
+├ 補正率: ${tempDiff} × (+1.0%) = +${increase}%
+├ 計算式: 1.0 + (${tempDiff} × 0.01) = ${tempCorrection.toFixed(3)}
+└ 温度補正係数 = ${tempCorrection.toFixed(3)}`;
+            }
+
+            steps += `
+
+<strong>【STEP 3: 最終許容電流の算出】</strong>
+├ 許容電流 = 基準許容電流 × 温度補正係数
+├ 許容電流 = ${baseCurrent} × ${tempCorrection.toFixed(3)}
+└ 許容電流 = ${allowableCurrent.toFixed(1)} A
+
+<strong>【STEP 4: 使用率の計算】</strong>
+├ 使用率 = (使用電流 ÷ 許容電流) × 100
+├ 使用率 = (${actualCurrent} ÷ ${allowableCurrent.toFixed(1)}) × 100
+└ 使用率 = ${usagePercent.toFixed(1)}%
+
+<strong>【STEP 5: 安全性判定】</strong>`;
+
+            if (usagePercent <= 80) {
+                steps += `
+├ 使用率: ${usagePercent.toFixed(1)}% ≤ 80%
+└ 判定: ✅ 安全に使用できます`;
+            } else if (usagePercent <= 100) {
+                steps += `
+├ 使用率: ${usagePercent.toFixed(1)}% > 80% かつ ≤ 100%
+└ 判定: ⚠️ 使用率が高いです（注意が必要）`;
+            } else {
+                steps += `
+├ 使用率: ${usagePercent.toFixed(1)}% > 100%
+└ 判定: ❌ 許容電流を超えています！（危険）`;
+            }
+
+            steps += `
+
+<strong>【計算根拠と参考情報】</strong>
+├ 電線データ: 電気設備技術基準の解釈に準拠
+├ 温度補正: JIS規格および内線規程による
+├ 安全率: 80%ルール（国際電気標準）
+└ 地中係数: 土壌の熱伝導性を考慮した工学的係数`;
+
+            document.getElementById('calculation-steps').innerHTML = `<pre style="margin: 0; white-space: pre-wrap; line-height: 1.4;">${steps}</pre>`;
+        }
+        
+        // 結果保存関数
+        function saveAllowableCurrentResult() {
+            const cableType = document.getElementById('cable-type').value;
+            const size = document.getElementById('cable-size-ac').value;
+            const installation = document.getElementById('installation-type').value;
+            const temp = parseFloat(document.getElementById('ambient-temp').value);
+            const actualCurrent = parseFloat(document.getElementById('actual-current').value);
+            const allowableCurrent = document.getElementById('allowable-current-result').textContent;
+            const usageRate = document.getElementById('usage-rate-result').textContent;
+            
+            const cableNames = {
+                'vvf': 'VVF',
+                'iv': 'IV',
+                'cv': 'CV',
+                'cvt': 'CVT'
+            };
+            
+            const installationNames = {
+                'air': '気中布設',
+                'conduit': '管内布設',
+                'bundle': 'たばね布設',
+                'buried': '地中埋設'
+            };
+            
+            const result = {
+                type: '許容電流',
+                allowable: allowableCurrent,
+                actual: actualCurrent + 'A',
+                usage: usageRate,
+                cableType: cableNames[cableType] + ' ' + size + 'mm²',
+                installation: installationNames[installation],
+                temperature: temp + '℃',
+                timestamp: new Date().toLocaleString('ja-JP')
+            };
+            
+            let savedResults = JSON.parse(localStorage.getItem('simulatorResults') || '[]');
+            savedResults.unshift(result);
+            if (savedResults.length > 10) savedResults = savedResults.slice(0, 10);
+            localStorage.setItem('simulatorResults', JSON.stringify(savedResults));
+            
+            // 成功メッセージ
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '✅ 保存しました';
+            button.style.background = '#4CAF50';
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.background = '';
+            }, 2000);
+            
+            updateSavedResults();
+        }
+        
+        // サンプル読み込み関数
+        function loadSample1() {
+            // サンプル1：標準的な家庭用配線
+            document.getElementById('cable-type').value = 'vvf';
+            document.getElementById('cable-size-ac').value = '2.0';
+            document.getElementById('installation-type').value = 'conduit';
+            document.getElementById('ambient-temp').value = 30;
+            document.getElementById('actual-current').value = 15;
+            updateAllowableCurrent();
+            
+            // 計算ロジックセクションを自動展開
+            const calculationSection = document.querySelector('.toggle-section .toggle-header h4');
+            if (calculationSection && calculationSection.textContent.includes('計算手順')) {
+                const toggleContent = calculationSection.closest('.toggle-section').querySelector('.toggle-content');
+                if (toggleContent && !toggleContent.style.display) {
+                    calculationSection.closest('.toggle-header').click();
+                }
+            }
+            
+            showNotification('サンプル1の条件を読み込みました');
+        }
+        
+        function loadSample2() {
+            // サンプル2：高温環境での使用例
+            document.getElementById('cable-type').value = 'vvf';
+            document.getElementById('cable-size-ac').value = '2.6';
+            document.getElementById('installation-type').value = 'bundle';
+            document.getElementById('ambient-temp').value = 45;
+            document.getElementById('actual-current').value = 20;
+            updateAllowableCurrent();
+            
+            showNotification('サンプル2の条件を読み込みました');
+        }
+        
+        function loadSample3() {
+            // サンプル3：低温環境での使用例
+            document.getElementById('cable-type').value = 'iv';
+            document.getElementById('cable-size-ac').value = '5.5';
+            document.getElementById('installation-type').value = 'air';
+            document.getElementById('ambient-temp').value = 20;
+            document.getElementById('actual-current').value = 65;
+            updateAllowableCurrent();
+            
+            showNotification('サンプル3の条件を読み込みました');
+        }
+        
+        // 電力と力率の計算
+        function updatePowerFactor() {
+            const voltage = parseFloat(document.getElementById('voltage-pf').value);
+            const current = parseFloat(document.getElementById('current-pf').value);
+            const pf = parseFloat(document.getElementById('power-factor').value) / 100;
+            
+            // 値の更新
+            document.getElementById('voltage-pf-value').textContent = voltage + 'V';
+            document.getElementById('current-pf-value').textContent = current + 'A';
+            document.getElementById('power-factor-value').textContent = pf.toFixed(2);
+            
+            // 計算
+            const apparentPower = voltage * current;
+            const activePower = apparentPower * pf;
+            const reactivePower = apparentPower * Math.sqrt(1 - pf * pf);
+            const phaseAngle = Math.acos(pf) * 180 / Math.PI;
+            
+            // 結果表示
+            document.getElementById('active-power').textContent = activePower.toLocaleString() + ' W';
+            document.getElementById('reactive-power').textContent = reactivePower.toLocaleString() + ' var';
+            document.getElementById('apparent-power').textContent = apparentPower.toLocaleString() + ' VA';
+            document.getElementById('phase-angle').textContent = phaseAngle.toFixed(1) + '°';
+            
+            // SVGの更新
+            updatePowerTriangle(activePower, reactivePower, apparentPower, phaseAngle);
+        }
+        
+        function updatePowerTriangle(P, Q, S, angle) {
+            // 三角形のスケール調整
+            const scale = 300 / S * 10000; // 10kVAを基準
+            const Px = Math.min(P * scale / 10000, 300);
+            const Qy = Math.min(Q * scale / 10000, 100);
+            
+            // 有効電力線
+            const activeLine = document.querySelector('#triangle-group line:nth-child(1)');
+            activeLine.setAttribute('x2', 100 + Px);
+            
+            // 無効電力線
+            const reactiveLine = document.querySelector('#triangle-group line:nth-child(3)');
+            reactiveLine.setAttribute('x1', 100 + Px);
+            reactiveLine.setAttribute('x2', 100 + Px);
+            reactiveLine.setAttribute('y2', 300 - Qy);
+            
+            // 皮相電力線
+            const apparentLine = document.querySelector('#triangle-group line:nth-child(5)');
+            apparentLine.setAttribute('x2', 100 + Px);
+            apparentLine.setAttribute('y2', 300 - Qy);
+            
+            // テキスト更新
+            document.getElementById('active-power-text').textContent = Math.round(P) + 'W';
+            document.getElementById('reactive-power-text').textContent = Math.round(Q) + 'var';
+            document.getElementById('apparent-power-text').textContent = Math.round(S) + 'VA';
+            document.getElementById('angle-text').textContent = 'θ=' + angle.toFixed(1) + '°';
+        }
+        
+        // 進相コンデンサ計算
+        function calculateCapacitor() {
+            const voltage = parseFloat(document.getElementById('voltage-pf').value);
+            const current = parseFloat(document.getElementById('current-pf').value);
+            const currentPF = parseFloat(document.getElementById('power-factor').value) / 100;
+            const targetPF = parseFloat(document.getElementById('target-pf').value) / 100;
+            
+            document.getElementById('target-pf-value').textContent = targetPF.toFixed(2);
+            
+            const P = voltage * current * currentPF;
+            const currentAngle = Math.acos(currentPF);
+            const targetAngle = Math.acos(targetPF);
+            
+            const Qc = P * (Math.tan(currentAngle) - Math.tan(targetAngle));
+            
+            const currentReduction = (1 - targetPF / currentPF) * 100;
+            const costReduction = (targetPF - currentPF) * 100;
+            const lossReduction = (1 - Math.pow(targetPF / currentPF, 2)) * 100;
+            
+            document.getElementById('capacitor-kvar').textContent = (Qc / 1000).toFixed(1) + ' kvar';
+            document.getElementById('current-reduction').textContent = currentReduction.toFixed(1) + '%';
+            document.getElementById('cost-reduction').textContent = '約' + costReduction.toFixed(0) + '%';
+            document.getElementById('loss-reduction').textContent = '約' + lossReduction.toFixed(0) + '%';
+        }
+        
+        // 電力と力率の結果を保存
+        function savePowerFactorResult() {
+            const data = {
+                activePower: document.getElementById('active-power').textContent,
+                reactivePower: document.getElementById('reactive-power').textContent,
+                apparentPower: document.getElementById('apparent-power').textContent,
+                powerFactor: document.getElementById('power-factor-value').textContent
+            };
+            saveResult('電力と力率', data);
+        }
+        
+        // 電圧降下計算
+        function updateVoltageDrop() {
+            const type = document.getElementById('distribution-type').value;
+            const length = parseFloat(document.getElementById('cable-length').value);
+            const current = parseFloat(document.getElementById('current-vd').value);
+            const size = parseFloat(document.getElementById('cable-size').value);
+            
+            // 値の更新
+            document.getElementById('cable-length-value').textContent = length + 'm';
+            document.getElementById('current-vd-value').textContent = current + 'A';
+            
+            // 係数設定
+            let k;
+            switch(type) {
+                case 'single2':
+                    k = 35.6; // 2倍
+                    document.getElementById('voltage-drop-formula').textContent = 'e = 35.6 × L × I / (1000 × A)';
+                    break;
+                case 'single3':
+                    k = 17.8;
+                    document.getElementById('voltage-drop-formula').textContent = 'e = 17.8 × L × I / (1000 × A)';
+                    break;
+                case 'three3':
+                    k = 30.8;
+                    document.getElementById('voltage-drop-formula').textContent = 'e = 30.8 × L × I / (1000 × A)';
+                    break;
+            }
+            
+            // 電圧降下計算
+            const voltageDrop = k * length * current / (1000 * size);
+            const baseVoltage = type === 'single2' ? 100 : 200;
+            const dropPercent = voltageDrop / baseVoltage * 100;
+            
+            // 結果表示
+            document.getElementById('voltage-drop-result').textContent = voltageDrop.toFixed(1) + ' V';
+            document.getElementById('voltage-drop-percent').textContent = dropPercent.toFixed(1) + ' %';
+            
+            // SVG更新
+            document.getElementById('source-voltage').textContent = baseVoltage + 'V';
+            document.getElementById('load-voltage').textContent = (baseVoltage - voltageDrop).toFixed(0) + 'V';
+            document.getElementById('voltage-drop-text').textContent = '電圧降下: ' + voltageDrop.toFixed(1) + 'V (' + dropPercent.toFixed(1) + '%)';
+            
+            // 判定
+            const statusElement = document.getElementById('voltage-drop-status');
+            if (dropPercent <= 2) {
+                statusElement.innerHTML = '<span class="status-indicator status-good"></span>許容値内です';
+            } else if (dropPercent <= 3) {
+                statusElement.innerHTML = '<span class="status-indicator status-warning"></span>注意が必要です';
+            } else {
+                statusElement.innerHTML = '<span class="status-indicator status-danger"></span>許容値を超えています';
+            }
+            
+            // 電線サイズ比較更新
+            updateCableComparison(type, length, current);
+        }
+        
+        function updateCableComparison(type, length, current) {
+            const sizes = [1.6, 2.0, 2.6, 5.5, 8.0, 14, 22, 38];
+            const comparison = document.getElementById('cable-comparison');
+            comparison.innerHTML = '';
+            
+            let k;
+            switch(type) {
+                case 'single2': k = 35.6; break;
+                case 'single3': k = 17.8; break;
+                case 'three3': k = 30.8; break;
+            }
+            
+            const baseVoltage = type === 'single2' ? 100 : 200;
+            
+            sizes.forEach(size => {
+                const drop = k * length * current / (1000 * size);
+                const percent = drop / baseVoltage * 100;
+                
+                let status, statusClass;
+                if (percent <= 2) {
+                    status = '推奨';
+                    statusClass = 'status-good';
+                } else if (percent <= 3) {
+                    status = '使用可';
+                    statusClass = 'status-warning';
+                } else {
+                    status = '不適';
+                    statusClass = 'status-danger';
+                }
+                
+                const item = document.createElement('div');
+                item.className = 'comparison-item';
+                item.innerHTML = `
+                    <h4>${size} mm²</h4>
+                    <p>電圧降下: ${drop.toFixed(1)}V (${percent.toFixed(1)}%)</p>
+                    <p><span class="status-indicator ${statusClass}"></span>${status}</p>
+                `;
+                comparison.appendChild(item);
+            });
+        }
+        
+        
+
+        
+        // 配電方式比較
+        function compareDistribution() {
+            const type = document.getElementById('compare-distribution').value;
+            const voltage = parseFloat(document.getElementById('compare-voltage').value);
+            const current = parseFloat(document.getElementById('compare-current').value);
+            
+            document.getElementById('compare-voltage-value').textContent = voltage + 'V';
+            document.getElementById('compare-current-value').textContent = current + 'A';
+            
+            const resultDiv = document.getElementById('distribution-comparison-result');
+            
+            if (type === 'all') {
+                // 全方式の比較
+                const single2Power = voltage * current / 1000;
+                const single3Power = voltage * current / 1000;
+                const three3Power = Math.sqrt(3) * voltage * current / 1000;
+                
+                resultDiv.innerHTML = `
+                    <div class="comparison-container" style="margin-top: 1rem;">
+                        <div style="background: #E8F5E9; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                            <h5>🏠 単相2線式</h5>
+                            <p><strong>${single2Power.toFixed(1)} kW</strong></p>
+                            <p style="font-size: 0.9rem;">基準値（100%）</p>
+                        </div>
+                        <div style="background: #E3F2FD; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                            <h5>🏘️ 単相3線式</h5>
+                            <p><strong>${single3Power.toFixed(1)} kW</strong> (片側)</p>
+                            <p style="font-size: 0.9rem;">両側合計: ${(single3Power * 2).toFixed(1)} kW</p>
+                            <p style="color: #1976D2;">効率: 電線3本で2回路分</p>
+                        </div>
+                        <div style="background: #FFF3E0; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                            <h5>🏭 三相3線式</h5>
+                            <p><strong>${three3Power.toFixed(1)} kW</strong></p>
+                            <p style="font-size: 0.9rem;">単相比: ${((three3Power / single2Power) * 100).toFixed(0)}%</p>
+                            <p style="color: #F57C00;">√3倍（約1.73倍）の電力</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 個別の方式
+                let power, formula;
+                switch(type) {
+                    case 'single2':
+                        power = voltage * current;
+                        formula = `P = V × I = ${voltage} × ${current} = ${(power/1000).toFixed(1)} kW`;
+                        break;
+                    case 'single3':
+                        power = voltage * current;
+                        formula = `P = V × I = ${voltage} × ${current} = ${(power/1000).toFixed(1)} kW (片側)`;
+                        break;
+                    case 'three3':
+                        power = Math.sqrt(3) * voltage * current;
+                        formula = `P = √3 × V × I = 1.732 × ${voltage} × ${current} = ${(power/1000).toFixed(1)} kW`;
+                        break;
+                }
+                
+                resultDiv.innerHTML = `
+                    <div class="formula">${formula}</div>
+                    <p><strong>送電可能電力:</strong> <span class="result-value">${(power/1000).toFixed(1)} kW</span></p>
+                    ${type === 'single3' ? '<p><small>※単相3線式は100V/200V両方の負荷に対応可能</small></p>' : ''}
+                    ${type === 'three3' ? '<p><small>※三相3線式は同じ電流でより大きな電力を送電可能</small></p>' : ''}
+                `;
+            }
+        }
+        
+        // 配電方式計算タイプの切り替え
+        function updateDistributionCalc() {
+            const calcType = document.getElementById('calc-type').value;
+            const sections = ['power-calc', 'current-calc', 'efficiency-calc', 'cost-calc'];
+            
+            sections.forEach(section => {
+                document.getElementById(section).style.display = 'none';
+            });
+            
+            document.getElementById(calcType + '-calc').style.display = 'block';
+            
+            // 初期計算実行
+            switch(calcType) {
+                case 'power': compareDistribution(); break;
+                case 'current': calculateRequiredCurrent(); break;
+                case 'efficiency': calculateEfficiency(); break;
+                case 'cost': calculateCost(); break;
+            }
+        }
+        
+        // 必要電流の計算
+        function calculateRequiredCurrent() {
+            const power = parseFloat(document.getElementById('required-power').value) * 1000; // kW to W
+            document.getElementById('required-power-value').textContent = (power/1000) + 'kW';
+            
+            const voltage = 200; // 標準電圧
+            
+            const single2Current = power / voltage;
+            const single3Current = power / voltage;
+            const three3Current = power / (Math.sqrt(3) * voltage);
+            
+            const resultDiv = document.getElementById('required-current-result');
+            resultDiv.innerHTML = `
+                <div class="comparison-container" style="margin-top: 1rem;">
+                    <div style="background: #E8F5E9; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                        <h5>単相2線式（${voltage}V）</h5>
+                        <p><strong>${single2Current.toFixed(1)} A</strong></p>
+                        <p style="font-size: 0.9rem;">必要電線: 2.0mm² (許容27A) → ${single2Current > 27 ? '❌ 不足' : '✅ OK'}</p>
+                    </div>
+                    <div style="background: #E3F2FD; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                        <h5>単相3線式（${voltage}V）</h5>
+                        <p><strong>${single3Current.toFixed(1)} A</strong></p>
+                        <p style="font-size: 0.9rem;">各相に分散可能: ${(single3Current/2).toFixed(1)} A</p>
+                    </div>
+                    <div style="background: #FFF3E0; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                        <h5>三相3線式（${voltage}V）</h5>
+                        <p><strong>${three3Current.toFixed(1)} A</strong></p>
+                        <p style="font-size: 0.9rem;">単相の${((three3Current/single2Current)*100).toFixed(0)}%で済む</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 送電効率の計算
+        function calculateEfficiency() {
+            const distance = parseFloat(document.getElementById('transmission-distance').value);
+            const power = parseFloat(document.getElementById('transmission-power').value) * 1000;
+            
+            document.getElementById('transmission-distance-value').textContent = distance + 'm';
+            document.getElementById('transmission-power-value').textContent = (power/1000) + 'kW';
+            
+            const voltage = 200;
+            const cableSize = 5.5; // mm²
+            
+            // 電圧降下計算
+            const single2Drop = 35.6 * distance * (power/voltage) / (1000 * cableSize);
+            const single3Drop = 17.8 * distance * (power/voltage) / (1000 * cableSize);
+            const three3Drop = 30.8 * distance * (power/(Math.sqrt(3)*voltage)) / (1000 * cableSize);
+            
+            // 損失電力計算
+            const single2Loss = single2Drop * (power/voltage) / 1000;
+            const single3Loss = single3Drop * (power/voltage) / 1000;
+            const three3Loss = three3Drop * (power/(Math.sqrt(3)*voltage)) / 1000;
+            
+            const resultDiv = document.getElementById('efficiency-result');
+            resultDiv.innerHTML = `
+                <div class="comparison-container" style="margin-top: 1rem;">
+                    <div style="background: #FFEBEE; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                        <h5>単相2線式</h5>
+                        <p>電圧降下: <strong>${single2Drop.toFixed(1)}V (${(single2Drop/voltage*100).toFixed(1)}%)</strong></p>
+                        <p>損失電力: <strong>${single2Loss.toFixed(2)}kW</strong></p>
+                        <p>効率: ${(100 - single2Loss/power*100000).toFixed(1)}%</p>
+                    </div>
+                    <div style="background: #E3F2FD; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                        <h5>単相3線式</h5>
+                        <p>電圧降下: <strong>${single3Drop.toFixed(1)}V (${(single3Drop/voltage*100).toFixed(1)}%)</strong></p>
+                        <p>損失電力: <strong>${single3Loss.toFixed(2)}kW</strong></p>
+                        <p>効率: ${(100 - single3Loss/power*100000).toFixed(1)}%</p>
+                    </div>
+                    <div style="background: #E8F5E9; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                        <h5>三相3線式 ✨最高効率</h5>
+                        <p>電圧降下: <strong>${three3Drop.toFixed(1)}V (${(three3Drop/voltage*100).toFixed(1)}%)</strong></p>
+                        <p>損失電力: <strong>${three3Loss.toFixed(2)}kW</strong></p>
+                        <p>効率: ${(100 - three3Loss/power*100000).toFixed(1)}%</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 電気料金の計算
+        function calculateCost() {
+            const usage = parseFloat(document.getElementById('monthly-usage').value);
+            const contract = parseFloat(document.getElementById('contract-power').value);
+            
+            document.getElementById('monthly-usage-value').textContent = usage + 'kWh';
+            document.getElementById('contract-power-value').textContent = contract + 'kW';
+            
+            // 料金単価（仮定）
+            const basicRate = 286; // 円/kW（基本料金）
+            const usageRate = 25; // 円/kWh（従量料金）
+            const powerBasicRate = 1100; // 円/kW（動力基本料金）
+            const powerUsageRate = 17; // 円/kWh（動力従量料金）
+            
+            // 単相契約の料金
+            const singleBasic = contract * basicRate;
+            const singleUsage = usage * usageRate;
+            const singleTotal = singleBasic + singleUsage;
+            
+            // 三相（動力）契約の料金
+            const threeBasic = contract * powerBasicRate;
+            const threeUsage = usage * powerUsageRate;
+            const threeTotal = threeBasic + threeUsage;
+            
+            const resultDiv = document.getElementById('cost-result');
+            resultDiv.innerHTML = `
+                <div class="comparison-container" style="margin-top: 1rem;">
+                    <div style="background: #E3F2FD; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                        <h5>📊 従量電灯契約（単相）</h5>
+                        <p>基本料金: ${singleBasic.toLocaleString()}円</p>
+                        <p>従量料金: ${singleUsage.toLocaleString()}円</p>
+                        <p><strong>合計: ${singleTotal.toLocaleString()}円/月</strong></p>
+                    </div>
+                    <div style="background: #FFF3E0; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                        <h5>⚡ 動力契約（三相）</h5>
+                        <p>基本料金: ${threeBasic.toLocaleString()}円</p>
+                        <p>従量料金: ${threeUsage.toLocaleString()}円</p>
+                        <p><strong>合計: ${threeTotal.toLocaleString()}円/月</strong></p>
+                        <p style="color: ${threeTotal < singleTotal ? '#4CAF50' : '#F44336'};">
+                            差額: ${Math.abs(threeTotal - singleTotal).toLocaleString()}円
+                            ${threeTotal < singleTotal ? '（お得）' : '（割高）'}
+                        </p>
+                    </div>
+                </div>
+                <div class="alert alert-info" style="margin-top: 1rem;">
+                    <p>💡 <strong>ポイント:</strong> 動力契約は基本料金が高いですが、使用量が多い場合は従量料金が安いため有利になることがあります。月300kWh以上使用する工場などでは検討の価値があります。</p>
+                </div>
+            `;
+        }
+        
+        // トグル機能
+        function toggleSection(header) {
+            const section = header.parentElement;
+            section.classList.toggle('active');
+        }
+        
+        // 初期化
+        window.onload = function() {
+            updatePowerFactor();
+            calculateCapacitor();
+            updateVoltageDrop();
+            updateAllowableCurrent();
+            compareDistribution();
+            updateDistributionCalc();
+            
+            // ゲージの目盛り生成
+            const gaugeTicks = document.getElementById('gauge-ticks');
+            for (let i = 0; i <= 100; i += 20) {
+                const angle = -180 + (i * 1.8);
+                const rad = angle * Math.PI / 180;
+                const x1 = 300 + 130 * Math.cos(rad);
+                const y1 = 250 + 130 * Math.sin(rad);
+                const x2 = 300 + 140 * Math.cos(rad);
+                const y2 = 250 + 140 * Math.sin(rad);
+                
+                const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                tick.setAttribute('x1', x1);
+                tick.setAttribute('y1', y1);
+                tick.setAttribute('x2', x2);
+                tick.setAttribute('y2', y2);
+                tick.setAttribute('stroke', '#666');
+                tick.setAttribute('stroke-width', '2');
+                gaugeTicks.appendChild(tick);
+                
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', 300 + 160 * Math.cos(rad));
+                label.setAttribute('y', 250 + 160 * Math.sin(rad) + 5);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('font-size', '12');
+                label.textContent = i + '%';
+                gaugeTicks.appendChild(label);
+            }
+        };
+        
+        // 初期化処理
+        document.addEventListener('DOMContentLoaded', function() {
+            // 許容電流タブの初期計算
+            if (document.getElementById('cable-type')) {
+                updateAllowableCurrent();
+            }
+        });
+    </script>
+</body>
+</html>

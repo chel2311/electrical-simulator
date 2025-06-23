@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>電気設計シミュレーター 設計仕様書</title>
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --primary-dark: #003d75;
+            --accent-color: #FF961C;
+            --text-color: #333;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --info-color: #2196f3;
+            --code-bg: #1e1e1e;
+            --code-color: #d4d4d4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Meiryo', 'Hiragino Sans', system-ui, sans-serif;
+            line-height: 1.7;
+            color: var(--text-color);
+            background: var(--bg-color);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+            margin-bottom: 3rem;
+            box-shadow: 0 4px 20px rgba(0,91,171,0.3);
+        }
+
+        header h1 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            opacity: 0.9;
+        }
+
+        .version-info {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,91,171,0.3);
+        }
+
+        .back-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,91,171,0.4);
+        }
+
+        .tab-navigation {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px auto;
+            max-width: min(900px, 95vw);
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--primary-color);
+            flex: 1;
+            min-width: 120px;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .tab-button.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .beginner-explanation {
+            background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+            border-left: 5px solid #4caf50;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+        }
+
+        .tech-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin: 1rem 0;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .tab-button {
+                font-size: 0.85rem;
+                padding: 10px 15px;
+            }
+            .tab-navigation {
+                gap: 5px;
+                padding: 10px;
+            }
+            .tech-grid {
+                grid-template-columns: 1fr;
+            }
+            .layout {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            .sidebar {
+                display: none;
+            }
+            /* 詳細設計タブでもモバイルではサイドバーを非表示 */
+            #detailed-tab .layout {
+                grid-template-columns: 1fr;
+            }
+            #detailed-tab .sidebar {
+                display: none;
+            }
+            .code-block {
+                padding: 1.5rem;
+                font-size: 0.9rem;
+                line-height: 1.6;
+                overflow-x: scroll;
+            }
+            .code-block::before {
+                top: 0.5rem;
+                right: 0.5rem;
+                padding: 0.3rem 0.6rem;
+                font-size: 0.7rem;
+            }
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        /* タブ専用レイアウト調整 */
+        .tab-content .layout {
+            display: block;
+        }
+
+        .tab-content .sidebar {
+            display: none;
+        }
+
+        /* 詳細設計タブでのみサイドバーを表示 */
+        #detailed-tab .layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        #detailed-tab .sidebar {
+            display: block;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 2rem;
+        }
+
+        .toc {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .toc h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        .toc-list a {
+            color: var(--text-color);
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .toc-list a:hover,
+        .toc-list a.active {
+            background: var(--primary-color);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .main-content {
+            min-height: 100vh;
+        }
+
+        .section {
+            background: var(--card-bg);
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 3rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section h2 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            border-left: 5px solid var(--accent-color);
+            padding-left: 1rem;
+        }
+
+        .section h3 {
+            color: var(--primary-dark);
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+            position: relative;
+        }
+
+        .section h4 {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.8rem 0;
+        }
+
+        /* 階層構造の視覚化 */
+        .section {
+            position: relative;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--accent-color), transparent);
+            border-radius: 2px;
+        }
+
+        .section-number {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .subsection {
+            margin-left: 2rem;
+            position: relative;
+        }
+
+        .subsection::before {
+            content: '';
+            position: absolute;
+            left: -15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+        }
+
+        .subsection h3 {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-left: -1.5rem;
+        }
+
+        .subsection h3::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: var(--accent-color);
+            border-radius: 50%;
+        }
+
+        .subsection h4 {
+            position: relative;
+            padding-left: 2rem;
+            margin-left: -2rem;
+            font-size: 1.1rem;
+        }
+
+        .subsection h4::before {
+            content: '';
+            position: absolute;
+            left: 0.3rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            background: var(--info-color);
+            border-radius: 50%;
+        }
+
+        .hierarchy-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .hierarchy-indicator .breadcrumb {
+            background: #f0f0f0;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+        }
+
+        .hierarchy-indicator .separator {
+            margin: 0 0.5rem;
+            color: var(--accent-color);
+        }
+
+        /* 階層レベル別のインデント */
+        .level-1 { margin-left: 0; }
+        .level-2 { margin-left: 1.5rem; }
+        .level-3 { margin-left: 3rem; }
+        .level-4 { margin-left: 4.5rem; }
+
+        /* 番号付けシステム */
+        .numbered-section {
+            counter-reset: subsection;
+        }
+
+        .numbered-section h3 {
+            counter-increment: subsection;
+        }
+
+        .numbered-section h3::after {
+            content: " (" counter(subsection) ")";
+            color: var(--accent-color);
+            font-weight: normal;
+            font-size: 0.9em;
+        }
+
+        .architecture {
+            background: linear-gradient(135deg, #e3f2fd, #f0f8ff);
+            border-left: 5px solid var(--info-color);
+        }
+
+        .design-system {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border-left: 5px solid var(--success-color);
+        }
+
+        .implementation {
+            background: linear-gradient(135deg, #fff3e0, #fef7e8);
+            border-left: 5px solid var(--warning-color);
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            color: var(--code-color);
+            padding: 2.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 2rem 0;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 2;
+            position: relative;
+            white-space: pre-line;
+            word-wrap: break-word;
+            border: 2px solid #444;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            letter-spacing: 0.5px;
+        }
+
+        /* シンタックスハイライト風のスタイル */
+        .code-block .comment {
+            color: #6a9955;
+            font-style: italic;
+        }
+
+        .code-block .keyword {
+            color: #569cd6;
+            font-weight: bold;
+        }
+
+        .code-block .string {
+            color: #ce9178;
+        }
+
+        .code-block .number {
+            color: #b5cea8;
+        }
+
+        .code-block::before {
+            content: attr(data-lang);
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--accent-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 2px 8px rgba(255,150,28,0.3);
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .color-item {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .color-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .color-sample {
+            height: 60px;
+            width: 100%;
+        }
+
+        .color-info {
+            padding: 1rem;
+        }
+
+        .color-name {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .color-value {
+            font-family: monospace;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .component-demo {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            border: 2px dashed var(--border-color);
+        }
+
+        .flow-diagram {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .flow-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .flow-step {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+            position: relative;
+        }
+
+        .flow-step::after {
+            content: '→';
+            position: absolute;
+            right: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent-color);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .flow-step:last-child::after {
+            display: none;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .data-table tr:hover {
+            background: #e3f2fd;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .tech-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .tech-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .tech-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .tech-name {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            border-color: var(--info-color);
+            color: #0d47a1;
+        }
+
+        .alert-warning {
+            background: #fff3e0;
+            border-color: var(--warning-color);
+            color: #e65100;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            border-color: var(--success-color);
+            color: #2e7d32;
+        }
+
+        footer {
+            background: var(--primary-dark);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .layout {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .sidebar {
+                position: static;
+                order: 2;
+            }
+
+            .back-button {
+                position: static;
+                margin: 1rem;
+                display: inline-block;
+            }
+
+            .flow-steps {
+                flex-direction: column;
+            }
+
+            .flow-step::after {
+                content: '↓';
+                right: 50%;
+                bottom: -15px;
+                top: auto;
+                transform: translateX(50%);
+            }
+
+            .tech-stack {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                padding: 2rem 0;
+            }
+        }
+
+        /* スクロールプログレスバー */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            z-index: 1001;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar"></div>
+    <a href="index.html" class="back-button">← ポータルに戻る</a>
+
+    <header>
+        <div class="container">
+            <div class="version-info">Version 2.0 - 詳細版</div>
+            <h1>電気設計シミュレーター</h1>
+            <p class="subtitle">詳細設計仕様書</p>
+        </div>
+    </header>
+
+    <!-- タブナビゲーション -->
+    <div class="tab-navigation">
+        <button class="tab-button active" onclick="switchTab('overview')">📋 概要・基本解説</button>
+        <button class="tab-button" onclick="switchTab('technical')">🔧 技術解説</button>
+        <button class="tab-button" onclick="switchTab('detailed')">📋 詳細設計</button>
+        <button class="tab-button" onclick="switchTab('implementation')">🛠️ 実装仕様</button>
+    </div>
+
+    <div class="container">
+        <!-- 概要・基本解説タブ -->
+        <div id="overview-tab" class="tab-content active">
+            <div class="section">
+                <h2>📋 設計仕様書概要</h2>
+                
+                <div class="beginner-explanation">
+                    <h3>📚 この設計仕様書について（初心者向け解説）</h3>
+                    <p>この設計仕様書は、要件定義書で決めた「何を作るか」を具体的に「どう作るか」に落とし込んだ技術文書です。</p>
+                    <p>プログラマーや設計者が実際にシステムを構築する際の詳細な設計図になります。</p>
+                </div>
+
+                <div class="tech-grid">
+                    <div class="tech-card">
+                        <h4>🎯 設計仕様書の目的</h4>
+                        <ul>
+                            <li><strong>技術選定の理由</strong>を明確化</li>
+                            <li><strong>実装方法</strong>を具体的に指示</li>
+                            <li><strong>品質基準</strong>を設定</li>
+                            <li><strong>開発チーム</strong>の共通理解を促進</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h4>📐 設計の主要ポイント</h4>
+                        <ul>
+                            <li><strong>シンプルな構造</strong>：保守しやすさを重視</li>
+                            <li><strong>モジュール化</strong>：機能ごとに独立した設計</li>
+                            <li><strong>レスポンシブ</strong>：あらゆるデバイスに対応</li>
+                            <li><strong>パフォーマンス</strong>：高速で軽量な動作</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 技術解説タブ -->
+        <div id="technical-tab" class="tab-content">
+            <div class="section">
+                <h2>🔧 技術解説（初心者向け）</h2>
+                
+                <div class="beginner-explanation">
+                    <h3>💻 「設計」って何をすること？</h3>
+                    <p><strong>設計</strong>とは、建物を建てる前に設計図を描くのと同じように、プログラムを作る前に「どんな技術を使って」「どんな構造で作るか」を決めることです。</p>
+                </div>
+
+                <div class="subsection">
+                    <h3>🏗️ システムの構造</h3>
+                    <div class="tech-grid">
+                        <div class="tech-card">
+                            <h4>📱 フロントエンド（見える部分）</h4>
+                            <p><strong>HTML</strong>：ページの骨組み</p>
+                            <p><strong>CSS</strong>：見た目やレイアウト</p>
+                            <p><strong>JavaScript</strong>：動的な機能</p>
+                            <p><strong>SVG</strong>：回路図やアイコン</p>
+                        </div>
+                        
+                        <div class="tech-card">
+                            <h4>⚡ パフォーマンス</h4>
+                            <p><strong>軽量化</strong>：ファイルサイズを最適化</p>
+                            <p><strong>キャッシュ</strong>：一度読み込んだら保存</p>
+                            <p><strong>圧縮</strong>：データ転送量を削減</p>
+                            <p><strong>最適化</strong>：無駄な処理を削減</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 詳細設計タブ -->
+        <div id="detailed-tab" class="tab-content">
+            <div class="layout">
+            <aside class="sidebar">
+                <nav class="toc">
+                    <h2>📋 目次</h2>
+                    <ul class="toc-list">
+                        <li><a href="#architecture">システムアーキテクチャ</a></li>
+                        <li><a href="#design-system">デザインシステム</a></li>
+                        <li><a href="#components">コンポーネント設計</a></li>
+                        <li><a href="#simulators">シミュレーター実装</a></li>
+                        <li><a href="#responsive">レスポンシブ設計</a></li>
+                        <li><a href="#performance">パフォーマンス最適化</a></li>
+                        <li><a href="#testing">テスト・品質管理</a></li>
+                        <li><a href="#deployment">デプロイメント</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <main class="main-content">
+                <section id="architecture" class="section architecture numbered-section">
+                    <div class="section-number">1. システムアーキテクチャ</div>
+                    <h2>🏗️ システムアーキテクチャ</h2>
+
+                    <div class="hierarchy-indicator">
+                        <span class="breadcrumb">1</span>
+                        <span class="separator">→</span>
+                        <span>システムアーキテクチャ</span>
+                    </div>
+
+                    <div class="subsection level-2">
+                        <h3>1.1 全体構成</h3>
+                        
+                        <!-- 技術アーキテクチャ図 -->
+                        <div class="architecture-diagram">
+                            <h4>🏗️ 技術アーキテクチャ構成図</h4>
+                            <svg viewBox="0 0 1000 720" style="width: 100%; height: auto; max-width: 1000px; min-height: 500px;">
+                                <!-- 背景グリッド -->
+                                <defs>
+                                    <pattern id="techGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+                                        <path d="M 25 0 L 0 0 0 25" fill="none" stroke="#e0e8f0" stroke-width="1"/>
+                                    </pattern>
+                                    <linearGradient id="layerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#005BAB;stop-opacity:0.1" />
+                                        <stop offset="100%" style="stop-color:#005BAB;stop-opacity:0.05" />
+                                    </linearGradient>
+                                </defs>
+                                <rect width="100%" height="100%" fill="url(#techGrid)" />
+                                
+                                <!-- ユーザーインタラクション（上部マージン確保） -->
+                                <path d="M 500 50 L 500 30 M 490 40 L 500 30 L 510 40" stroke="#FF961C" stroke-width="3" fill="none"/>
+                                <text x="500" y="25" text-anchor="middle" fill="#FF961C" font-size="16" font-weight="bold">👤 ユーザーインタラクション</text>
+                                
+                                <!-- レイヤー構造 -->
+                                <!-- フロントエンド層 -->
+                                <rect x="50" y="70" width="900" height="120" rx="15" fill="url(#layerGradient)" stroke="#005BAB" stroke-width="2"/>
+                                <text x="500" y="105" text-anchor="middle" fill="#005BAB" font-size="20" font-weight="bold">🎨 フロントエンド層</text>
+                                <text x="500" y="130" text-anchor="middle" fill="#003d75" font-size="14">HTML5 + CSS3 + JavaScript ES6+</text>
+                                <text x="500" y="150" text-anchor="middle" fill="#666" font-size="12">レスポンシブデザイン・PWA対応・アクセシビリティ準拠</text>
+                                <text x="500" y="170" text-anchor="middle" fill="#666" font-size="12">SVG + Canvas API + Chart.js</text>
+                                
+                                <!-- データフロー矢印（フロントエンドから詳細UI） -->
+                                <path d="M 500 190 L 500 210 M 490 200 L 500 210 L 510 200" stroke="#666" stroke-width="2" fill="none"/>
+                                
+                                <!-- UI層詳細 -->
+                                <rect x="100" y="220" width="180" height="80" rx="8" fill="#e8f5e9" stroke="#4caf50" stroke-width="2"/>
+                                <text x="190" y="245" text-anchor="middle" fill="#2e7d32" font-size="14" font-weight="bold">🖥️ ポータル UI</text>
+                                <text x="190" y="265" text-anchor="middle" fill="#2e7d32" font-size="11">タブナビゲーション</text>
+                                <text x="190" y="280" text-anchor="middle" fill="#2e7d32" font-size="11">カード型レイアウト</text>
+                                <text x="190" y="295" text-anchor="middle" fill="#2e7d32" font-size="11">隠しアクセス機能</text>
+                                
+                                <rect x="320" y="220" width="180" height="80" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="2"/>
+                                <text x="410" y="245" text-anchor="middle" fill="#ef6c00" font-size="14" font-weight="bold">⚙️ シミュレーター UI</text>
+                                <text x="410" y="265" text-anchor="middle" fill="#ef6c00" font-size="11">インタラクティブ操作</text>
+                                <text x="410" y="280" text-anchor="middle" fill="#ef6c00" font-size="11">リアルタイム計算</text>
+                                <text x="410" y="295" text-anchor="middle" fill="#ef6c00" font-size="11">視覚的フィードバック</text>
+                                
+                                <rect x="540" y="220" width="180" height="80" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="2"/>
+                                <text x="630" y="245" text-anchor="middle" fill="#1565c0" font-size="14" font-weight="bold">📊 データ可視化</text>
+                                <text x="630" y="265" text-anchor="middle" fill="#1565c0" font-size="11">SVGグラフィックス</text>
+                                <text x="630" y="280" text-anchor="middle" fill="#1565c0" font-size="11">Canvasアニメーション</text>
+                                <text x="630" y="295" text-anchor="middle" fill="#1565c0" font-size="11">Chart.jsグラフ</text>
+                                
+                                <rect x="760" y="220" width="180" height="80" rx="8" fill="#fce4ec" stroke="#e91e63" stroke-width="2"/>
+                                <text x="850" y="245" text-anchor="middle" fill="#c2185b" font-size="14" font-weight="bold">🔐 セキュリティ</text>
+                                <text x="850" y="265" text-anchor="middle" fill="#c2185b" font-size="11">入力値検証</text>
+                                <text x="850" y="280" text-anchor="middle" fill="#c2185b" font-size="11">XSS対策</text>
+                                <text x="850" y="295" text-anchor="middle" fill="#c2185b" font-size="11">CSP適用</text>
+                                
+                                <!-- ロジック層 -->
+                                <path d="M 500 300 L 500 330 M 490 320 L 500 330 L 510 320" stroke="#666" stroke-width="2" fill="none"/>
+                                <rect x="50" y="350" width="900" height="100" rx="15" fill="#f8f9fa" stroke="#666" stroke-width="2"/>
+                                <text x="500" y="380" text-anchor="middle" fill="#333" font-size="20" font-weight="bold">🧮 ビジネスロジック層</text>
+                                <text x="500" y="405" text-anchor="middle" fill="#666" font-size="14">計算エンジン・状態管理・イベント処理</text>
+                                <text x="500" y="425" text-anchor="middle" fill="#666" font-size="12">オームの法則計算・インピーダンス計算・電力計算・許容電流計算</text>
+                                
+                                <!-- ロジック層詳細 -->
+                                <path d="M 500 450 L 500 470 M 490 460 L 500 470 L 510 460" stroke="#666" stroke-width="2" fill="none"/>
+                                
+                                <rect x="100" y="480" width="160" height="70" rx="8" fill="#e8f5e9" stroke="#4caf50" stroke-width="1"/>
+                                <text x="180" y="500" text-anchor="middle" fill="#2e7d32" font-size="12" font-weight="bold">🔢 計算エンジン</text>
+                                <text x="180" y="515" text-anchor="middle" fill="#2e7d32" font-size="10">電気計算</text>
+                                <text x="180" y="530" text-anchor="middle" fill="#2e7d32" font-size="10">物理演算</text>
+                                <text x="180" y="545" text-anchor="middle" fill="#2e7d32" font-size="10">統計処理</text>
+                                
+                                <rect x="280" y="480" width="160" height="70" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="1"/>
+                                <text x="360" y="500" text-anchor="middle" fill="#ef6c00" font-size="12" font-weight="bold">📱 状態管理</text>
+                                <text x="360" y="515" text-anchor="middle" fill="#ef6c00" font-size="10">設定保存</text>
+                                <text x="360" y="530" text-anchor="middle" fill="#ef6c00" font-size="10">進捗追跡</text>
+                                <text x="360" y="545" text-anchor="middle" fill="#ef6c00" font-size="10">履歴管理</text>
+                                
+                                <rect x="460" y="480" width="160" height="70" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1"/>
+                                <text x="540" y="500" text-anchor="middle" fill="#1565c0" font-size="12" font-weight="bold">⚡ イベント処理</text>
+                                <text x="540" y="515" text-anchor="middle" fill="#1565c0" font-size="10">DOM操作</text>
+                                <text x="540" y="530" text-anchor="middle" fill="#1565c0" font-size="10">アニメーション</text>
+                                <text x="540" y="545" text-anchor="middle" fill="#1565c0" font-size="10">ユーザー操作</text>
+                                
+                                <rect x="640" y="480" width="160" height="70" rx="8" fill="#fce4ec" stroke="#e91e63" stroke-width="1"/>
+                                <text x="720" y="500" text-anchor="middle" fill="#c2185b" font-size="12" font-weight="bold">🎓 学習管理</text>
+                                <text x="720" y="515" text-anchor="middle" fill="#c2185b" font-size="10">進捗評価</text>
+                                <text x="720" y="530" text-anchor="middle" fill="#c2185b" font-size="10">スコア計算</text>
+                                <text x="720" y="545" text-anchor="middle" fill="#c2185b" font-size="10">レポート</text>
+                                
+                                <rect x="820" y="480" width="120" height="70" rx="8" fill="#f3e5f5" stroke="#9c27b0" stroke-width="1"/>
+                                <text x="880" y="500" text-anchor="middle" fill="#7b1fa2" font-size="12" font-weight="bold">🔧 ユーティリティ</text>
+                                <text x="880" y="515" text-anchor="middle" fill="#7b1fa2" font-size="10">検証</text>
+                                <text x="880" y="530" text-anchor="middle" fill="#7b1fa2" font-size="10">変換</text>
+                                <text x="880" y="545" text-anchor="middle" fill="#7b1fa2" font-size="10">形式化</text>
+                                
+                                <!-- データ層 -->
+                                <path d="M 500 550 L 500 580 M 490 570 L 500 580 L 510 570" stroke="#666" stroke-width="2" fill="none"/>
+                                <rect x="50" y="590" width="900" height="80" rx="15" fill="#f5f5f5" stroke="#9e9e9e" stroke-width="2"/>
+                                <text x="500" y="620" text-anchor="middle" fill="#333" font-size="20" font-weight="bold">💾 データ層</text>
+                                <text x="500" y="645" text-anchor="middle" fill="#666" font-size="14">ローカルストレージ・設定管理・キャッシュ</text>
+                                
+                                <!-- 外部依存関係 -->
+                                <rect x="50" y="690" width="900" height="20" rx="8" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="1"/>
+                                <text x="500" y="704" text-anchor="middle" fill="#34495e" font-size="12" font-weight="bold">📦 外部依存関係: Chart.js (v3.9+) | Modern Browsers (ES6+) | No Server Dependencies</text>
+                            </svg>
+                        </div>
+                        
+                        <div class="flow-diagram">
+                            <h4>システム構成図</h4>
+                            <div class="code-block" data-lang="architecture">
+┌─────────────────────────────────────────────────────────┐
+│                    ポータルページ (index.html)            │
+│  ┌─────────────────┬───────────────────┬─────────────────┐  │
+│  │   設計知識タブ   │   基礎理論タブ    │   隠しリンク     │  │
+│  └─────────────────┴───────────────────┴─────────────────┘  │
+├─────────────────────────────────────────────────────────┤
+│                    シミュレーター層                      │
+│  ┌─────────────┬─────────────┬─────────────┬─────────────┐  │
+│  │ 電気回路    │ 住宅分電盤  │ 太陽光発電  │ 交流回路    │  │
+│  │ シミュレータ │ シミュレータ │ シミュレータ │ シミュレータ │  │
+│  └─────────────┴─────────────┴─────────────┴─────────────┘  │
+├─────────────────────────────────────────────────────────┤
+│                   共通ライブラリ層                       │
+│  ┌─────────────┬─────────────┬─────────────┬─────────────┐  │
+│  │ 計算エンジン │ アニメーション│ データ管理  │ UI部品      │  │
+│  └─────────────┴─────────────┴─────────────┴─────────────┘  │
+├─────────────────────────────────────────────────────────┤
+│                     技術基盤層                          │
+│  ┌─────────────┬─────────────┬─────────────┬─────────────┐  │
+│  │ HTML5       │ CSS3        │ Vanilla JS  │ SVG/Canvas  │  │
+│  └─────────────┴─────────────┴─────────────┴─────────────┘  │
+└─────────────────────────────────────────────────────────┘
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection level-2">
+                        <h3>1.2 技術スタック詳細</h3>
+                        <div class="tech-stack">
+                        <div class="tech-item">
+                            <div class="tech-icon">🌐</div>
+                            <div class="tech-name">HTML5</div>
+                            <p>セマンティックマークアップ、アクセシビリティ対応、Progressive Web App対応</p>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">🎨</div>
+                            <div class="tech-name">CSS3</div>
+                            <p>CSS Grid、Flexbox、CSS変数、アニメーション、レスポンシブデザイン</p>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">⚡</div>
+                            <div class="tech-name">JavaScript ES6+</div>
+                            <p>モジュール、クラス、非同期処理、DOM操作最適化</p>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">📊</div>
+                            <div class="tech-name">SVG & Canvas</div>
+                            <p>ベクターグラフィックス、インタラクティブアニメーション、波形描画</p>
+                        </div>
+                    </div>
+
+                    <div class="subsection level-2">
+                        <h3>1.3 ファイル構成と依存関係</h3>
+                        <div class="code-block" data-lang="tree">
+electrical-simulator/
+├── index.html                     # ポータルページ（エントリーポイント）
+├── requirements-document.html     # 要件定義書（隠しリンク）
+├── design-specification.html     # 設計仕様書（隠しリンク）
+├── circuit-simulator-rich.html   # 電気回路シミュレーター
+├── distribution-board-simulator.html # 住宅分電盤シミュレーター
+├── residential-breaker-simulator.html # ブレーカー遮断シミュレーター
+├── solar-power-simulator.html    # 太陽光発電シミュレーター
+├── ventilation-simulator.html    # 24時間換気シミュレーター
+├── ohms-law-basic-theory.html    # オームの法則・基礎理論
+├── ac-circuit-simulator.html     # 交流回路シミュレーター
+├── electrical-law-simulator.html # 法令対策シミュレーター
+├── electrical-simulator.html     # 基礎インタラクティブシミュレーター
+├── cable-types-simulator.html    # ケーブル構造シミュレーター
+└── README.md                     # プロジェクト説明
+                        </div>
+                    </div>
+                </section>
+
+                <section id="design-system" class="section design-system numbered-section">
+                    <div class="section-number">2. デザインシステム</div>
+                    <h2>🎨 デザインシステム</h2>
+
+                    <div class="hierarchy-indicator">
+                        <span class="breadcrumb">2</span>
+                        <span class="separator">→</span>
+                        <span>デザインシステム</span>
+                    </div>
+
+                    <div class="subsection level-2">
+                        <h3>2.1 カラーパレット</h3>
+                    <div class="color-palette">
+                        <div class="color-item">
+                            <div class="color-sample" style="background: #005BAB;"></div>
+                            <div class="color-info">
+                                <div class="color-name">プライマリーカラー</div>
+                                <div class="color-value">#005BAB</div>
+                                <div class="color-value">企業カラー（青）</div>
+                            </div>
+                        </div>
+                        <div class="color-item">
+                            <div class="color-sample" style="background: #003d75;"></div>
+                            <div class="color-info">
+                                <div class="color-name">プライマリーダーク</div>
+                                <div class="color-value">#003d75</div>
+                                <div class="color-value">ヘッダー・フッター</div>
+                            </div>
+                        </div>
+                        <div class="color-item">
+                            <div class="color-sample" style="background: #FF961C;"></div>
+                            <div class="color-info">
+                                <div class="color-name">アクセントカラー</div>
+                                <div class="color-value">#FF961C</div>
+                                <div class="color-value">強調・CTA</div>
+                            </div>
+                        </div>
+                        <div class="color-item">
+                            <div class="color-sample" style="background: #4caf50;"></div>
+                            <div class="color-info">
+                                <div class="color-name">成功状態</div>
+                                <div class="color-value">#4caf50</div>
+                                <div class="color-value">正常・完了</div>
+                            </div>
+                        </div>
+                        <div class="color-item">
+                            <div class="color-sample" style="background: #ff9800;"></div>
+                            <div class="color-info">
+                                <div class="color-name">警告状態</div>
+                                <div class="color-value">#ff9800</div>
+                                <div class="color-value">注意・警告</div>
+                            </div>
+                        </div>
+                        <div class="color-item">
+                            <div class="color-sample" style="background: #f44336;"></div>
+                            <div class="color-info">
+                                <div class="color-name">エラー状態</div>
+                                <div class="color-value">#f44336</div>
+                                <div class="color-value">エラー・危険</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>2.2 CSS変数システム</h3>
+                    <div class="code-block" data-lang="css">
+:root {
+    /* カラーパレット */
+    --primary-color: #005BAB;
+    --primary-dark: #003d75;
+    --accent-color: #FF961C;
+    --text-color: #333333;
+    --bg-color: #f5f5f5;
+    
+    /* フォントサイズ（レスポンシブ） */
+    --fs-h1: clamp(1.75rem, 4vw, 2.5rem);
+    --fs-h2: clamp(1.5rem, 3vw, 2rem);
+    --fs-body: clamp(0.875rem, 2vw, 1rem);
+    
+    /* スペーシング */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    
+    /* シャドウ */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 20px rgba(0,0,0,0.15);
+    
+    /* トランジション */
+    --transition-fast: 0.2s;
+    --transition-normal: 0.3s;
+    --transition-slow: 0.5s;
+}
+                    </div>
+
+                    <h3>2.3 レイアウトシステム</h3>
+                    <div class="alert alert-info">
+                        <strong>📐 レスポンシブグリッド:</strong> CSS GridとFlexboxを組み合わせた柔軟なレイアウトシステムを採用
+                    </div>
+
+                    <div class="code-block" data-lang="css">
+/* コンテナシステム */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+}
+
+/* グリッドシステム */
+.grid {
+    display: grid;
+    gap: var(--spacing-lg);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* フレックスシステム */
+.flex {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.flex-center { justify-content: center; align-items: center; }
+.flex-between { justify-content: space-between; }
+.flex-column { flex-direction: column; }
+                    </div>
+                </section>
+
+                <section id="components" class="section">
+                    <h2>🧩 コンポーネント設計</h2>
+
+                    <h3>3.1 カードコンポーネント</h3>
+                    <div class="component-demo">
+                        <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 300px;">
+                            <div style="background: linear-gradient(135deg, #005BAB, #003d75); color: white; padding: 1rem; margin: -1.5rem -1.5rem 1rem -1.5rem; border-radius: 12px 12px 0 0;">
+                                <h4>シミュレーターカード</h4>
+                                <span style="float: right; background: rgba(255,255,255,0.2); padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.8rem;">v1.0</span>
+                            </div>
+                            <div style="background: #e8f5e9; color: #2e7d32; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; display: inline-block; margin-bottom: 0.8rem;">初級</div>
+                            <p style="margin-bottom: 1rem; color: #666;">基本的な電気回路の動作を視覚的に学習できます。</p>
+                            <button style="background: #FF961C; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">シミュレーターを開く →</button>
+                        </div>
+                    </div>
+
+                    <div class="code-block" data-lang="html">
+&lt;div class="simulator-card"&gt;
+    &lt;div class="card-header"&gt;
+        &lt;h2&gt;シミュレーター名&lt;/h2&gt;
+        &lt;span class="card-version"&gt;v1.0&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class="card-body"&gt;
+        &lt;span class="difficulty-badge beginner"&gt;初級&lt;/span&gt;
+        &lt;p class="card-description"&gt;説明文&lt;/p&gt;
+        &lt;ul class="feature-list"&gt;
+            &lt;li&gt;機能1&lt;/li&gt;
+            &lt;li&gt;機能2&lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;a href="#" class="card-link"&gt;開く →&lt;/a&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+                    </div>
+
+                    <h3>3.2 ボタンコンポーネント</h3>
+                    <div class="component-demo">
+                        <button style="background: #005BAB; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 6px; margin-right: 1rem; cursor: pointer; transition: all 0.3s ease;">プライマリー</button>
+                        <button style="background: #FF961C; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 6px; margin-right: 1rem; cursor: pointer; transition: all 0.3s ease;">アクション</button>
+                        <button style="background: transparent; color: #005BAB; border: 2px solid #005BAB; padding: 0.8rem 1.5rem; border-radius: 6px; cursor: pointer; transition: all 0.3s ease;">セカンダリー</button>
+                    </div>
+
+                    <h3>3.3 フォームコンポーネント</h3>
+                    <div class="component-demo">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">入力ラベル</label>
+                            <input type="text" style="width: 100%; max-width: 300px; padding: 0.8rem; border: 1px solid #e0e0e0; border-radius: 6px;" placeholder="プレースホルダー">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">セレクトボックス</label>
+                            <select style="width: 100%; max-width: 300px; padding: 0.8rem; border: 1px solid #e0e0e0; border-radius: 6px;">
+                                <option>選択してください</option>
+                                <option>オプション1</option>
+                                <option>オプション2</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="simulators" class="section implementation">
+                    <h2>⚙️ シミュレーター実装詳細</h2>
+
+                    <h3>4.1 電気回路シミュレーター</h3>
+                    <div class="flow-steps">
+                        <div class="flow-step">SVG回路図描画</div>
+                        <div class="flow-step">イベントリスナー設定</div>
+                        <div class="flow-step">状態管理</div>
+                        <div class="flow-step">アニメーション実行</div>
+                    </div>
+
+                    <div class="code-block" data-lang="javascript">
+class CircuitSimulator {
+    constructor(container) {
+        this.container = container;
+        this.state = {
+            switchOn: false,
+            currentFlow: false,
+            ledOn: false
+        };
+        this.init();
+    }
+    
+    init() {
+        this.createSVG();
+        this.bindEvents();
+        this.render();
+    }
+    
+    createSVG() {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 800 400');
+        svg.setAttribute('class', 'circuit-svg');
+        
+        // 回路要素を追加
+        this.addPowerSource(svg);
+        this.addSwitch(svg);
+        this.addLED(svg);
+        this.addWires(svg);
+        
+        this.container.appendChild(svg);
+    }
+    
+    toggleSwitch() {
+        this.state.switchOn = !this.state.switchOn;
+        this.updateCircuit();
+    }
+    
+    updateCircuit() {
+        if (this.state.switchOn) {
+            this.startCurrentFlow();
+            this.turnOnLED();
+        } else {
+            this.stopCurrentFlow();
+            this.turnOffLED();
+        }
+    }
+    
+    startCurrentFlow() {
+        const electrons = this.container.querySelectorAll('.electron');
+        electrons.forEach(electron => {
+            electron.style.animationPlayState = 'running';
+        });
+    }
+}
+                    </div>
+
+                    <h3>4.2 分電盤シミュレーター</h3>
+                    <div class="alert alert-warning">
+                        <strong>⚠️ 複雑性注意:</strong> 分電盤シミュレーターは最も複雑な実装となるため、段階的な開発アプローチを採用
+                    </div>
+
+                    <div class="code-block" data-lang="javascript">
+class DistributionBoardSimulator {
+    constructor(container) {
+        this.container = container;
+        this.board = {
+            mainBreaker: { capacity: 60, status: 'on', load: 0 },
+            branchBreakers: [
+                { id: 1, name: 'リビング', capacity: 20, status: 'on', load: 0 },
+                { id: 2, name: '寝室', capacity: 20, status: 'on', load: 0 },
+                { id: 3, name: 'キッチン', capacity: 30, status: 'on', load: 0 }
+            ],
+            earthLeakage: { sensitivity: 30, status: 'normal' }
+        };
+        this.appliances = new Map();
+        this.init();
+    }
+    
+    calculateTotalLoad() {
+        return this.board.branchBreakers
+            .filter(breaker => breaker.status === 'on')
+            .reduce((total, breaker) => total + breaker.load, 0);
+    }
+    
+    checkOverload(breaker, newLoad) {
+        if (newLoad > breaker.capacity) {
+            this.tripBreaker(breaker);
+            this.showAlert(`${breaker.name}のブレーカーが過負荷により遮断されました`);
+            return true;
+        }
+        return false;
+    }
+    
+    addAppliance(breakerId, appliance) {
+        const breaker = this.board.branchBreakers.find(b => b.id === breakerId);
+        const newLoad = breaker.load + appliance.power;
+        
+        if (!this.checkOverload(breaker, newLoad)) {
+            breaker.load = newLoad;
+            this.appliances.set(appliance.id, { breakerId, appliance });
+            this.updateDisplay();
+        }
+    }
+}
+                    </div>
+
+                    <h3>4.3 電線許容電流値計算エンジン</h3>
+                    <div class="code-block" data-lang="javascript">
+class AllowableCurrentCalculator {
+    constructor() {
+        this.cableData = {
+            'vvf': {
+                '1.6': { air: 19, conduit: 17, bundle: 15, buried: 16 },
+                '2.0': { air: 27, conduit: 23, bundle: 19, buried: 21 },
+                '2.6': { air: 36, conduit: 31, bundle: 26, buried: 28 },
+                // ... 他のサイズ
+            },
+            'iv': { /* IVケーブルデータ */ },
+            'cv': { /* CVケーブルデータ */ },
+            'cvt': { /* CVTケーブルデータ */ }
+        };
+    }
+    
+    calculate(params) {
+        const { cableType, size, installation, temperature, actualCurrent } = params;
+        
+        // 基準許容電流の取得
+        const baseCurrent = this.cableData[cableType][size][installation];
+        
+        // 温度補正係数の計算
+        const tempCorrection = this.calculateTemperatureCorrection(temperature);
+        
+        // 許容電流の算出
+        const allowableCurrent = baseCurrent * tempCorrection;
+        
+        // 使用率の計算
+        const usagePercent = (actualCurrent / allowableCurrent) * 100;
+        
+        // 安全性評価
+        const safety = this.evaluateSafety(usagePercent);
+        
+        return {
+            baseCurrent,
+            tempCorrection,
+            allowableCurrent,
+            usagePercent,
+            safety,
+            steps: this.generateCalculationSteps(params, baseCurrent, tempCorrection, allowableCurrent, usagePercent)
+        };
+    }
+    
+    calculateTemperatureCorrection(temperature) {
+        const baseTemp = 30; // 基準温度 30℃
+        
+        if (temperature > baseTemp) {
+            // 高温時の補正（1℃につき1.5%減少）
+            return 1.0 - (temperature - baseTemp) * 0.015;
+        } else if (temperature < baseTemp) {
+            // 低温時の補正（1℃につき1.0%増加）
+            return 1.0 + (baseTemp - temperature) * 0.01;
+        }
+        
+        return 1.0;
+    }
+    
+    evaluateSafety(usagePercent) {
+        if (usagePercent <= 70) return { level: 'safe', message: '安全範囲内' };
+        if (usagePercent <= 85) return { level: 'caution', message: '注意が必要' };
+        if (usagePercent <= 100) return { level: 'warning', message: '危険範囲' };
+        return { level: 'danger', message: '過負荷状態' };
+    }
+}
+                    </div>
+                </section>
+
+                <section id="responsive" class="section">
+                    <h2>📱 レスポンシブ設計</h2>
+
+                    <h3>5.1 ブレークポイント戦略</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>デバイス</th>
+                                <th>ブレークポイント</th>
+                                <th>グリッド列数</th>
+                                <th>フォントサイズ調整</th>
+                                <th>特別対応</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>スマートフォン</td>
+                                <td>～767px</td>
+                                <td>1列</td>
+                                <td>14px → 16px</td>
+                                <td>タッチ操作最適化</td>
+                            </tr>
+                            <tr>
+                                <td>タブレット</td>
+                                <td>768px～1199px</td>
+                                <td>2列</td>
+                                <td>15px → 16px</td>
+                                <td>横向きレイアウト</td>
+                            </tr>
+                            <tr>
+                                <td>デスクトップ</td>
+                                <td>1200px～</td>
+                                <td>3列</td>
+                                <td>16px → 18px</td>
+                                <td>高解像度対応</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3>5.2 タッチデバイス最適化</h3>
+                    <div class="code-block" data-lang="css">
+/* タッチターゲットの最小サイズ確保 */
+@media (hover: none) {
+    .btn, .clickable, .touch-target {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 12px;
+    }
+    
+    /* タッチフィードバック */
+    .btn:active {
+        transform: scale(0.98);
+        background-color: var(--primary-dark);
+    }
+}
+
+/* ホバー効果の適切な制御 */
+@media (hover: hover) {
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+}
+                    </div>
+
+                    <h3>5.3 動的フォントサイズ調整</h3>
+                    <div class="code-block" data-lang="javascript">
+function adjustFontSize() {
+    const viewportWidth = window.innerWidth;
+    const baseSize = 16;
+    
+    let scaleFactor;
+    if (viewportWidth < 768) {
+        scaleFactor = 0.875; // 14px
+    } else if (viewportWidth < 992) {
+        scaleFactor = 0.9375; // 15px
+    } else {
+        scaleFactor = 1; // 16px
+    }
+    
+    document.documentElement.style.fontSize = `${baseSize * scaleFactor}px`;
+}
+
+// ウィンドウサイズ変更時の調整
+window.addEventListener('resize', debounce(adjustFontSize, 250));
+window.addEventListener('DOMContentLoaded', adjustFontSize);
+                    </div>
+                </section>
+
+                <section id="performance" class="section">
+                    <h2>⚡ パフォーマンス最適化</h2>
+
+                    <h3>6.1 読み込み速度最適化</h3>
+                    <div class="alert alert-success">
+                        <strong>🎯 目標:</strong> First Contentful Paint < 1.5s, Largest Contentful Paint < 2.5s
+                    </div>
+
+                    <div class="code-block" data-lang="html">
+&lt;!-- リソースの優先読み込み --&gt;
+&lt;link rel="preload" href="critical.css" as="style"&gt;
+&lt;link rel="preload" href="main.js" as="script"&gt;
+
+&lt;!-- 重要でないリソースの遅延読み込み --&gt;
+&lt;link rel="stylesheet" href="non-critical.css" media="print" onload="this.media='all'"&gt;
+
+&lt;!-- 画像の最適化 --&gt;
+&lt;img src="image.webp" alt="説明" loading="lazy" 
+     srcset="image-400.webp 400w, image-800.webp 800w" 
+     sizes="(max-width: 768px) 400px, 800px"&gt;
+                    </div>
+
+                    <h3>6.2 JavaScript最適化</h3>
+                    <div class="code-block" data-lang="javascript">
+// デバウンス関数による処理最適化
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// requestAnimationFrameによるアニメーション最適化
+class AnimationManager {
+    constructor() {
+        this.animations = new Set();
+        this.isRunning = false;
+    }
+    
+    add(animation) {
+        this.animations.add(animation);
+        if (!this.isRunning) {
+            this.start();
+        }
+    }
+    
+    remove(animation) {
+        this.animations.delete(animation);
+        if (this.animations.size === 0) {
+            this.stop();
+        }
+    }
+    
+    start() {
+        this.isRunning = true;
+        this.tick();
+    }
+    
+    tick() {
+        if (this.isRunning) {
+            this.animations.forEach(animation => animation.update());
+            requestAnimationFrame(() => this.tick());
+        }
+    }
+    
+    stop() {
+        this.isRunning = false;
+    }
+}
+                    </div>
+
+                    <h3>6.3 メモリ管理</h3>
+                    <div class="code-block" data-lang="javascript">
+class ResourceManager {
+    constructor() {
+        this.eventListeners = new Map();
+        this.intervals = new Set();
+        this.observers = new Set();
+    }
+    
+    addEventListener(element, event, handler) {
+        if (!this.eventListeners.has(element)) {
+            this.eventListeners.set(element, new Map());
+        }
+        this.eventListeners.get(element).set(event, handler);
+        element.addEventListener(event, handler);
+    }
+    
+    cleanup() {
+        // イベントリスナーの削除
+        this.eventListeners.forEach((events, element) => {
+            events.forEach((handler, event) => {
+                element.removeEventListener(event, handler);
+            });
+        });
+        
+        // インターバルの削除
+        this.intervals.forEach(interval => clearInterval(interval));
+        
+        // オブザーバーの削除
+        this.observers.forEach(observer => observer.disconnect());
+        
+        // マップとセットをクリア
+        this.eventListeners.clear();
+        this.intervals.clear();
+        this.observers.clear();
+    }
+}
+                    </div>
+                </section>
+
+                <section id="testing" class="section">
+                    <h2>🧪 テスト・品質管理</h2>
+
+                    <h3>7.1 テスト戦略</h3>
+                    <div class="flow-steps">
+                        <div class="flow-step">単体テスト<br>(Jest)</div>
+                        <div class="flow-step">統合テスト<br>(Cypress)</div>
+                        <div class="flow-step">視覚回帰テスト<br>(Percy)</div>
+                        <div class="flow-step">パフォーマンステスト<br>(Lighthouse)</div>
+                    </div>
+
+                    <h3>7.2 テストコード例</h3>
+                    <div class="code-block" data-lang="javascript">
+// 単体テスト例（Jest）
+describe('AllowableCurrentCalculator', () => {
+    let calculator;
+    
+    beforeEach(() => {
+        calculator = new AllowableCurrentCalculator();
+    });
+    
+    test('VVF 2.0mm² 管内配線の許容電流計算', () => {
+        const params = {
+            cableType: 'vvf',
+            size: '2.0',
+            installation: 'conduit',
+            temperature: 30,
+            actualCurrent: 15
+        };
+        
+        const result = calculator.calculate(params);
+        
+        expect(result.baseCurrent).toBe(23);
+        expect(result.tempCorrection).toBe(1.0);
+        expect(result.allowableCurrent).toBe(23);
+        expect(result.usagePercent).toBeCloseTo(65.22, 2);
+        expect(result.safety.level).toBe('safe');
+    });
+    
+    test('高温環境での温度補正', () => {
+        const correction = calculator.calculateTemperatureCorrection(40);
+        expect(correction).toBeCloseTo(0.85, 2);
+    });
+});
+
+// E2Eテスト例（Cypress）
+describe('電気回路シミュレーター', () => {
+    beforeEach(() => {
+        cy.visit('/circuit-simulator-rich.html');
+    });
+    
+    it('スイッチ操作でLEDが点灯する', () => {
+        cy.get('.switch-element').click();
+        cy.get('.led-bulb').should('have.class', 'active');
+        cy.get('.current-flow').should('be.visible');
+    });
+    
+    it('ブレーカーが落ちると回路が遮断される', () => {
+        cy.get('.load-slider').invoke('val', 25).trigger('input');
+        cy.get('.breaker-20a').should('have.class', 'tripped');
+        cy.get('.led-bulb').should('not.have.class', 'active');
+    });
+});
+                    </div>
+
+                    <h3>7.3 品質メトリクス</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>メトリクス</th>
+                                <th>目標値</th>
+                                <th>現在値</th>
+                                <th>測定ツール</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>コードカバレッジ</td>
+                                <td>≥ 80%</td>
+                                <td>85%</td>
+                                <td>Jest Coverage</td>
+                            </tr>
+                            <tr>
+                                <td>Lighthouse Score</td>
+                                <td>≥ 90</td>
+                                <td>92</td>
+                                <td>Chrome DevTools</td>
+                            </tr>
+                            <tr>
+                                <td>Accessibility Score</td>
+                                <td>≥ 95</td>
+                                <td>96</td>
+                                <td>axe-core</td>
+                            </tr>
+                            <tr>
+                                <td>Bundle Size</td>
+                                <td>< 500KB</td>
+                                <td>420KB</td>
+                                <td>Webpack Bundle Analyzer</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section id="deployment" class="section">
+                    <h2>🚀 デプロイメント</h2>
+
+                    <h3>8.1 GitHub Pages設定</h3>
+                    <div class="code-block" data-lang="yaml">
+# .github/workflows/deploy.yml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests
+      run: npm test
+      
+    - name: Build
+      run: npm run build
+      
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./dist
+                    </div>
+
+                    <h3>8.2 最適化スクリプト</h3>
+                    <div class="code-block" data-lang="javascript">
+// build.js - プロダクションビルドスクリプト
+const fs = require('fs');
+const path = require('path');
+const htmlMinifier = require('html-minifier');
+const CleanCSS = require('clean-css');
+const { minify } = require('terser');
+
+class BuildOptimizer {
+    constructor() {
+        this.inputDir = './src';
+        this.outputDir = './dist';
+    }
+    
+    async optimizeHTML(filePath) {
+        const content = fs.readFileSync(filePath, 'utf8');
+        
+        return htmlMinifier.minify(content, {
+            collapseWhitespace: true,
+            removeComments: true,
+            minifyCSS: true,
+            minifyJS: true,
+            removeEmptyAttributes: true,
+            removeRedundantAttributes: true
+        });
+    }
+    
+    async optimizeCSS(cssContent) {
+        const cleanCSS = new CleanCSS({
+            level: 2,
+            returnPromise: true
+        });
+        
+        const result = await cleanCSS.minify(cssContent);
+        return result.styles;
+    }
+    
+    async optimizeJS(jsContent) {
+        const result = await minify(jsContent, {
+            compress: {
+                drop_console: true,
+                drop_debugger: true
+            },
+            mangle: true
+        });
+        
+        return result.code;
+    }
+}
+                    </div>
+
+                    <h3>8.3 パフォーマンス監視</h3>
+                    <div class="alert alert-info">
+                        <strong>📊 継続的監視:</strong> Lighthouse CI、Web Vitals、Error Trackingによる品質保証
+                    </div>
+                </section>
+            </main>
+        </div>
+        </div>
+
+        <!-- 実装仕様タブ -->
+        <div id="implementation-tab" class="tab-content">
+            <div class="section">
+                <h2>🛠️ 実装仕様（開発者向け）</h2>
+                
+                <div class="beginner-explanation">
+                    <h3>⚙️ 実装時の重要ポイント</h3>
+                    <p>これまでの設計を踏まえて、実際にコードを書く際に注意すべき具体的な実装方法を説明します。</p>
+                </div>
+
+                <div class="subsection">
+                    <h3>🎯 開発優先順位</h3>
+                    <div class="tech-grid">
+                        <div class="tech-card">
+                            <h4>🥇 Phase 1：基盤構築</h4>
+                            <ol>
+                                <li>ポータルページの作成</li>
+                                <li>共通CSS/JavaScript</li>
+                                <li>レスポンシブ対応</li>
+                                <li>ナビゲーション機能</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="tech-card">
+                            <h4>🥈 Phase 2：基本機能</h4>
+                            <ol>
+                                <li>電気回路シミュレーター</li>
+                                <li>オームの法則計算機</li>
+                                <li>基本的なアニメーション</li>
+                                <li>エラーハンドリング</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="tech-card">
+                            <h4>🥉 Phase 3：高度機能</h4>
+                            <ol>
+                                <li>分電盤シミュレーター</li>
+                                <li>太陽光発電計算</li>
+                                <li>交流回路シミュレーター</li>
+                                <li>パフォーマンス最適化</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h3>📋 品質チェックリスト</h3>
+                    <div class="tech-card">
+                        <h4>✅ 実装完了の基準</h4>
+                        <ul>
+                            <li>すべてのブラウザで正常動作</li>
+                            <li>モバイル・タブレット・PC対応</li>
+                            <li>3秒以内のページ読み込み</li>
+                            <li>アクセシビリティ基準クリア</li>
+                            <li>エラーハンドリング実装</li>
+                            <li>コード品質基準達成</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 電気設計シミュレーター プロジェクト. All rights reserved.</p>
+            <p>この設計仕様書は技術的詳細と実装ガイドラインを提供します。</p>
+        </div>
+    </footer>
+
+    <script>
+        // スクロール進捗バー
+        function updateProgressBar() {
+            const scrollTop = document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (scrollTop / scrollHeight) * 100;
+            
+            document.querySelector('.progress-bar').style.width = `${Math.min(progress, 100)}%`;
+        }
+
+        window.addEventListener('scroll', updateProgressBar);
+
+        // セクション表示アニメーション
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // TOCアクティブ状態管理
+        function updateActiveTOC() {
+            const sections = document.querySelectorAll('.section');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            
+            let activeSection = null;
+            const scrollTop = window.pageYOffset;
+            
+            sections.forEach(section => {
+                const top = section.offsetTop - 100;
+                const bottom = top + section.offsetHeight;
+                
+                if (scrollTop >= top && scrollTop < bottom) {
+                    activeSection = section.id;
+                }
+            });
+            
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${activeSection}`) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveTOC);
+
+        // スムーズスクロール
+        document.querySelectorAll('.toc-list a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            });
+        });
+
+        // コードブロックのコピー機能
+        document.querySelectorAll('.code-block').forEach(block => {
+            const button = document.createElement('button');
+            button.innerHTML = '📋';
+            button.style.cssText = `
+                position: absolute;
+                top: 0.5rem;
+                left: 0.5rem;
+                background: var(--accent-color);
+                color: white;
+                border: none;
+                padding: 0.3rem 0.5rem;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.8rem;
+            `;
+            
+            button.addEventListener('click', () => {
+                navigator.clipboard.writeText(block.textContent).then(() => {
+                    button.innerHTML = '✅';
+                    setTimeout(() => {
+                        button.innerHTML = '📋';
+                    }, 2000);
+                });
+            });
+            
+            block.style.position = 'relative';
+            block.appendChild(button);
+        });
+
+        // タブ切り替え機能
+        function switchTab(tabName) {
+            // すべてのタブコンテンツを非表示
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // すべてのタブボタンから active クラスを削除
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // 選択されたタブを表示
+            const targetTab = document.getElementById(`${tabName}-tab`);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+            
+            // 選択されたボタンに active クラスを追加
+            event.target.classList.add('active');
+        }
+
+        // ページ読み込み時のアニメーション
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.tech-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+
+        // 初期化
+        updateProgressBar();
+        updateActiveTOC();
+    </script>
+</body>
+</html>

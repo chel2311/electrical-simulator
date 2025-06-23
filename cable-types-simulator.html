@@ -1,0 +1,2023 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>各種ケーブルの構造と特徴 </title>
+    <style>
+        :root {
+            --primary-color: #005BAB;
+            --secondary-color: #FF961C;
+            --light-blue: #E0EEF9;
+            --medium-blue: #4D8BC9;
+            --success-color: #4CAF50;
+            --danger-color: #F44336;
+            --text-dark: #333333;
+            --gray-light: #f5f5f5;
+            --gray-medium: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Meiryo, "Hiragino Sans", sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--medium-blue) 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        
+        .portal-back-btn {
+            position: absolute;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .portal-back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-50%) translateX(-3px);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            animation: slideInDown 0.8s ease;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            animation: fadeIn 1s ease 0.3s both;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* ナビゲーションタブ */
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .nav-tab {
+            padding: 0.8rem 1.5rem;
+            background: var(--light-blue);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-tab:hover {
+            background: var(--medium-blue);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,91,171,0.3);
+        }
+
+        .nav-tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--secondary-color);
+        }
+
+        /* ケーブル詳細カード */
+        .cable-detail {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .cable-detail.active {
+            display: block;
+        }
+
+        .detail-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .cable-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light-blue);
+        }
+
+        .cable-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--light-blue);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .cable-title h2 {
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .cable-subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* 構造図SVG */
+        .structure-diagram {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+            padding: 2rem;
+            background: var(--gray-light);
+            border-radius: 12px;
+        }
+
+        .structure-svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* 仕様表 */
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .spec-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .spec-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-medium);
+            background: white;
+        }
+
+        .spec-table tr:hover td {
+            background: var(--light-blue);
+            transition: all 0.3s ease;
+        }
+
+        /* 特徴グリッド */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--secondary-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        .feature-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+        }
+
+        /* 使用例セクション */
+        .usage-section {
+            background: var(--light-blue);
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+
+        .usage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .usage-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .usage-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* 比較モード */
+        .compare-mode {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        .compare-button {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 1rem 0;
+        }
+
+        .compare-button:hover {
+            background: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .comparison-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+        }
+
+        .comparison-table td {
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid var(--gray-medium);
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: var(--gray-light);
+        }
+
+        /* クイズセクション */
+        .quiz-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .quiz-question {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .quiz-options {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .quiz-option {
+            background: var(--gray-light);
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .quiz-option.correct {
+            background: #E8F5E9;
+            border-color: var(--success-color);
+        }
+
+        .quiz-option.incorrect {
+            background: #FFEBEE;
+            border-color: var(--danger-color);
+        }
+
+        /* アニメーション */
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-tabs {
+                justify-content: center;
+            }
+            
+            .nav-tab {
+                font-size: 0.9rem;
+                padding: 0.6rem 1rem;
+            }
+            
+            .cable-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        /* ツールチップ */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            color: var(--primary-color);
+            text-decoration: underline;
+            text-decoration-style: dotted;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 250px;
+            background-color: #333;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            padding: 0.5rem;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* 凡例 */
+        .legend {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="portal-back-btn">← ポータルに戻る</a>
+        <h1>🔌 各種ケーブルの構造と特徴</h1>
+    </header>
+
+    <div class="container">
+        <!-- ナビゲーションタブ -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showCable('iv')">IVケーブル</button>
+            <button class="nav-tab" onclick="showCable('vvf')">VVFケーブル</button>
+            <button class="nav-tab" onclick="showCable('vvr')">VVRケーブル</button>
+            <button class="nav-tab" onclick="showCable('cv')">CVケーブル</button>
+            <button class="nav-tab" onclick="showCable('cvt')">CVTケーブル</button>
+            <button class="nav-tab" onclick="showCable('cat5e')">Cat5e</button>
+            <button class="nav-tab" onclick="showCable('cat6a')">Cat6a</button>
+            <button class="nav-tab" onclick="showCable('coaxial')">同軸ケーブル</button>
+            <button class="nav-tab" onclick="showCable('comm')">通信線</button>
+        </div>
+
+        <button class="compare-button" onclick="toggleCompareMode()">📊 ケーブル比較モード</button>
+
+        <!-- IVケーブル -->
+        <div id="iv" class="cable-detail active">
+            <div class="detail-card">
+                <div class="cable-header">
+                    <div class="cable-icon">🟡</div>
+                    <div class="cable-title">
+                        <h2>IV電線（600Vビニル絶縁電線）</h2>
+                        <p class="cable-subtitle">Indoor PVC insulated wire</p>
+                    </div>
+                </div>
+
+                <div class="structure-diagram">
+                    <svg width="400" height="300" viewBox="0 0 400 300" class="structure-svg">
+                        <!-- 背景 -->
+                        <rect width="400" height="300" fill="#f9f9f9"/>
+                        
+                        <!-- タイトル -->
+                        <text x="200" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#005BAB">IV電線 断面構造図</text>
+                        
+                        <!-- 断面図 -->
+                        <g transform="translate(200, 150)">
+                            <!-- 導体（銅） -->
+                            <circle cx="0" cy="0" r="40" fill="#B87333" stroke="#8B4513" stroke-width="2"/>
+                            <text x="0" y="5" text-anchor="middle" font-size="14" fill="white" font-weight="bold">導体（銅）</text>
+                            
+                            <!-- ビニル絶縁体（実際の色に合わせて変更） -->
+                            <circle cx="0" cy="0" r="70" fill="none" stroke="#000000" stroke-width="30" opacity="0.8"/>
+                            <text x="0" y="-85" text-anchor="middle" font-size="12" fill="#333">ビニル絶縁体</text>
+                            
+                            <!-- 寸法線 -->
+                            <line x1="0" y1="0" x2="70" y2="0" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+                            <text x="35" y="-5" text-anchor="middle" font-size="10" fill="#666">絶縁厚</text>
+                        </g>
+                        
+                        <!-- 凡例 -->
+                        <g transform="translate(50, 250)">
+                            <rect x="0" y="0" width="20" height="15" fill="#B87333"/>
+                            <text x="25" y="12" font-size="12" fill="#333">導体（銅）</text>
+                            
+                            <rect x="120" y="0" width="20" height="15" fill="#000000" opacity="0.8"/>
+                            <text x="145" y="12" font-size="12" fill="#333">ビニル絶縁体（黒）</text>
+                        </g>
+                    </svg>
+                </div>
+
+                <table class="spec-table">
+                    <tr>
+                        <th>項目</th>
+                        <th>仕様</th>
+                    </tr>
+                    <tr>
+                        <td>定格電圧</td>
+                        <td>600V以下</td>
+                    </tr>
+                    <tr>
+                        <td>最高許容温度</td>
+                        <td>60℃</td>
+                    </tr>
+                    <tr>
+                        <td>導体サイズ</td>
+                        <td>0.9mm² ～ 325mm²</td>
+                    </tr>
+                    <tr>
+                        <td>絶縁体</td>
+                        <td>ビニル（PVC）</td>
+                    </tr>
+                    <tr>
+                        <td>色分け</td>
+                        <td>黒、白、赤、緑、黄、青、紫、灰、茶、橙、桃、空</td>
+                    </tr>
+                </table>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">✨</span>主な特徴</h3>
+                        <ul>
+                            <li>単線構造でシンプル</li>
+                            <li>屋内配線の基本電線</li>
+                            <li>色分けによる識別が容易</li>
+                            <li>比較的安価</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">⚠️</span>注意点</h3>
+                        <ul>
+                            <li>屋外使用不可</li>
+                            <li>直射日光に弱い</li>
+                            <li>機械的強度が低い</li>
+                            <li>保護管内での使用推奨</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="usage-section">
+                    <h3>📍 主な使用場所・用途</h3>
+                    <div class="usage-grid">
+                        <div class="usage-item">
+                            <span>🏠</span>
+                            <span>住宅の屋内配線</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🏢</span>
+                            <span>ビル内の電灯・コンセント回路</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>📦</span>
+                            <span>分電盤内の配線</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🔧</span>
+                            <span>制御盤内の配線</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VVFケーブル -->
+        <div id="vvf" class="cable-detail">
+            <div class="detail-card">
+                <div class="cable-header">
+                    <div class="cable-icon">⬜</div>
+                    <div class="cable-title">
+                        <h2>VVFケーブル（600Vビニル絶縁ビニルシースケーブル平形）</h2>
+                        <p class="cable-subtitle">Vinyl insulated Vinyl sheathed Flat-type cable</p>
+                    </div>
+                </div>
+
+                <div class="structure-diagram">
+                    <svg width="500" height="300" viewBox="0 0 500 300" class="structure-svg">
+                        <rect width="500" height="300" fill="#f9f9f9"/>
+                        <text x="250" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#005BAB">VVFケーブル 断面構造図</text>
+                        
+                        <!-- 2心の場合 -->
+                        <g transform="translate(150, 150)">
+                            <text x="0" y="-70" text-anchor="middle" font-size="14" fill="#333">2心（1.6mm）</text>
+                            
+                            <!-- 外装（シース）灰色に変更 -->
+                            <rect x="-60" y="-40" width="120" height="80" rx="20" fill="#808080" stroke="#666" stroke-width="2"/>
+                            
+                            <!-- 絶縁体付き導体1（実際の色：白） -->
+                            <circle cx="-25" cy="0" r="20" fill="#FFFFFF" stroke="#D3D3D3" stroke-width="2"/>
+                            <circle cx="-25" cy="0" r="10" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                            
+                            <!-- 絶縁体付き導体2（実際の色：黒） -->
+                            <circle cx="25" cy="0" r="20" fill="#000000" stroke="#333" stroke-width="2"/>
+                            <circle cx="25" cy="0" r="10" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                        </g>
+                        
+                        <!-- 3心の場合 -->
+                        <g transform="translate(350, 150)">
+                            <text x="0" y="-70" text-anchor="middle" font-size="14" fill="#333">3心（2.0mm）</text>
+                            
+                            <!-- 外装（シース）灰色 -->
+                            <rect x="-80" y="-40" width="160" height="80" rx="20" fill="#808080" stroke="#666" stroke-width="2"/>
+                            
+                            <!-- 絶縁体付き導体1（白） -->
+                            <circle cx="-45" cy="0" r="22" fill="#FFFFFF" stroke="#D3D3D3" stroke-width="2"/>
+                            <circle cx="-45" cy="0" r="12" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                            
+                            <!-- 絶縁体付き導体2（黒） -->
+                            <circle cx="0" cy="0" r="22" fill="#000000" stroke="#333" stroke-width="2"/>
+                            <circle cx="0" cy="0" r="12" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                            
+                            <!-- 絶縁体付き導体3（接地線：緑） -->
+                            <circle cx="45" cy="0" r="22" fill="#228B22" stroke="#006400" stroke-width="2"/>
+                            <circle cx="45" cy="0" r="12" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                        </g>
+                        
+                        <!-- 凡例 -->
+                        <g transform="translate(50, 250)">
+                            <rect x="0" y="0" width="20" height="15" fill="#B87333"/>
+                            <text x="25" y="12" font-size="12" fill="#333">導体</text>
+                            
+                            <rect x="80" y="0" width="20" height="15" fill="#FFFFFF" stroke="#999" stroke-width="1"/>
+                            <text x="105" y="12" font-size="12" fill="#333">絶縁体（白）</text>
+                            
+                            <rect x="160" y="0" width="20" height="15" fill="#000000"/>
+                            <text x="185" y="12" font-size="12" fill="#333">絶縁体（黒）</text>
+                            
+                            <rect x="240" y="0" width="20" height="15" fill="#228B22"/>
+                            <text x="265" y="12" font-size="12" fill="#333">絶縁体（緑：接地線）</text>
+                            
+                            <rect x="350" y="0" width="20" height="15" fill="#808080"/>
+                            <text x="375" y="12" font-size="12" fill="#333">シース（灰色）</text>
+                        </g>
+                    </svg>
+                </div>
+
+                <table class="spec-table">
+                    <tr>
+                        <th>項目</th>
+                        <th>仕様</th>
+                    </tr>
+                    <tr>
+                        <td>定格電圧</td>
+                        <td>600V以下</td>
+                    </tr>
+                    <tr>
+                        <td>最高許容温度</td>
+                        <td>60℃</td>
+                    </tr>
+                    <tr>
+                        <td>導体サイズ</td>
+                        <td>1.6mm、2.0mm、2.6mm（単線）</td>
+                    </tr>
+                    <tr>
+                        <td>心数</td>
+                        <td>2心、3心、4心</td>
+                    </tr>
+                    <tr>
+                        <td>シース色</td>
+                        <td>灰色（標準）、赤、青、黄、黒、茶、白</td>
+                    </tr>
+                </table>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">✨</span>主な特徴</h3>
+                        <ul>
+                            <li>平形で施工が容易</li>
+                            <li>住宅配線の標準ケーブル</li>
+                            <li>ステープル留めが可能</li>
+                            <li>造営材に沿わせやすい</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">🛠️</span>施工方法</h3>
+                        <ul>
+                            <li>ケーブル工事</li>
+                            <li>天井裏・壁内配線</li>
+                            <li>露出配線（モール内）</li>
+                            <li>
+                                <span class="tooltip">PF管
+                                    <span class="tooltiptext">合成樹脂製可とう電線管。柔軟性があり、曲げやすい保護管</span>
+                                </span>
+                                ・CD管内配線
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="usage-section">
+                    <h3>📍 主な使用場所・用途</h3>
+                    <div class="usage-grid">
+                        <div class="usage-item">
+                            <span>🏠</span>
+                            <span>一般住宅の屋内配線</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>💡</span>
+                            <span>照明回路</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🔌</span>
+                            <span>コンセント回路</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🏪</span>
+                            <span>小規模店舗・事務所</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VVRケーブル -->
+        <div id="vvr" class="cable-detail">
+            <div class="detail-card">
+                <div class="cable-header">
+                    <div class="cable-icon">⭕</div>
+                    <div class="cable-title">
+                        <h2>VVRケーブル（600Vビニル絶縁ビニルシースケーブル丸形）</h2>
+                        <p class="cable-subtitle">Vinyl insulated Vinyl sheathed Round-type cable</p>
+                    </div>
+                </div>
+
+                <div class="structure-diagram">
+                    <svg width="400" height="300" viewBox="0 0 400 300" class="structure-svg">
+                        <rect width="400" height="300" fill="#f9f9f9"/>
+                        <text x="200" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#005BAB">VVRケーブル 断面構造図</text>
+                        
+                        <g transform="translate(200, 150)">
+                            <!-- 外装（シース）灰色 -->
+                            <circle cx="0" cy="0" r="80" fill="#808080" stroke="#666" stroke-width="3"/>
+                            
+                            <!-- 介在物 -->
+                            <circle cx="0" cy="0" r="65" fill="#F5F5F5" stroke="none"/>
+                            
+                            <!-- 3心配置 -->
+                            <!-- 導体1（上）白 -->
+                            <g transform="translate(0, -30)">
+                                <circle cx="0" cy="0" r="25" fill="#FFFFFF" stroke="#D3D3D3" stroke-width="2"/>
+                                <circle cx="0" cy="0" r="15" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                                <text x="0" y="5" text-anchor="middle" font-size="10" fill="#333">L1</text>
+                            </g>
+                            
+                            <!-- 導体2（左下）黒 -->
+                            <g transform="translate(-26, 15)">
+                                <circle cx="0" cy="0" r="25" fill="#000000" stroke="#333" stroke-width="2"/>
+                                <circle cx="0" cy="0" r="15" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                                <text x="0" y="5" text-anchor="middle" font-size="10" fill="white">L2</text>
+                            </g>
+                            
+                            <!-- 導体3（右下）緑（接地） -->
+                            <g transform="translate(26, 15)">
+                                <circle cx="0" cy="0" r="25" fill="#228B22" stroke="#006400" stroke-width="2"/>
+                                <circle cx="0" cy="0" r="15" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                                <text x="0" y="5" text-anchor="middle" font-size="10" fill="white">E</text>
+                            </g>
+                            
+                            <!-- ラベル -->
+                            <text x="0" y="-95" text-anchor="middle" font-size="12" fill="#333">シース（外装）</text>
+                            <text x="70" y="-40" text-anchor="middle" font-size="10" fill="#666">介在物</text>
+                        </g>
+                        
+                        <!-- サイズ表示 -->
+                        <text x="200" y="260" text-anchor="middle" font-size="12" fill="#333">3心 × 5.5mm² の例</text>
+                    </svg>
+                </div>
+
+                <table class="spec-table">
+                    <tr>
+                        <th>項目</th>
+                        <th>仕様</th>
+                    </tr>
+                    <tr>
+                        <td>定格電圧</td>
+                        <td>600V以下</td>
+                    </tr>
+                    <tr>
+                        <td>最高許容温度</td>
+                        <td>60℃</td>
+                    </tr>
+                    <tr>
+                        <td>導体サイズ</td>
+                        <td>2mm² ～ 325mm²（より線）</td>
+                    </tr>
+                    <tr>
+                        <td>心数</td>
+                        <td>2心、3心、4心</td>
+                    </tr>
+                    <tr>
+                        <td>形状</td>
+                        <td>丸形（円形断面）</td>
+                    </tr>
+                </table>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">✨</span>主な特徴</h3>
+                        <ul>
+                            <li>より線構造で柔軟性が高い</li>
+                            <li>大電流に対応可能</li>
+                            <li>丸形で管路への引き込みが容易</li>
+                            <li>機械的強度が高い</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">💪</span>VVFとの違い</h3>
+                        <ul>
+                            <li>より線（VVFは単線）</li>
+                            <li>丸形（VVFは平形）</li>
+                            <li>太いサイズに対応</li>
+                            <li>動力回路に適している</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="usage-section">
+                    <h3>📍 主な使用場所・用途</h3>
+                    <div class="usage-grid">
+                        <div class="usage-item">
+                            <span>🏭</span>
+                            <span>工場の動力配線</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>⚡</span>
+                            <span>大型機器への電源供給</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🏢</span>
+                            <span>ビルの幹線</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🚇</span>
+                            <span>地中埋設配線</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CVケーブル -->
+        <div id="cv" class="cable-detail">
+            <div class="detail-card">
+                <div class="cable-header">
+                    <div class="cable-icon">🔴</div>
+                    <div class="cable-title">
+                        <h2>CVケーブル（架橋ポリエチレン絶縁ビニルシースケーブル）</h2>
+                        <p class="cable-subtitle">Cross-linked polyethylene insulated Vinyl sheathed cable</p>
+                    </div>
+                </div>
+
+                <div class="structure-diagram">
+                    <svg width="400" height="350" viewBox="0 0 400 350" class="structure-svg">
+                        <rect width="400" height="350" fill="#f9f9f9"/>
+                        <text x="200" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#005BAB">CVケーブル 断面構造図</text>
+                        
+                        <g transform="translate(200, 180)">
+                            <!-- 外装（シース）黒色 -->
+                            <circle cx="0" cy="0" r="100" fill="#1A1A1A" stroke="#000000" stroke-width="3"/>
+                            
+                            <!-- 遮蔽層（銅テープ） -->
+                            <circle cx="0" cy="0" r="85" fill="none" stroke="#CD853F" stroke-width="2" stroke-dasharray="5,3"/>
+                            
+                            <!-- 3心配置 -->
+                            <!-- 導体1（架橋ポリエチレン絶縁：半透明） -->
+                            <g transform="translate(0, -35)">
+                                <circle cx="0" cy="0" r="30" fill="#FFFACD" stroke="#F0E68C" stroke-width="2" opacity="0.8"/>
+                                <circle cx="0" cy="0" r="18" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                                <text x="0" y="5" text-anchor="middle" font-size="12" fill="#333" font-weight="bold">R</text>
+                            </g>
+                            
+                            <!-- 導体2 -->
+                            <g transform="translate(-30, 17)">
+                                <circle cx="0" cy="0" r="30" fill="#FFFACD" stroke="#F0E68C" stroke-width="2" opacity="0.8"/>
+                                <circle cx="0" cy="0" r="18" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                                <text x="0" y="5" text-anchor="middle" font-size="12" fill="#333" font-weight="bold">S</text>
+                            </g>
+                            
+                            <!-- 導体3 -->
+                            <g transform="translate(30, 17)">
+                                <circle cx="0" cy="0" r="30" fill="#FFFACD" stroke="#F0E68C" stroke-width="2" opacity="0.8"/>
+                                <circle cx="0" cy="0" r="18" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                                <text x="0" y="5" text-anchor="middle" font-size="12" fill="#333" font-weight="bold">T</text>
+                            </g>
+                            
+                            <!-- ラベル -->
+                            <text x="0" y="-115" text-anchor="middle" font-size="12" fill="#333">ビニルシース（黒）</text>
+                            <text x="90" y="-70" text-anchor="middle" font-size="10" fill="#666">遮蔽層</text>
+                            <text x="0" y="70" text-anchor="middle" font-size="10" fill="#666">架橋ポリエチレン絶縁体</text>
+                        </g>
+                        
+                        <!-- 特徴表示 -->
+                        <text x="200" y="300" text-anchor="middle" font-size="14" font-weight="bold" fill="#FF0000">最高許容温度 90℃</text>
+                        <text x="200" y="320" text-anchor="middle" font-size="12" fill="#333">高圧用 3心 × 38mm² の例</text>
+                    </svg>
+                </div>
+
+                <table class="spec-table">
+                    <tr>
+                        <th>項目</th>
+                        <th>仕様</th>
+                    </tr>
+                    <tr>
+                        <td>定格電圧</td>
+                        <td>600V ～ 6600V</td>
+                    </tr>
+                    <tr>
+                        <td>最高許容温度</td>
+                        <td>90℃（VVより30℃高い）</td>
+                    </tr>
+                    <tr>
+                        <td>導体サイズ</td>
+                        <td>2mm² ～ 3500mm²</td>
+                    </tr>
+                    <tr>
+                        <td>絶縁体</td>
+                        <td>架橋ポリエチレン（XLPE）</td>
+                    </tr>
+                    <tr>
+                        <td>用途</td>
+                        <td>低圧～高圧まで幅広く対応</td>
+                    </tr>
+                </table>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">🔥</span>耐熱性能</h3>
+                        <ul>
+                            <li>許容温度90℃で大電流対応</li>
+                            <li>短絡時許容温度230℃</li>
+                            <li>VVケーブルの約1.3倍の電流容量</li>
+                            <li>熱劣化しにくい</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">⚡</span>電気的特性</h3>
+                        <ul>
+                            <li>優れた絶縁性能</li>
+                            <li>低誘電率・低誘電損失</li>
+                            <li>耐電圧性能が高い</li>
+                            <li>経年劣化が少ない</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="usage-section">
+                    <h3>📍 主な使用場所・用途</h3>
+                    <div class="usage-grid">
+                        <div class="usage-item">
+                            <span>🏭</span>
+                            <span>工場の高圧受電設備</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🏢</span>
+                            <span>大型ビルの幹線</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🚊</span>
+                            <span>鉄道・地下鉄施設</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>⚡</span>
+                            <span>変電所・発電所</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CVTケーブル -->
+        <div id="cvt" class="cable-detail">
+            <div class="detail-card">
+                <div class="cable-header">
+                    <div class="cable-icon">🔺</div>
+                    <div class="cable-title">
+                        <h2>CVTケーブル（トリプレックス形架橋ポリエチレン絶縁ビニルシースケーブル）</h2>
+                        <p class="cable-subtitle">Triplex type Cross-linked polyethylene insulated Vinyl sheathed cable</p>
+                    </div>
+                </div>
+
+                <div class="structure-diagram">
+                    <svg width="500" height="300" viewBox="0 0 500 300" class="structure-svg">
+                        <rect width="500" height="300" fill="#f9f9f9"/>
+                        <text x="250" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#005BAB">CVTケーブル 断面構造図</text>
+                        
+                        <g transform="translate(250, 150)">
+                            <!-- 3本の単心ケーブルをより合わせた構造 -->
+                            
+                            <!-- ケーブル1 -->
+                            <g transform="translate(-50, -30)">
+                                <circle cx="0" cy="0" r="35" fill="#1A1A1A" stroke="#000000" stroke-width="2"/>
+                                <circle cx="0" cy="0" r="25" fill="#FFFACD" stroke="#F0E68C" stroke-width="2" opacity="0.8"/>
+                                <circle cx="0" cy="0" r="15" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                                <text x="0" y="5" text-anchor="middle" font-size="10" fill="#333" font-weight="bold">R</text>
+                            </g>
+                            
+                            <!-- ケーブル2 -->
+                            <g transform="translate(50, -30)">
+                                <circle cx="0" cy="0" r="35" fill="#1A1A1A" stroke="#000000" stroke-width="2"/>
+                                <circle cx="0" cy="0" r="25" fill="#FFFACD" stroke="#F0E68C" stroke-width="2" opacity="0.8"/>
+                                <circle cx="0" cy="0" r="15" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                                <text x="0" y="5" text-anchor="middle" font-size="10" fill="#333" font-weight="bold">S</text>
+                            </g>
+                            
+                            <!-- ケーブル3 -->
+                            <g transform="translate(0, 40)">
+                                <circle cx="0" cy="0" r="35" fill="#1A1A1A" stroke="#000000" stroke-width="2"/>
+                                <circle cx="0" cy="0" r="25" fill="#FFFACD" stroke="#F0E68C" stroke-width="2" opacity="0.8"/>
+                                <circle cx="0" cy="0" r="15" fill="#B87333" stroke="#8B4513" stroke-width="1"/>
+                                <text x="0" y="5" text-anchor="middle" font-size="10" fill="#333" font-weight="bold">T</text>
+                            </g>
+                            
+                            <!-- より合わせを示す線 -->
+                            <path d="M -50,-30 Q 0,0 50,-30" fill="none" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+                            <path d="M 50,-30 Q 25,5 0,40" fill="none" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+                            <path d="M 0,40 Q -25,5 -50,-30" fill="none" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+                            
+                            <!-- ラベル -->
+                            <text x="0" y="-90" text-anchor="middle" font-size="12" fill="#333">3本の単心CVケーブルをより合わせ</text>
+                        </g>
+                        
+                        <text x="250" y="250" text-anchor="middle" font-size="12" fill="#333">単心ケーブル × 3本構造</text>
+                    </svg>
+                </div>
+
+                <table class="spec-table">
+                    <tr>
+                        <th>項目</th>
+                        <th>仕様</th>
+                    </tr>
+                    <tr>
+                        <td>定格電圧</td>
+                        <td>600V ～ 6600V</td>
+                    </tr>
+                    <tr>
+                        <td>最高許容温度</td>
+                        <td>90℃</td>
+                    </tr>
+                    <tr>
+                        <td>構造</td>
+                        <td>単心CVケーブル3本をより合わせ</td>
+                    </tr>
+                    <tr>
+                        <td>特徴</td>
+                        <td>各相が独立した構造</td>
+                    </tr>
+                    <tr>
+                        <td>可とう性</td>
+                        <td>CVケーブルより優れる</td>
+                    </tr>
+                </table>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">🔄</span>構造上の利点</h3>
+                        <ul>
+                            <li>各相が独立で故障時の影響が限定的</li>
+                            <li>単心ケーブルのため曲げやすい</li>
+                            <li>端末処理が容易</li>
+                            <li>相間短絡が起きにくい</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">🏗️</span>施工上の特徴</h3>
+                        <ul>
+                            <li>狭い場所での布設が容易</li>
+                            <li>ケーブルラックへの敷設に適する</li>
+                            <li>分岐接続が簡単</li>
+                            <li>1相のみの交換が可能</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="usage-section">
+                    <h3>📍 主な使用場所・用途</h3>
+                    <div class="usage-grid">
+                        <div class="usage-item">
+                            <span>🏭</span>
+                            <span>工場内の高圧配電</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🌉</span>
+                            <span>橋梁・高架下配線</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🏗️</span>
+                            <span>仮設電源配線</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🚧</span>
+                            <span>建設現場の動力線</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cat5eケーブル -->
+        <div id="cat5e" class="cable-detail">
+            <div class="detail-card">
+                <div class="cable-header">
+                    <div class="cable-icon">🔵</div>
+                    <div class="cable-title">
+                        <h2>Cat5e LANケーブル（カテゴリー5e）</h2>
+                        <p class="cable-subtitle">Category 5e Enhanced Network Cable</p>
+                    </div>
+                </div>
+
+                <div class="structure-diagram">
+                    <svg width="500" height="350" viewBox="0 0 500 350" class="structure-svg">
+                        <rect width="500" height="350" fill="#f9f9f9"/>
+                        <text x="250" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#005BAB">Cat5e LANケーブル 構造図</text>
+                        
+                        <!-- 断面図 -->
+                        <g transform="translate(150, 180)">
+                            <text x="0" y="-80" text-anchor="middle" font-size="14" fill="#333">断面図</text>
+                            
+                            <!-- 外被（一般的な青色） -->
+                            <circle cx="0" cy="0" r="50" fill="#4169E1" stroke="#00008B" stroke-width="2"/>
+                            
+                            <!-- 4対のツイストペア（T568B配線） -->
+                            <!-- ペア1（橙・橙白） -->
+                            <g transform="translate(-20, -20)">
+                                <circle cx="-5" cy="0" r="8" fill="#FFA500" stroke="#FF8C00" stroke-width="1"/>
+                                <circle cx="5" cy="0" r="8" fill="#FFE4E1" stroke="#FF8C00" stroke-width="1"/>
+                            </g>
+                            
+                            <!-- ペア2（緑・緑白） -->
+                            <g transform="translate(20, -20)">
+                                <circle cx="-5" cy="0" r="8" fill="#228B22" stroke="#006400" stroke-width="1"/>
+                                <circle cx="5" cy="0" r="8" fill="#E0FFE0" stroke="#006400" stroke-width="1"/>
+                            </g>
+                            
+                            <!-- ペア3（青・青白） -->
+                            <g transform="translate(-20, 20)">
+                                <circle cx="-5" cy="0" r="8" fill="#0000FF" stroke="#00008B" stroke-width="1"/>
+                                <circle cx="5" cy="0" r="8" fill="#E0E0FF" stroke="#00008B" stroke-width="1"/>
+                            </g>
+                            
+                            <!-- ペア4（茶・茶白） -->
+                            <g transform="translate(20, 20)">
+                                <circle cx="-5" cy="0" r="8" fill="#8B4513" stroke="#654321" stroke-width="1"/>
+                                <circle cx="5" cy="0" r="8" fill="#F5DEB3" stroke="#654321" stroke-width="1"/>
+                            </g>
+                        </g>
+                        
+                        <!-- ツイスト構造の側面図 -->
+                        <g transform="translate(350, 180)">
+                            <text x="0" y="-80" text-anchor="middle" font-size="14" fill="#333">ツイストペア構造</text>
+                            
+                            <!-- ツイストを表現 -->
+                            <path d="M -40,0 Q -20,-20 0,0 Q 20,20 40,0" fill="none" stroke="#FFA500" stroke-width="3"/>
+                            <path d="M -40,0 Q -20,20 0,0 Q 20,-20 40,0" fill="none" stroke="#FFE4B5" stroke-width="3"/>
+                            
+                            <text x="0" y="40" text-anchor="middle" font-size="10" fill="#666">より合わせることで</text>
+                            <text x="0" y="55" text-anchor="middle" font-size="10" fill="#666">ノイズを低減</text>
+                        </g>
+                        
+                        <!-- 色配列 -->
+                        <g transform="translate(250, 290)">
+                            <text x="0" y="0" text-anchor="middle" font-size="12" fill="#333" font-weight="bold">T568B配線（一般的）</text>
+                            <text x="0" y="20" text-anchor="middle" font-size="10" fill="#666">1:橙白 2:橙 3:緑白 4:青 5:青白 6:緑 7:茶白 8:茶</text>
+                        </g>
+                    </svg>
+                </div>
+
+                <table class="spec-table">
+                    <tr>
+                        <th>項目</th>
+                        <th>仕様</th>
+                    </tr>
+                    <tr>
+                        <td>伝送速度</td>
+                        <td>最大1Gbps（1000BASE-T）</td>
+                    </tr>
+                    <tr>
+                        <td>周波数帯域</td>
+                        <td>100MHz</td>
+                    </tr>
+                    <tr>
+                        <td>最大配線長</td>
+                        <td>100m</td>
+                    </tr>
+                    <tr>
+                        <td>導体</td>
+                        <td>AWG24（約0.5mm）銅線</td>
+                    </tr>
+                    <tr>
+                        <td>対数</td>
+                        <td>4対8芯（UTPまたはSTP）</td>
+                    </tr>
+                </table>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">🌐</span>ネットワーク性能</h3>
+                        <ul>
+                            <li>ギガビットイーサネット対応</li>
+                            <li>Cat5より
+                                <span class="tooltip">クロストーク
+                                    <span class="tooltiptext">隣接する線対間で信号が漏れ込む現象。通信品質を低下させる原因となる</span>
+                                </span>
+                                特性が改善
+                            </li>
+                            <li>PoE（Power over Ethernet）対応</li>
+                            <li>下位互換性あり</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">🛡️</span>シールドタイプ</h3>
+                        <ul>
+                            <li>UTP：シールドなし（一般的）</li>
+                            <li>STP：各対にシールド</li>
+                            <li>FTP：全体にシールド</li>
+                            <li>環境に応じて選択</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="usage-section">
+                    <h3>📍 主な使用場所・用途</h3>
+                    <div class="usage-grid">
+                        <div class="usage-item">
+                            <span>🏢</span>
+                            <span>オフィスのLAN配線</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🏠</span>
+                            <span>家庭内ネットワーク</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>📹</span>
+                            <span>IPカメラ接続（PoE利用）</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>☎️</span>
+                            <span>IP電話システム</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cat6aケーブル -->
+        <div id="cat6a" class="cable-detail">
+            <div class="detail-card">
+                <div class="cable-header">
+                    <div class="cable-icon">🟣</div>
+                    <div class="cable-title">
+                        <h2>Cat6a LANケーブル（カテゴリー6a）</h2>
+                        <p class="cable-subtitle">Category 6a Augmented Network Cable</p>
+                    </div>
+                </div>
+
+                <div class="structure-diagram">
+                    <svg width="500" height="350" viewBox="0 0 500 350" class="structure-svg">
+                        <rect width="500" height="350" fill="#f9f9f9"/>
+                        <text x="250" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#005BAB">Cat6a LANケーブル 構造図</text>
+                        
+                        <!-- 断面図 -->
+                        <g transform="translate(150, 180)">
+                            <text x="0" y="-90" text-anchor="middle" font-size="14" fill="#333">断面図（STP）</text>
+                            
+                            <!-- 外被（一般的な紫色） -->
+                            <circle cx="0" cy="0" r="65" fill="#6A5ACD" stroke="#483D8B" stroke-width="3"/>
+                            
+                            <!-- 総合シールド -->
+                            <circle cx="0" cy="0" r="58" fill="none" stroke="#C0C0C0" stroke-width="2" stroke-dasharray="4,2"/>
+                            
+                            <!-- 十字介在 -->
+                            <line x1="0" y1="-50" x2="0" y2="50" stroke="#666" stroke-width="3"/>
+                            <line x1="-50" y1="0" x2="50" y2="0" stroke="#666" stroke-width="3"/>
+                            
+                            <!-- 4対のツイストペア（シールド付き、T568B配線） -->
+                            <!-- ペア1 -->
+                            <g transform="translate(-25, -25)">
+                                <circle cx="0" cy="0" r="15" fill="none" stroke="#C0C0C0" stroke-width="1"/>
+                                <circle cx="-5" cy="0" r="6" fill="#FFA500"/>
+                                <circle cx="5" cy="0" r="6" fill="#FFE4E1"/>
+                            </g>
+                            
+                            <!-- ペア2 -->
+                            <g transform="translate(25, -25)">
+                                <circle cx="0" cy="0" r="15" fill="none" stroke="#C0C0C0" stroke-width="1"/>
+                                <circle cx="-5" cy="0" r="6" fill="#228B22"/>
+                                <circle cx="5" cy="0" r="6" fill="#E0FFE0"/>
+                            </g>
+                            
+                            <!-- ペア3 -->
+                            <g transform="translate(-25, 25)">
+                                <circle cx="0" cy="0" r="15" fill="none" stroke="#C0C0C0" stroke-width="1"/>
+                                <circle cx="-5" cy="0" r="6" fill="#0000FF"/>
+                                <circle cx="5" cy="0" r="6" fill="#E0E0FF"/>
+                            </g>
+                            
+                            <!-- ペア4 -->
+                            <g transform="translate(25, 25)">
+                                <circle cx="0" cy="0" r="15" fill="none" stroke="#C0C0C0" stroke-width="1"/>
+                                <circle cx="-5" cy="0" r="6" fill="#8B4513"/>
+                                <circle cx="5" cy="0" r="6" fill="#F5DEB3"/>
+                            </g>
+                        </g>
+                        
+                        <!-- 性能比較グラフ -->
+                        <g transform="translate(350, 150)">
+                            <text x="0" y="-20" text-anchor="middle" font-size="14" fill="#333">性能比較</text>
+                            
+                            <!-- Cat5e -->
+                            <rect x="-60" y="0" width="30" height="60" fill="#87CEEB"/>
+                            <text x="-45" y="70" text-anchor="middle" font-size="10" fill="#333">Cat5e</text>
+                            <text x="-45" y="-5" text-anchor="middle" font-size="9" fill="#666">100MHz</text>
+                            
+                            <!-- Cat6 -->
+                            <rect x="-15" y="-40" width="30" height="100" fill="#9370DB" opacity="0.7"/>
+                            <text x="0" y="70" text-anchor="middle" font-size="10" fill="#333">Cat6</text>
+                            <text x="0" y="-45" text-anchor="middle" font-size="9" fill="#666">250MHz</text>
+                            
+                            <!-- Cat6a -->
+                            <rect x="30" y="-80" width="30" height="140" fill="#9370DB"/>
+                            <text x="45" y="70" text-anchor="middle" font-size="10" fill="#333">Cat6a</text>
+                            <text x="45" y="-85" text-anchor="middle" font-size="9" fill="#666">500MHz</text>
+                        </g>
+                        
+                        <text x="250" y="310" text-anchor="middle" font-size="14" font-weight="bold" fill="#FF0000">10GBASE-T対応</text>
+                    </svg>
+                </div>
+
+                <table class="spec-table">
+                    <tr>
+                        <th>項目</th>
+                        <th>仕様</th>
+                    </tr>
+                    <tr>
+                        <td>伝送速度</td>
+                        <td>最大10Gbps（10GBASE-T）</td>
+                    </tr>
+                    <tr>
+                        <td>周波数帯域</td>
+                        <td>500MHz</td>
+                    </tr>
+                    <tr>
+                        <td>最大配線長</td>
+                        <td>100m（10Gbps時も）</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="tooltip">エイリアンクロストーク
+                                <span class="tooltiptext">隣接する別のケーブルからの信号干渉。高速通信では大きな問題となる</span>
+                            </span>
+                        </td>
+                        <td>大幅に改善</td>
+                    </tr>
+                    <tr>
+                        <td>構造</td>
+                        <td>十字介在入り、各対シールド推奨</td>
+                    </tr>
+                </table>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">⚡</span>高速性能</h3>
+                        <ul>
+                            <li>10ギガビット完全対応</li>
+                            <li>将来の高速化にも対応</li>
+                            <li>データセンター品質</li>
+                            <li>4K/8K映像伝送可能</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">🔧</span>設置上の注意</h3>
+                        <ul>
+                            <li>曲げ半径に注意（4倍以上）</li>
+                            <li>専用工具での施工推奨</li>
+                            <li>アース接続が重要</li>
+                            <li>他のケーブルとの離隔</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="usage-section">
+                    <h3>📍 主な使用場所・用途</h3>
+                    <div class="usage-grid">
+                        <div class="usage-item">
+                            <span>🖥️</span>
+                            <span>データセンター</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🏥</span>
+                            <span>医療機関（高精細画像伝送）</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🎬</span>
+                            <span>放送・映像制作現場</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🏭</span>
+                            <span>工場の産業用ネットワーク</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 同軸ケーブル -->
+        <div id="coaxial" class="cable-detail">
+            <div class="detail-card">
+                <div class="cable-header">
+                    <div class="cable-icon">⚫</div>
+                    <div class="cable-title">
+                        <h2>同軸ケーブル</h2>
+                        <p class="cable-subtitle">Coaxial Cable</p>
+                    </div>
+                </div>
+
+                <div class="structure-diagram">
+                    <svg width="500" height="350" viewBox="0 0 500 350" class="structure-svg">
+                        <rect width="500" height="350" fill="#f9f9f9"/>
+                        <text x="250" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#005BAB">同軸ケーブル 構造図</text>
+                        
+                        <!-- 断面図 -->
+                        <g transform="translate(150, 180)">
+                            <text x="0" y="-90" text-anchor="middle" font-size="14" fill="#333">断面構造</text>
+                            
+                            <!-- 外被（黒色） -->
+                            <circle cx="0" cy="0" r="70" fill="#1A1A1A" stroke="#000000" stroke-width="2"/>
+                            
+                            <!-- 外部導体（編組シールド） -->
+                            <circle cx="0" cy="0" r="55" fill="none" stroke="#C0C0C0" stroke-width="8"/>
+                            <circle cx="0" cy="0" r="55" fill="none" stroke="#808080" stroke-width="1" stroke-dasharray="2,2"/>
+                            
+                            <!-- 絶縁体（誘電体）ポリエチレン：白色 -->
+                            <circle cx="0" cy="0" r="45" fill="#FFFFFF" stroke="#E0E0E0" stroke-width="1"/>
+                            
+                            <!-- 内部導体（芯線） -->
+                            <circle cx="0" cy="0" r="15" fill="#B87333" stroke="#8B4513" stroke-width="2"/>
+                            
+                            <!-- ラベル -->
+                            <line x1="0" y1="0" x2="80" y2="0" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+                            <text x="90" y="-65" text-anchor="start" font-size="10" fill="#666">外被（黒）</text>
+                            <text x="90" y="-45" text-anchor="start" font-size="10" fill="#666">外部導体</text>
+                            <text x="90" y="-25" text-anchor="start" font-size="10" fill="#666">絶縁体（PE）</text>
+                            <text x="90" y="-5" text-anchor="start" font-size="10" fill="#666">内部導体</text>
+                        </g>
+                        
+                        <!-- 種類別比較 -->
+                        <g transform="translate(350, 150)">
+                            <text x="0" y="-20" text-anchor="middle" font-size="14" fill="#333">代表的な規格</text>
+                            
+                            <!-- 5C-2V -->
+                            <g transform="translate(-50, 20)">
+                                <circle cx="0" cy="0" r="25" fill="#1A1A1A"/>
+                                <circle cx="0" cy="0" r="18" fill="#FFFFFF"/>
+                                <circle cx="0" cy="0" r="8" fill="#B87333"/>
+                                <text x="0" y="40" text-anchor="middle" font-size="10" fill="#333">5C-2V</text>
+                                <text x="0" y="52" text-anchor="middle" font-size="8" fill="#666">家庭用</text>
+                            </g>
+                            
+                            <!-- 3C-2V -->
+                            <g transform="translate(50, 20)">
+                                <circle cx="0" cy="0" r="18" fill="#1A1A1A"/>
+                                <circle cx="0" cy="0" r="13" fill="#FFFFFF"/>
+                                <circle cx="0" cy="0" r="5" fill="#B87333"/>
+                                <text x="0" y="40" text-anchor="middle" font-size="10" fill="#333">3C-2V</text>
+                                <text x="0" y="52" text-anchor="middle" font-size="8" fill="#666">機器間</text>
+                            </g>
+                        </g>
+                        
+                        <text x="250" y="310" text-anchor="middle" font-size="12" fill="#333">特性インピーダンス：50Ω/75Ω</text>
+                    </svg>
+                </div>
+
+                <table class="spec-table">
+                    <tr>
+                        <th>項目</th>
+                        <th>仕様</th>
+                    </tr>
+                    <tr>
+                        <td>特性インピーダンス</td>
+                        <td>50Ω（無線用）、75Ω（映像用）</td>
+                    </tr>
+                    <tr>
+                        <td>周波数特性</td>
+                        <td>DC～数GHz（種類による）</td>
+                    </tr>
+                    <tr>
+                        <td>代表的な規格</td>
+                        <td>3C-2V、5C-2V、5C-FB、5D-2V、5D-FB</td>
+                    </tr>
+                    <tr>
+                        <td>コネクタ</td>
+                        <td>F型、BNC、N型、SMA</td>
+                    </tr>
+                    <tr>
+                        <td>減衰量</td>
+                        <td>太いほど少ない（5C < 3C）</td>
+                    </tr>
+                </table>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">📡</span>電気的特性</h3>
+                        <ul>
+                            <li>広帯域伝送が可能</li>
+                            <li>外部ノイズに強い</li>
+                            <li>長距離伝送可能</li>
+                            <li>信号の質が安定</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">📏</span>ケーブル名の見方</h3>
+                        <ul>
+                            <li>数字：絶縁体の外径（mm）</li>
+                            <li>C：TV受信用、D：無線用</li>
+                            <li>2V：ポリエチレン絶縁</li>
+                            <li>FB：発泡ポリエチレン絶縁</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="usage-section">
+                    <h3>📍 主な使用場所・用途</h3>
+                    <div class="usage-grid">
+                        <div class="usage-item">
+                            <span>📺</span>
+                            <span>テレビアンテナ配線</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>📡</span>
+                            <span>衛星放送受信</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>📹</span>
+                            <span>防犯カメラ（アナログ）</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>📶</span>
+                            <span>無線機アンテナ接続</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 通信線 -->
+        <div id="comm" class="cable-detail">
+            <div class="detail-card">
+                <div class="cable-header">
+                    <div class="cable-icon">📞</div>
+                    <div class="cable-title">
+                        <h2>通信線（インターホン・電話・リモコン線）</h2>
+                        <p class="cable-subtitle">Communication Cables</p>
+                    </div>
+                </div>
+
+                <div class="structure-diagram">
+                    <svg width="600" height="400" viewBox="0 0 600 400" class="structure-svg">
+                        <rect width="600" height="400" fill="#f9f9f9"/>
+                        <text x="300" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#005BAB">各種通信線 構造図</text>
+                        
+                        <!-- インターホン線 -->
+                        <g transform="translate(150, 120)">
+                            <text x="0" y="-20" text-anchor="middle" font-size="14" fill="#333">インターホン線</text>
+                            
+                            <!-- 2心平行線（外被：灰色） -->
+                            <rect x="-40" y="-15" width="80" height="30" rx="10" fill="#808080" stroke="#666" stroke-width="2"/>
+                            <circle cx="-20" cy="0" r="8" fill="#FF0000" stroke="#CC0000" stroke-width="1"/>
+                            <circle cx="20" cy="0" r="8" fill="#FFFFFF" stroke="#D3D3D3" stroke-width="1"/>
+                            
+                            <text x="0" y="35" text-anchor="middle" font-size="10" fill="#666">0.65mm×2C</text>
+                        </g>
+                        
+                        <!-- 電話線 -->
+                        <g transform="translate(300, 120)">
+                            <text x="0" y="-20" text-anchor="middle" font-size="14" fill="#333">電話線（屋内）</text>
+                            
+                            <!-- 2心より線 -->
+                            <circle cx="0" cy="0" r="20" fill="#F0F0F0" stroke="#999" stroke-width="2"/>
+                            <circle cx="-7" cy="0" r="6" fill="#FFFFFF" stroke="#666" stroke-width="1"/>
+                            <circle cx="7" cy="0" r="6" fill="#0000FF" stroke="#00008B" stroke-width="1"/>
+                            
+                            <text x="0" y="35" text-anchor="middle" font-size="10" fill="#666">0.4mm×2P</text>
+                        </g>
+                        
+                        <!-- エアコンリモコン線 -->
+                        <g transform="translate(450, 120)">
+                            <text x="0" y="-20" text-anchor="middle" font-size="14" fill="#333">リモコン線</text>
+                            
+                            <!-- 3心線（外被：灰色） -->
+                            <rect x="-50" y="-15" width="100" height="30" rx="10" fill="#808080" stroke="#666" stroke-width="2"/>
+                            <circle cx="-30" cy="0" r="7" fill="#FF0000" stroke="#CC0000" stroke-width="1"/>
+                            <circle cx="0" cy="0" r="7" fill="#FFFFFF" stroke="#666" stroke-width="1"/>
+                            <circle cx="30" cy="0" r="7" fill="#000000" stroke="#333" stroke-width="1"/>
+                            
+                            <text x="0" y="35" text-anchor="middle" font-size="10" fill="#666">0.3mm×3C</text>
+                        </g>
+                        
+                        <!-- CPEV電話線 -->
+                        <g transform="translate(150, 250)">
+                            <text x="0" y="-20" text-anchor="middle" font-size="14" fill="#333">CPEV（屋外電話線）</text>
+                            
+                            <!-- シース付き多対線（青色シース） -->
+                            <circle cx="0" cy="0" r="35" fill="#4169E1" stroke="#00008B" stroke-width="3"/>
+                            
+                            <!-- 10対の例（色分け） -->
+                            <g transform="translate(-15, -15)">
+                                <circle cx="0" cy="0" r="5" fill="#FFFFFF"/>
+                                <circle cx="10" cy="0" r="5" fill="#FF0000"/>
+                            </g>
+                            <g transform="translate(5, -15)">
+                                <circle cx="0" cy="0" r="5" fill="#FFFFFF"/>
+                                <circle cx="10" cy="0" r="5" fill="#0000FF"/>
+                            </g>
+                            <g transform="translate(-15, 5)">
+                                <circle cx="0" cy="0" r="5" fill="#FFFFFF"/>
+                                <circle cx="10" cy="0" r="5" fill="#228B22"/>
+                            </g>
+                            <g transform="translate(5, 5)">
+                                <circle cx="0" cy="0" r="5" fill="#FFFFFF"/>
+                                <circle cx="10" cy="0" r="5" fill="#FFD700"/>
+                            </g>
+                            
+                            <text x="0" y="55" text-anchor="middle" font-size="10" fill="#666">0.5mm×10P</text>
+                        </g>
+                        
+                        <!-- AE線 -->
+                        <g transform="translate(300, 250)">
+                            <text x="0" y="-20" text-anchor="middle" font-size="14" fill="#333">AE線（警報線）</text>
+                            
+                            <!-- 平行線（象牙色） -->
+                            <rect x="-30" y="-10" width="60" height="20" rx="8" fill="#FFFFF0" stroke="#F0E68C" stroke-width="2"/>
+                            <circle cx="-15" cy="0" r="5" fill="#FF0000"/>
+                            <circle cx="15" cy="0" r="5" fill="#FFFFFF"/>
+                            
+                            <text x="0" y="55" text-anchor="middle" font-size="10" fill="#666">0.65mm×2C</text>
+                        </g>
+                        
+                        <!-- FCPEV線 -->
+                        <g transform="translate(450, 250)">
+                            <text x="0" y="-20" text-anchor="middle" font-size="14" fill="#333">FCPEV（火報線）</text>
+                            
+                            <!-- 耐火ケーブル（オレンジ色） -->
+                            <rect x="-40" y="-20" width="80" height="40" rx="15" fill="#FF4500" stroke="#CC0000" stroke-width="3"/>
+                            <circle cx="-20" cy="0" r="8" fill="#FFFFFF" stroke="#666" stroke-width="1"/>
+                            <circle cx="20" cy="0" r="8" fill="#000000" stroke="#333" stroke-width="1"/>
+                            
+                            <text x="0" y="55" text-anchor="middle" font-size="10" fill="#666">1.2mm×2C 耐火</text>
+                        </g>
+                        
+                        <!-- 特性比較 -->
+                        <text x="300" y="350" text-anchor="middle" font-size="12" fill="#333" font-weight="bold">用途に応じた専用設計</text>
+                    </svg>
+                </div>
+
+                <table class="spec-table">
+                    <tr>
+                        <th>種類</th>
+                        <th>仕様</th>
+                        <th>主な用途</th>
+                    </tr>
+                    <tr>
+                        <td>インターホン線</td>
+                        <td>0.65mm×2C、非シールド</td>
+                        <td>住宅用インターホン</td>
+                    </tr>
+                    <tr>
+                        <td>電話線（屋内）</td>
+                        <td>0.4～0.65mm×2P</td>
+                        <td>電話機接続</td>
+                    </tr>
+                    <tr>
+                        <td>CPEV（屋外電話）</td>
+                        <td>0.5mm×10P～100P、PEシース</td>
+                        <td>構内電話回線</td>
+                    </tr>
+                    <tr>
+                        <td>AE線（警報線）</td>
+                        <td>0.65～1.2mm×2C</td>
+                        <td>火災報知器、防犯装置</td>
+                    </tr>
+                    <tr>
+                        <td>リモコン線</td>
+                        <td>0.3～0.5mm×2～5C</td>
+                        <td>エアコン、給湯器リモコン</td>
+                    </tr>
+                </table>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">🔌</span>共通特徴</h3>
+                        <ul>
+                            <li>低電圧・弱電流用</li>
+                            <li>細径で取り回しやすい</li>
+                            <li>色分けで識別容易</li>
+                            <li>専用端子台使用</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h3><span class="feature-icon">⚠️</span>施工上の注意</h3>
+                        <ul>
+                            <li>強電線との離隔確保</li>
+                            <li>ノイズ対策（必要に応じてシールド線）</li>
+                            <li>端末処理の確実性</li>
+                            <li>極性の確認</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="usage-section">
+                    <h3>📍 主な使用場所・用途</h3>
+                    <div class="usage-grid">
+                        <div class="usage-item">
+                            <span>🏠</span>
+                            <span>住宅（インターホン・電話）</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🏢</span>
+                            <span>ビル（構内電話・放送）</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>🚨</span>
+                            <span>防災設備（火報・非常放送）</span>
+                        </div>
+                        <div class="usage-item">
+                            <span>❄️</span>
+                            <span>空調機器（リモコン配線）</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 比較モード -->
+        <div id="compare-mode" class="compare-mode">
+            <h2 style="text-align: center; color: var(--primary-color); margin-bottom: 2rem;">📊 ケーブル比較表</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>ケーブル種類</th>
+                        <th>定格電圧</th>
+                        <th>最高温度</th>
+                        <th>主な用途</th>
+                        <th>特徴</th>
+                        <th>注意点</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>IVケーブル</strong></td>
+                        <td>600V</td>
+                        <td>60℃</td>
+                        <td>屋内配線</td>
+                        <td>単線、色分け豊富</td>
+                        <td>屋外使用不可</td>
+                    </tr>
+                    <tr>
+                        <td><strong>VVFケーブル</strong></td>
+                        <td>600V</td>
+                        <td>60℃</td>
+                        <td>住宅配線</td>
+                        <td>平形、施工容易</td>
+                        <td>可とう性低い</td>
+                    </tr>
+                    <tr>
+                        <td><strong>VVRケーブル</strong></td>
+                        <td>600V</td>
+                        <td>60℃</td>
+                        <td>動力配線</td>
+                        <td>丸形、より線</td>
+                        <td>コスト高め</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CVケーブル</strong></td>
+                        <td>600V～6600V</td>
+                        <td>90℃</td>
+                        <td>高圧配線</td>
+                        <td>耐熱性優秀</td>
+                        <td>端末処理重要</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CVTケーブル</strong></td>
+                        <td>600V～6600V</td>
+                        <td>90℃</td>
+                        <td>高圧配電</td>
+                        <td>単心×3、可とう性</td>
+                        <td>布設スペース大</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cat5e</strong></td>
+                        <td>－</td>
+                        <td>－</td>
+                        <td>LAN配線</td>
+                        <td>1Gbps対応</td>
+                        <td>100m制限</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cat6a</strong></td>
+                        <td>－</td>
+                        <td>－</td>
+                        <td>高速LAN</td>
+                        <td>10Gbps対応</td>
+                        <td>曲げ半径注意</td>
+                    </tr>
+                    <tr>
+                        <td><strong>同軸ケーブル</strong></td>
+                        <td>－</td>
+                        <td>－</td>
+                        <td>TV/アンテナ</td>
+                        <td>広帯域、低損失</td>
+                        <td>コネクタ処理</td>
+                    </tr>
+                    <tr>
+                        <td><strong>通信線</strong></td>
+                        <td>－</td>
+                        <td>－</td>
+                        <td>弱電設備</td>
+                        <td>細径、多種類</td>
+                        <td>強電との離隔</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- クイズセクション -->
+        <div class="quiz-section">
+            <h2 style="color: var(--primary-color); margin-bottom: 1.5rem;">📝 理解度チェッククイズ</h2>
+            
+            <div style="margin-bottom: 2rem;">
+                <p class="quiz-question">Q1. 住宅の屋内配線で最も一般的に使用されるケーブルは？</p>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkQuizAnswer(1, 'A')">A. IVケーブル</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(1, 'B')">B. VVFケーブル</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(1, 'C')">C. CVケーブル</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(1, 'D')">D. Cat5eケーブル</div>
+                </div>
+                <div id="quiz-feedback-1" style="display: none; margin-top: 1rem; padding: 1rem; border-radius: 8px;"></div>
+            </div>
+
+            <div>
+                <p class="quiz-question">Q2. 最高許容温度が90℃のケーブルは？</p>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkQuizAnswer(2, 'A')">A. VVFケーブル</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(2, 'B')">B. IVケーブル</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(2, 'C')">C. CVケーブル</div>
+                    <div class="quiz-option" onclick="checkQuizAnswer(2, 'D')">D. 同軸ケーブル</div>
+                </div>
+                <div id="quiz-feedback-2" style="display: none; margin-top: 1rem; padding: 1rem; border-radius: 8px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ケーブル表示切り替え
+        function showCable(cableId) {
+            // すべてのケーブル詳細を非表示
+            const details = document.querySelectorAll('.cable-detail');
+            details.forEach(detail => {
+                detail.classList.remove('active');
+            });
+            
+            // すべてのタブのアクティブ状態を解除
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 選択されたケーブルを表示
+            document.getElementById(cableId).classList.add('active');
+            
+            // 対応するタブをアクティブに
+            const activeTab = Array.from(tabs).find(tab => 
+                tab.textContent.toLowerCase().includes(cableId) || 
+                tab.onclick.toString().includes(cableId)
+            );
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+            
+            // 比較モードを非表示
+            document.getElementById('compare-mode').style.display = 'none';
+        }
+
+        // 比較モード切り替え
+        function toggleCompareMode() {
+            const compareMode = document.getElementById('compare-mode');
+            const details = document.querySelectorAll('.cable-detail');
+            
+            if (compareMode.style.display === 'block') {
+                compareMode.style.display = 'none';
+                // 最初のケーブルを表示
+                showCable('iv');
+            } else {
+                compareMode.style.display = 'block';
+                // すべての詳細を非表示
+                details.forEach(detail => {
+                    detail.classList.remove('active');
+                });
+            }
+        }
+
+        // クイズの答え合わせ
+        function checkQuizAnswer(questionNum, answer) {
+            const options = document.querySelectorAll(`#quiz-feedback-${questionNum}`).
+                          previousElementSibling.querySelectorAll('.quiz-option');
+            const feedback = document.getElementById(`quiz-feedback-${questionNum}`);
+            
+            // 正解の設定
+            const correctAnswers = {
+                1: 'B', // VVFケーブル
+                2: 'C'  // CVケーブル
+            };
+            
+            const explanations = {
+                1: {
+                    correct: '正解！VVFケーブルは平形で施工が容易なため、住宅の屋内配線で最も広く使用されています。',
+                    incorrect: '不正解。住宅配線では主にVVFケーブルが使用されます。'
+                },
+                2: {
+                    correct: '正解！CVケーブルは架橋ポリエチレン絶縁で、最高許容温度が90℃と高温に耐えられます。',
+                    incorrect: '不正解。VVF、IVケーブルの最高許容温度は60℃です。'
+                }
+            };
+            
+            // リセット
+            options.forEach(option => {
+                option.classList.remove('correct', 'incorrect');
+                option.style.pointerEvents = 'none';
+            });
+            
+            // 答えチェック
+            if (answer === correctAnswers[questionNum]) {
+                options[answer.charCodeAt(0) - 65].classList.add('correct');
+                feedback.style.background = '#E8F5E9';
+                feedback.innerHTML = `✓ ${explanations[questionNum].correct}`;
+            } else {
+                options[answer.charCodeAt(0) - 65].classList.add('incorrect');
+                options[correctAnswers[questionNum].charCodeAt(0) - 65].classList.add('correct');
+                feedback.style.background = '#FFEBEE';
+                feedback.innerHTML = `✗ ${explanations[questionNum].incorrect}`;
+            }
+            
+            feedback.style.display = 'block';
+        }
+
+        // ページ読み込み時のアニメーション
+        window.addEventListener('load', () => {
+            const elements = document.querySelectorAll('.nav-tab, .detail-card');
+            elements.forEach((element, index) => {
+                setTimeout(() => {
+                    element.style.opacity = '0';
+                    element.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        element.style.transition = 'all 0.5s ease';
+                        element.style.opacity = '1';
+                        element.style.transform = 'translateY(0)';
+                    }, 50);
+                }, index * 50);
+            });
+        });
+    </script>
+</body>
+</html>
