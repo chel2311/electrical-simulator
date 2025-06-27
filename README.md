@@ -170,24 +170,31 @@
 ## ファイル構成
 
 ```
-シミュレーター/
+electrical-simulator/
 ├── index.html                              # ポータルページ
 ├── README.md                               # このファイル
-├── 要件定義書.md                           # プロジェクト要件定義
-├── 設計仕様書.md                           # 技術設計仕様
-├── 設計知識系/
-│   ├── circuit-simulator-rich.html         # 電気回路シミュレーター
-│   ├── distribution-board-simulator.html   # 住宅分電盤回路シミュレーター
-│   ├── residential-breaker-simulator.html  # 住宅ブレーカー遮断シミュレーター
-│   ├── solar-power-simulator.html          # 太陽光発電システムシミュレーター
-│   └── improved-electrical-simulator.html  # 電気工学基礎インタラクティブシミュレーター
-├── 基礎理論系/
-│   ├── ohms-law-basic-theory.html          # オームの法則・基礎理論
-│   ├── ac-circuit-simulator.html           # 交流回路シミュレーター
-│   └── electrical-law-simulator.html       # 第二種電気工事士 法令対策
-└── その他/
-    ├── cable-types-simulator.html          # ケーブル種類シミュレーター
-    └── ventilation-simulator.html          # 24時間換気シミュレーター
+├── css/                                    # 共通CSSファイル
+│   └── style.css                           # 統一スタイルシート
+├── js/                                     # 共通JavaScriptファイル
+│   └── main.js                             # 共通機能（タブ切り替え、アニメーション等）
+├── simulators/                             # シミュレーター本体
+│   ├── design/                             # 設計知識系
+│   │   ├── circuit-simulator-rich.html     # 電気回路シミュレーター
+│   │   ├── distribution-board-simulator.html # 住宅分電盤回路シミュレーター
+│   │   ├── residential-breaker-simulator.html # 住宅ブレーカー遮断シミュレーター
+│   │   ├── solar-power-simulator.html      # 太陽光発電システムシミュレーター
+│   │   └── ventilation-simulator.html      # 24時間換気シミュレーター
+│   └── theory/                             # 基礎理論系
+│       ├── ohms-law-basic-theory.html      # オームの法則・基礎理論
+│       ├── ac-circuit-simulator.html       # 交流回路シミュレーター
+│       ├── electrical-law-simulator.html   # 第二種電気工事士 法令対策
+│       ├── electrical-simulator.html       # 電気工学基礎インタラクティブシミュレーター
+│       └── cable-types-simulator.html      # ケーブル種類シミュレーター
+└── docs/                                   # ドキュメント
+    ├── requirements-document.html          # 要件定義書（HTML版）
+    ├── design-specification.html           # 設計仕様書（HTML版）
+    ├── 要件定義書.md                        # 要件定義書（Markdown版）
+    └── 設計仕様書.md                        # 設計仕様書（Markdown版）
 ```
 
 ## 開発者向け情報
@@ -207,7 +214,18 @@
 ### 拡張性
 - 各シミュレーターは独立して動作
 - モジュール化された構造
+- 共通CSS/JavaScriptによるコード再利用
 - 新しいシミュレーターの追加が容易
+
+### コードアーキテクチャ
+**共通ファイル**：
+- `css/style.css`: 全体統一のデザインシステム（コーポレートカラー、レイアウト、アニメーション）
+- `js/main.js`: タブ切り替え、ページ読み込みアニメーション、ポータル戻り機能等
+
+**ディレクトリ構造の特徴**：
+- `simulators/design/`: 実践的な設計業務に関するシミュレーター
+- `simulators/theory/`: 理論・法令・基礎知識系シミュレーター
+- `docs/`: プロジェクト仕様書とドキュメント
 
 ## ライセンス
 
@@ -216,8 +234,15 @@
 ## 更新履歴
 
 ### 2025年6月
+- **v3.0** - プロジェクト構造の大幅リファクタリング
+  - ディレクトリ構造の整理（css/, js/, simulators/, docs/）
+  - 共通CSS/JavaScriptの外部ファイル化による保守性向上
+  - 全HTMLファイルの外部ファイル参照修正
+  - コードの重複削除とパフォーマンス改善
+  - ドキュメント構造の更新
+
 - **v2.2** - 電気工学基礎インタラクティブシミュレーターの追加
-  - `improved-electrical-simulator.html`の新規実装
+  - `electrical-simulator.html`の新規実装
   - 電線の許容電流値計算機能の詳細実装
   - 計算ロジックの明示化と透明性向上
   - ポータルへ戻るボタンの統一実装

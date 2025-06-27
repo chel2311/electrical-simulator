@@ -4,314 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>電気設計シミュレーター ポータル</title>
-    <style>
-        :root {
-            --primary-color: #005BAB;
-            --primary-dark: #004590;
-            --accent-color: #FF961C;
-            --bg-color: #f5f5f5;
-            --text-color: #333;
-            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --card-hover-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Noto Sans JP', 'Meiryo', system-ui, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        header {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            color: white;
-            padding: clamp(20px, 3vh, 40px) 0;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .header-content {
-            max-width: min(1200px, 95vw);
-            margin: 0 auto;
-            padding: 0 clamp(10px, 2vw, 20px);
-            text-align: center;
-        }
-
-        header h1 {
-            font-size: clamp(24px, 4vw, 36px);
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        header p {
-            font-size: clamp(14px, 2vw, 18px);
-            opacity: 0.9;
-        }
-
-        main {
-            flex: 1;
-            max-width: min(1200px, 95vw);
-            margin: 0 auto;
-            padding: clamp(20px, 3vw, 40px) clamp(10px, 2vw, 20px);
-            width: 100%;
-        }
-
-        .simulator-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
-            gap: clamp(20px, 3vw, 30px);
-            margin-top: clamp(20px, 3vw, 40px);
-        }
-
-        /* 基礎理論タブは3列固定表示 */
-        @media (min-width: 1000px) {
-            #theory-tab .simulator-grid {
-                grid-template-columns: repeat(3, 1fr) !important;
-                max-width: 1200px;
-                margin: 0 auto;
-                margin-top: clamp(20px, 3vw, 40px);
-            }
-        }
-
-        @media (max-width: 999px) and (min-width: 700px) {
-            #theory-tab .simulator-grid {
-                grid-template-columns: repeat(2, 1fr) !important;
-            }
-        }
-
-        @media (max-width: 699px) {
-            #theory-tab .simulator-grid {
-                grid-template-columns: 1fr !important;
-            }
-        }
-
-        .simulator-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: var(--card-shadow);
-            overflow: hidden;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .simulator-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--card-hover-shadow);
-        }
-
-        .card-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            color: white;
-            padding: clamp(15px, 2vw, 20px);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            transform: rotate(45deg);
-        }
-
-        .card-header h2 {
-            font-size: clamp(18px, 2.5vw, 24px);
-            font-weight: 600;
-            position: relative;
-            z-index: 1;
-        }
-
-        .card-version {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255,255,255,0.2);
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .card-body {
-            padding: clamp(15px, 2vw, 20px);
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card-description {
-            color: #666;
-            font-size: clamp(14px, 1.5vw, 16px);
-            margin-bottom: clamp(15px, 2vw, 20px);
-            flex: 1;
-        }
-
-        .feature-list {
-            list-style: none;
-            margin-bottom: clamp(15px, 2vw, 20px);
-        }
-
-        .feature-list li {
-            position: relative;
-            padding-left: 24px;
-            margin-bottom: 8px;
-            font-size: clamp(13px, 1.4vw, 15px);
-            color: #555;
-        }
-
-        .feature-list li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: var(--accent-color);
-            font-weight: bold;
-        }
-
-        .card-link {
-            display: inline-block;
-            background: var(--accent-color);
-            color: white;
-            text-decoration: none;
-            padding: clamp(10px, 1.5vw, 12px) clamp(20px, 3vw, 30px);
-            border-radius: 6px;
-            font-weight: 600;
-            text-align: center;
-            transition: all 0.3s ease;
-            font-size: clamp(14px, 1.5vw, 16px);
-        }
-
-        .card-link:hover {
-            background: #e67e00;
-            transform: translateX(5px);
-        }
-
-        .difficulty-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .beginner {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
-        .intermediate {
-            background: #fff3e0;
-            color: #ef6c00;
-        }
-
-        .advanced {
-            background: #fce4ec;
-            color: #c2185b;
-        }
-
-        footer {
-            background: var(--primary-dark);
-            color: white;
-            text-align: center;
-            padding: clamp(15px, 2vh, 20px);
-            margin-top: auto;
-        }
-
-        footer p {
-            font-size: clamp(12px, 1.5vw, 14px);
-            opacity: 0.9;
-        }
-
-        @media (max-width: 768px) {
-            .simulator-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* アニメーション */
-        .tab-navigation {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px auto;
-            max-width: min(600px, 95vw);
-            background: white;
-            padding: 10px;
-            border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .tab-button {
-            padding: 15px 30px;
-            border: none;
-            background: #f0f0f0;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: var(--primary-color);
-            flex: 1;
-        }
-
-        .tab-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .tab-button.active {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* 基礎理論タブのカードサイズ調整 */
-        #theory-tab .simulator-grid {
-            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 400px));
-            justify-content: start;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .simulator-card {
-            animation: fadeIn 0.5s ease forwards;
-        }
-
-        .simulator-card:nth-child(1) { animation-delay: 0.1s; }
-        .simulator-card:nth-child(2) { animation-delay: 0.2s; }
-        .simulator-card:nth-child(3) { animation-delay: 0.3s; }
-        .simulator-card:nth-child(4) { animation-delay: 0.4s; }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <header>
@@ -348,7 +41,7 @@
                         <li>コンセント・プラグ操作</li>
                         <li>電流の流れを可視化</li>
                     </ul>
-                    <a href="circuit-simulator-rich.html" class="card-link">
+                    <a href="simulators/design/circuit-simulator-rich.html" class="card-link">
                         シミュレーターを開く →
                     </a>
                 </div>
@@ -371,7 +64,7 @@
                         <li>過負荷・短絡シミュレーション</li>
                         <li>太陽光発電連系対応</li>
                     </ul>
-                    <a href="distribution-board-simulator.html" class="card-link">
+                    <a href="simulators/design/distribution-board-simulator.html" class="card-link">
                         シミュレーターを開く →
                     </a>
                 </div>
@@ -393,7 +86,7 @@
                         <li>漏電ブレーカー動作</li>
                         <li>感震ブレーカー対応</li>
                     </ul>
-                    <a href="residential-breaker-simulator.html" class="card-link">
+                    <a href="simulators/design/residential-breaker-simulator.html" class="card-link">
                         シミュレーターを開く →
                     </a>
                 </div>
@@ -415,7 +108,7 @@
                         <li>経済効果分析</li>
                         <li>専門用語集付き</li>
                     </ul>
-                    <a href="solar-power-simulator.html" class="card-link">
+                    <a href="simulators/design/solar-power-simulator.html" class="card-link">
                         シミュレーターを開く →
                     </a>
                 </div>
@@ -438,7 +131,7 @@
                             <li>ダクトシステムと空気の流れ表示</li>
                             <li>間取りシミュレーション機能</li>
                         </ul>
-                        <a href="ventilation-simulator.html" class="card-link">
+                        <a href="simulators/design/ventilation-simulator.html" class="card-link">
                             シミュレーターを開く →
                         </a>
                     </div>
@@ -467,7 +160,7 @@
                             <li>合成抵抗の自動計算</li>
                             <li>回路図の視覚的解説</li>
                         </ul>
-                        <a href="ohms-law-basic-theory.html" class="card-link">
+                        <a href="simulators/theory/ohms-law-basic-theory.html" class="card-link">
                             基礎理論を学ぶ →
                         </a>
                     </div>
@@ -490,7 +183,7 @@
                             <li>インピーダンスの計算と視覚化</li>
                             <li>位相差の動的表示</li>
                         </ul>
-                        <a href="ac-circuit-simulator.html" class="card-link">
+                        <a href="simulators/theory/ac-circuit-simulator.html" class="card-link">
                             交流回路を学ぶ →
                         </a>
                     </div>
@@ -513,7 +206,7 @@
                             <li>試験頻出の数値・条件</li>
                             <li>模擬問題とクイズ形式</li>
                         </ul>
-                        <a href="electrical-law-simulator.html" class="card-link">
+                        <a href="simulators/theory/electrical-law-simulator.html" class="card-link">
                             法令対策を始める →
                         </a>
                     </div>
@@ -536,7 +229,7 @@
                             <li>三相交流の概念</li>
                             <li>インタラクティブな視覚学習</li>
                         </ul>
-                        <a href="electrical-simulator.html" class="card-link">
+                        <a href="simulators/theory/electrical-simulator.html" class="card-link">
                             基礎を学ぶ →
                         </a>
                     </div>
@@ -559,7 +252,7 @@
                             <li>ケーブル比較モード</li>
                             <li>理解度チェッククイズ</li>
                         </ul>
-                        <a href="cable-types-simulator.html" class="card-link">
+                        <a href="simulators/theory/cable-types-simulator.html" class="card-link">
                             ケーブルを学ぶ →
                         </a>
                     </div>
@@ -572,176 +265,6 @@
         <p>&copy; 2024 電気工事シミュレーター. All rights reserved.</p>
     </footer>
 
-    <script>
-        // ページ読み込み時のアニメーション
-        document.addEventListener('DOMContentLoaded', function() {
-            const cards = document.querySelectorAll('.simulator-card');
-            cards.forEach((card, index) => {
-                card.style.opacity = '0';
-                setTimeout(() => {
-                    card.style.opacity = '1';
-                }, index * 100);
-            });
-        });
-
-        // ウィンドウサイズに応じた調整
-        function adjustScale() {
-            const viewportWidth = window.innerWidth;
-            
-            if (viewportWidth < 768) {
-                document.documentElement.style.fontSize = '14px';
-            } else if (viewportWidth < 992) {
-                document.documentElement.style.fontSize = '15px';
-            } else {
-                document.documentElement.style.fontSize = '16px';
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', adjustScale);
-        window.addEventListener('resize', adjustScale);
-
-        // タブ切り替え機能
-        function switchTab(tabName) {
-            // すべてのタブコンテンツを非表示
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            // すべてのタブボタンから active クラスを削除
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.classList.remove('active');
-            });
-            
-            // 選択されたタブを表示
-            document.getElementById(`${tabName}-tab`).classList.add('active');
-            
-            // 選択されたボタンに active クラスを追加
-            event.target.classList.add('active');
-        }
-
-        // 隠しアクセス機能（開発者向けドキュメント）
-        let keySequence = [];
-        const secretCode = ['d', 'o', 'c', 's'];
-        
-        document.addEventListener('keydown', function(e) {
-            keySequence.push(e.key.toLowerCase());
-            
-            // 最新の4文字を保持
-            if (keySequence.length > secretCode.length) {
-                keySequence.shift();
-            }
-            
-            // シークレットコードの確認
-            if (keySequence.length === secretCode.length && 
-                keySequence.every((key, index) => key === secretCode[index])) {
-                showDocumentPortal();
-                keySequence = []; // リセット
-            }
-        });
-
-        function showDocumentPortal() {
-            // 既存のポータルを削除
-            const existingPortal = document.getElementById('document-portal');
-            if (existingPortal) {
-                existingPortal.remove();
-                return;
-            }
-
-            // ドキュメントポータルを作成
-            const portal = document.createElement('div');
-            portal.id = 'document-portal';
-            portal.innerHTML = `
-                <div style="
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: linear-gradient(135deg, #005BAB, #003d75);
-                    color: white;
-                    padding: 2rem;
-                    border-radius: 15px;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                    z-index: 10000;
-                    text-align: center;
-                    min-width: 350px;
-                    animation: documentPortalAppear 0.5s ease-out;
-                ">
-                    <h3 style="margin-bottom: 1.5rem; color: #FF961C;">📚 開発者ドキュメント</h3>
-                    <p style="margin-bottom: 2rem; opacity: 0.9;">プロジェクトの詳細仕様書へアクセス</p>
-                    <div style="display: grid; gap: 1rem;">
-                        <a href="requirements-document.html" style="
-                            background: #FF961C;
-                            color: white;
-                            text-decoration: none;
-                            padding: 0.8rem 1.5rem;
-                            border-radius: 8px;
-                            transition: all 0.3s ease;
-                            font-weight: bold;
-                        " onmouseover="this.style.background='#e67e00'" onmouseout="this.style.background='#FF961C'">
-                            📋 要件定義書
-                        </a>
-                        <a href="design-specification.html" style="
-                            background: #FF961C;
-                            color: white;
-                            text-decoration: none;
-                            padding: 0.8rem 1.5rem;
-                            border-radius: 8px;
-                            transition: all 0.3s ease;
-                            font-weight: bold;
-                        " onmouseover="this.style.background='#e67e00'" onmouseout="this.style.background='#FF961C'">
-                            🛠️ 設計仕様書
-                        </a>
-                    </div>
-                    <button onclick="document.getElementById('document-portal').remove()" style="
-                        background: transparent;
-                        border: 2px solid rgba(255,255,255,0.3);
-                        color: white;
-                        padding: 0.5rem 1rem;
-                        border-radius: 20px;
-                        cursor: pointer;
-                        margin-top: 1.5rem;
-                        transition: all 0.3s ease;
-                    " onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
-                        閉じる
-                    </button>
-                </div>
-                <div style="
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100vw;
-                    height: 100vh;
-                    background: rgba(0,0,0,0.5);
-                    z-index: 9999;
-                    animation: documentPortalBackdrop 0.5s ease-out;
-                " onclick="document.getElementById('document-portal').remove()"></div>
-            `;
-
-            document.body.appendChild(portal);
-        }
-
-        // アニメーションのCSSを追加
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes documentPortalAppear {
-                from {
-                    opacity: 0;
-                    transform: translate(-50%, -60%);
-                    scale: 0.9;
-                }
-                to {
-                    opacity: 1;
-                    transform: translate(-50%, -50%);
-                    scale: 1;
-                }
-            }
-            
-            @keyframes documentPortalBackdrop {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
-    </script>
+    <script src="js/main.js" defer></script>
 </body>
 </html>

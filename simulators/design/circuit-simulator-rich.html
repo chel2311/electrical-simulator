@@ -4,14 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>電気回路シミュレーター - 初級研修</title>
+  <link rel="stylesheet" href="../../css/style.css">
   <style>
+    /* 個別シミュレーター固有のスタイル */
     :root {
-      --corporate-color: #005BAB;
-      --accent-color: #FF961C;
       --secondary-color: #4D8BC9;
       --light-blue: #E0EEF9;
-      --background-color: #f5f5f5;
-      --text-color: #333;
       --light-gray: #E0E0E0;
       --mid-gray: #9E9E9E;
       --dark-gray: #616161;
@@ -622,7 +620,7 @@
 <body>
   <header class="header">
     <h1>電気回路シミュレーター</h1>
-    <a href="index.html" class="back-to-home">
+    <a href="../../index.html" class="back-to-home">
       ← ポータルに戻る
     </a>
   </header>
@@ -2086,5 +2084,6 @@ function updateThreeWaySwitchState() {
     window.addEventListener('DOMContentLoaded', adjustScale);
     window.addEventListener('resize', adjustScale);
   </script>
+  <script src="../../js/main.js" defer></script>
 </body>
 </html>
